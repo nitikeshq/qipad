@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema } from "@shared/schema";
+import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema, insertCompanySchema, insertPaymentSchema, insertSubscriptionSchema } from "@shared/schema";
+import { payumoneyService } from "./payumoney";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -1370,6 +1371,282 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedBid);
     } catch (error: any) {
       res.status(400).json({ message: "Failed to update bid", error: error.message });
+    }
+  });
+
+  // Companies routes
+  app.get('/api/companies', async (req, res) => {
+    try {
+      const companies = await storage.getAllCompanies();
+      res.json(companies);
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+      res.status(500).json({ message: 'Failed to fetch companies' });
+    }
+  });
+
+  app.get('/api/companies/:id', async (req, res) => {
+    try {
+      const company = await storage.getCompanyById(req.params.id);
+      if (!company) {
+        return res.status(404).json({ message: 'Company not found' });
+      }
+      res.json(company);
+    } catch (error) {
+      console.error('Error fetching company:', error);
+      res.status(500).json({ message: 'Failed to fetch company' });
+    }
+  });
+
+  // PayUMoney payment routes
+  app.post('/api/payments/company-creation', authenticateToken, async (req, res) => {
+    try {
+      const { amount, companyData } = req.body;
+      const userId = req.user.userId;
+
+      const txnId = payumoneyService.generateTxnId();
+      
+      // Create payment record
+      const payment = await storage.createPayment({
+        userId,
+        amount,
+        paymentType: 'company_creation',
+        status: 'pending',
+        description: 'Company registration fee',
+        metadata: JSON.stringify({ companyData, txnId }),
+      });
+
+      const paymentData = {
+        amount,
+        productInfo: 'Company Registration Fee',
+        firstName: req.user.firstName || 'User',
+        email: req.user.email || 'user@example.com',
+        txnId,
+        successUrl: `${req.protocol}://${req.get('host')}/api/payments/success`,
+        failureUrl: `${req.protocol}://${req.get('host')}/api/payments/failure`,
+        userId,
+        paymentType: 'company_creation',
+        metadata: { paymentId: payment.id, companyData },
+      };
+
+      const paymentResponse = await payumoneyService.createPayment(paymentData);
+      
+      if (paymentResponse.success) {
+        res.json({
+          success: true,
+          paymentUrl: paymentResponse.paymentUrl,
+          txnId: paymentResponse.txnId,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: paymentResponse.error,
+        });
+      }
+    } catch (error) {
+      console.error('Error creating company payment:', error);
+      res.status(500).json({ message: 'Failed to create payment' });
+    }
+  });
+
+  app.post('/api/payments/support', authenticateToken, async (req, res) => {
+    try {
+      const { amount, projectId } = req.body;
+      const userId = req.user.userId;
+
+      const txnId = payumoneyService.generateTxnId();
+      
+      // Create payment record
+      const payment = await storage.createPayment({
+        userId,
+        projectId,
+        amount,
+        paymentType: 'support',
+        status: 'pending',
+        description: 'Project support donation',
+        metadata: JSON.stringify({ txnId }),
+      });
+
+      const paymentData = {
+        amount,
+        productInfo: 'Project Support Donation',
+        firstName: req.user.firstName || 'User',
+        email: req.user.email || 'user@example.com',
+        txnId,
+        successUrl: `${req.protocol}://${req.get('host')}/api/payments/success`,
+        failureUrl: `${req.protocol}://${req.get('host')}/api/payments/failure`,
+        userId,
+        paymentType: 'support',
+        metadata: { paymentId: payment.id, projectId },
+      };
+
+      const paymentResponse = await payumoneyService.createPayment(paymentData);
+      
+      if (paymentResponse.success) {
+        res.json({
+          success: true,
+          paymentUrl: paymentResponse.paymentUrl,
+          txnId: paymentResponse.txnId,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: paymentResponse.error,
+        });
+      }
+    } catch (error) {
+      console.error('Error creating support payment:', error);
+      res.status(500).json({ message: 'Failed to create payment' });
+    }
+  });
+
+  app.post('/api/payments/subscription', authenticateToken, async (req, res) => {
+    try {
+      const { planType } = req.body;
+      const userId = req.user.userId;
+
+      const amount = planType === 'monthly' ? 399 : planType === 'annual' ? 3990 : 0; // Beta is free
+      const txnId = payumoneyService.generateTxnId();
+      
+      // Create subscription
+      const subscription = await storage.createSubscription({
+        userId,
+        planType,
+        amount,
+        status: amount === 0 ? 'trial' : 'inactive',
+      });
+
+      if (amount === 0) {
+        // Beta subscription - no payment needed
+        res.json({
+          success: true,
+          subscriptionId: subscription.id,
+          message: 'Beta subscription activated',
+        });
+        return;
+      }
+
+      // Create payment record
+      const payment = await storage.createPayment({
+        userId,
+        subscriptionId: subscription.id,
+        amount,
+        paymentType: 'subscription',
+        status: 'pending',
+        description: `Qipad ${planType} subscription`,
+        metadata: JSON.stringify({ txnId, subscriptionId: subscription.id }),
+      });
+
+      const paymentData = {
+        amount,
+        productInfo: `Qipad ${planType} subscription`,
+        firstName: req.user.firstName || 'User',
+        email: req.user.email || 'user@example.com',
+        txnId,
+        successUrl: `${req.protocol}://${req.get('host')}/api/payments/success`,
+        failureUrl: `${req.protocol}://${req.get('host')}/api/payments/failure`,
+        userId,
+        paymentType: 'subscription',
+        metadata: { paymentId: payment.id, subscriptionId: subscription.id },
+      };
+
+      const paymentResponse = await payumoneyService.createPayment(paymentData);
+      
+      if (paymentResponse.success) {
+        res.json({
+          success: true,
+          paymentUrl: paymentResponse.paymentUrl,
+          txnId: paymentResponse.txnId,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: paymentResponse.error,
+        });
+      }
+    } catch (error) {
+      console.error('Error creating subscription payment:', error);
+      res.status(500).json({ message: 'Failed to create payment' });
+    }
+  });
+
+  // PayUMoney callback handlers
+  app.post('/api/payments/success', async (req, res) => {
+    try {
+      const callbackResult = await payumoneyService.processCallback(req.body);
+      
+      if (callbackResult.success) {
+        // Update payment status
+        const metadata = JSON.parse(req.body.udf3 || '{}');
+        await storage.updatePaymentStatus(callbackResult.txnId, 'completed', req.body.payuMoneyId);
+        
+        // Handle different payment types
+        if (req.body.udf2 === 'company_creation') {
+          // Create the company after successful payment
+          const companyData = metadata.companyData;
+          if (companyData) {
+            await storage.createCompany({
+              ...companyData,
+              ownerId: req.body.udf1,
+              status: 'pending',
+            });
+          }
+        } else if (req.body.udf2 === 'subscription') {
+          // Activate subscription
+          const subscriptionId = metadata.subscriptionId;
+          if (subscriptionId) {
+            await storage.updateSubscriptionStatus(subscriptionId, 'active');
+          }
+        } else if (req.body.udf2 === 'support') {
+          // Update project funding (with 2% platform fee deducted)
+          const projectId = metadata.projectId;
+          const platformFee = callbackResult.amount * 0.02;
+          const netAmount = callbackResult.amount - platformFee;
+          
+          if (projectId) {
+            await storage.updateProjectFunding(projectId, netAmount);
+          }
+        }
+        
+        res.redirect('/dashboard?payment=success');
+      } else {
+        res.redirect('/dashboard?payment=failed');
+      }
+    } catch (error) {
+      console.error('Error processing payment success:', error);
+      res.redirect('/dashboard?payment=error');
+    }
+  });
+
+  app.post('/api/payments/failure', async (req, res) => {
+    try {
+      const callbackResult = await payumoneyService.processCallback(req.body);
+      await storage.updatePaymentStatus(callbackResult.txnId, 'failed', req.body.payuMoneyId);
+      res.redirect('/dashboard?payment=failed');
+    } catch (error) {
+      console.error('Error processing payment failure:', error);
+      res.redirect('/dashboard?payment=error');
+    }
+  });
+
+  // Billing and subscription routes
+  app.get('/api/subscriptions/my', authenticateToken, async (req, res) => {
+    try {
+      const subscription = await storage.getUserSubscription(req.user.userId);
+      res.json(subscription);
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+      res.status(500).json({ message: 'Failed to fetch subscription' });
+    }
+  });
+
+  app.get('/api/payments/my', authenticateToken, async (req, res) => {
+    try {
+      const payments = await storage.getUserPayments(req.user.userId);
+      res.json(payments);
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      res.status(500).json({ message: 'Failed to fetch payments' });
     }
   });
 

@@ -1,7 +1,7 @@
 import { 
   users, projects, documents, investments, communities, communityMembers, 
   communityPosts, jobs, jobApplications, connections, biddingProjects, projectBids,
-  companyFormations, tenders, tenderEligibility,
+  companyFormations, tenders, tenderEligibility, companies, subscriptions, payments,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
   type Community, type InsertCommunity, type CommunityMember, type InsertCommunityMember,
@@ -9,7 +9,8 @@ import {
   type JobApplication, type InsertJobApplication, type Connection,
   type BiddingProject, type InsertBiddingProject, type ProjectBid, type InsertProjectBid,
   type CompanyFormation, type InsertCompanyFormation, type Tender, type InsertTender,
-  type TenderEligibility, type InsertTenderEligibility
+  type TenderEligibility, type InsertTenderEligibility, type Company, type InsertCompany,
+  type Subscription, type InsertSubscription, type Payment, type InsertPayment
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, sql, ne } from "drizzle-orm";
@@ -106,6 +107,23 @@ export interface IStorage {
   getTender(id: string): Promise<Tender | undefined>;
   updateTender(id: string, updates: Partial<Tender>): Promise<Tender>;
   deleteTender(id: string): Promise<void>;
+
+  // Company methods
+  getAllCompanies(): Promise<Company[]>;
+  getCompanyById(id: string): Promise<Company | undefined>;
+  createCompany(company: InsertCompany): Promise<Company>;
+  updateCompany(id: string, updates: Partial<Company>): Promise<Company>;
+
+  // Subscription methods
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  getUserSubscription(userId: string): Promise<Subscription | undefined>;
+  updateSubscriptionStatus(id: string, status: string): Promise<Subscription>;
+
+  // Payment methods
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  getUserPayments(userId: string): Promise<Payment[]>;
+  updatePaymentStatus(txnId: string, status: string, payumoneyId?: string): Promise<Payment>;
+  updateProjectFunding(projectId: string, amount: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -684,6 +702,100 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCompanyFormation(id: string): Promise<void> {
     await db.delete(companyFormations).where(eq(companyFormations.id, id));
+  }
+
+  // Company methods
+  async getAllCompanies(): Promise<Company[]> {
+    return await db.select().from(companies).orderBy(desc(companies.createdAt));
+  }
+
+  async getCompanyById(id: string): Promise<Company | undefined> {
+    const [company] = await db.select().from(companies).where(eq(companies.id, id));
+    return company || undefined;
+  }
+
+  async createCompany(insertCompany: InsertCompany): Promise<Company> {
+    const [company] = await db
+      .insert(companies)
+      .values(insertCompany)
+      .returning();
+    return company;
+  }
+
+  async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {
+    const [company] = await db
+      .update(companies)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(companies.id, id))
+      .returning();
+    return company;
+  }
+
+  // Subscription methods
+  async createSubscription(insertSubscription: InsertSubscription): Promise<Subscription> {
+    const [subscription] = await db
+      .insert(subscriptions)
+      .values(insertSubscription)
+      .returning();
+    return subscription;
+  }
+
+  async getUserSubscription(userId: string): Promise<Subscription | undefined> {
+    const [subscription] = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId))
+      .orderBy(desc(subscriptions.createdAt));
+    return subscription || undefined;
+  }
+
+  async updateSubscriptionStatus(id: string, status: string): Promise<Subscription> {
+    const [subscription] = await db
+      .update(subscriptions)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(subscriptions.id, id))
+      .returning();
+    return subscription;
+  }
+
+  // Payment methods
+  async createPayment(insertPayment: InsertPayment): Promise<Payment> {
+    const [payment] = await db
+      .insert(payments)
+      .values(insertPayment)
+      .returning();
+    return payment;
+  }
+
+  async getUserPayments(userId: string): Promise<Payment[]> {
+    return await db
+      .select()
+      .from(payments)
+      .where(eq(payments.userId, userId))
+      .orderBy(desc(payments.createdAt));
+  }
+
+  async updatePaymentStatus(txnId: string, status: string, payumoneyId?: string): Promise<Payment> {
+    const [payment] = await db
+      .update(payments)
+      .set({ 
+        status, 
+        payumoneyTransactionId: payumoneyId,
+        updatedAt: new Date() 
+      })
+      .where(eq(payments.payumoneyTransactionId, txnId))
+      .returning();
+    return payment;
+  }
+
+  async updateProjectFunding(projectId: string, amount: number): Promise<void> {
+    await db
+      .update(projects)
+      .set({ 
+        currentFunding: sql`COALESCE(${projects.currentFunding}, 0) + ${amount}`,
+        updatedAt: new Date() 
+      })
+      .where(eq(projects.id, projectId));
   }
 }
 

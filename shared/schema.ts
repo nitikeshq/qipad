@@ -8,6 +8,9 @@ export const userTypeEnum = pgEnum('user_type', ['business_owner', 'investor', '
 export const projectStatusEnum = pgEnum('project_status', ['draft', 'pending_review', 'approved', 'rejected', 'active', 'completed']);
 export const documentTypeEnum = pgEnum('document_type', ['business_pan', 'gst_certificate', 'incorporation_certificate', 'personal_pan']);
 export const investmentStatusEnum = pgEnum('investment_status', ['pending', 'approved', 'rejected', 'completed']);
+export const subscriptionStatusEnum = pgEnum('subscription_status', ['active', 'inactive', 'trial', 'cancelled']);
+export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'completed', 'failed', 'refunded']);
+export const companyStatusEnum = pgEnum('company_status', ['pending', 'approved', 'rejected']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -403,6 +406,104 @@ export const tenderEligibilityRelations = relations(tenderEligibility, ({ one })
   }),
 }));
 
+// Companies Table
+export const companies = pgTable("companies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ownerId: varchar("owner_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  industry: text("industry").notNull(),
+  website: text("website"),
+  logo: text("logo"),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  pincode: text("pincode"),
+  gstNumber: text("gst_number"),
+  cinNumber: text("cin_number"),
+  panNumber: text("pan_number"),
+  status: companyStatusEnum("status").default("pending"),
+  employeeCount: integer("employee_count"),
+  foundedYear: integer("founded_year"),
+  revenue: decimal("revenue", { precision: 15, scale: 2 }),
+  isVerified: boolean("is_verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Subscriptions Table for Billing
+export const subscriptions = pgTable("subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  planType: text("plan_type").notNull().default("beta"), // beta, monthly, annual
+  status: subscriptionStatusEnum("status").default("trial"),
+  amount: decimal("amount", { precision: 10, scale: 2 }).default("0"),
+  currency: text("currency").default("INR"),
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
+  trialEndsAt: timestamp("trial_ends_at").default(sql`now() + interval '6 months'`),
+  isActive: boolean("is_active").default(true),
+  autoRenew: boolean("auto_renew").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Payments Table for PayUMoney integration
+export const payments = pgTable("payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  subscriptionId: varchar("subscription_id").references(() => subscriptions.id),
+  projectId: varchar("project_id").references(() => projects.id),
+  companyId: varchar("company_id").references(() => companies.id),
+  biddingId: varchar("bidding_id").references(() => projectBids.id),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  currency: text("currency").default("INR"),
+  paymentType: text("payment_type").notNull(), // subscription, support, investment, company_creation, bidding_fee
+  status: paymentStatusEnum("status").default("pending"),
+  payumoneyTransactionId: text("payumoney_transaction_id"),
+  payumoneyStatus: text("payumoney_status"),
+  paymentMethod: text("payment_method"),
+  description: text("description"),
+  metadata: text("metadata"), // JSON string for additional data
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations for new tables
+export const companiesRelations = relations(companies, ({ one }) => ({
+  owner: one(users, {
+    fields: [companies.ownerId],
+    references: [users.id],
+  }),
+}));
+
+export const subscriptionsRelations = relations(subscriptions, ({ one, many }) => ({
+  user: one(users, {
+    fields: [subscriptions.userId],
+    references: [users.id],
+  }),
+  payments: many(payments),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  user: one(users, {
+    fields: [payments.userId],
+    references: [users.id],
+  }),
+  subscription: one(subscriptions, {
+    fields: [payments.subscriptionId],
+    references: [subscriptions.id],
+  }),
+  project: one(projects, {
+    fields: [payments.projectId],
+    references: [projects.id],
+  }),
+  company: one(companies, {
+    fields: [payments.companyId],
+    references: [companies.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -501,6 +602,25 @@ export const insertTenderEligibilitySchema = createInsertSchema(tenderEligibilit
   createdAt: true,
 });
 
+export const insertCompanySchema = createInsertSchema(companies).omit({
+  id: true,
+  isVerified: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -531,3 +651,9 @@ export type Tender = typeof tenders.$inferSelect;
 export type InsertTender = z.infer<typeof insertTenderSchema>;
 export type TenderEligibility = typeof tenderEligibility.$inferSelect;
 export type InsertTenderEligibility = z.infer<typeof insertTenderEligibilitySchema>;
+export type Company = typeof companies.$inferSelect;
+export type InsertCompany = z.infer<typeof insertCompanySchema>;
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;

@@ -146,7 +146,23 @@ export default function Dashboard() {
                 <div className="divide-y divide-border">
                   {userProjects.length > 0 ? (
                     userProjects.slice(0, 3).map((project: Project) => (
-                      <ProjectCard key={project.id} project={project} showActions />
+                      <div key={project.id} className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-semibold text-foreground">{project.title}</h3>
+                            <p className="text-sm text-muted-foreground">{project.industry}</p>
+                            <p className="text-sm text-green-600 font-medium">
+                              ₹{parseFloat(project.currentFunding).toLocaleString()} / ₹{parseFloat(project.fundingGoal).toLocaleString()}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-muted-foreground">{project.status}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {Math.round((parseFloat(project.currentFunding) / parseFloat(project.fundingGoal)) * 100)}% funded
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     ))
                   ) : (
                     <div className="p-6 text-center">
