@@ -23,7 +23,7 @@ import { ConnectionRequestButton } from "@/components/ConnectionRequestButton";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function ProjectDetailsPage() {
-  const [match, params] = useRoute("/projects/:id");
+  const [match, params] = useRoute("/innovations/:id");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isEditProjectModalOpen, setIsEditProjectModalOpen] = useState(false);
   const [isInvestModalOpen, setIsInvestModalOpen] = useState(false);
@@ -161,10 +161,10 @@ export function ProjectDetailsPage() {
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-6">
-              <Link href="/projects">
+              <Link href="/innovations">
                 <Button variant="ghost" className="mb-4" data-testid="button-back">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Projects
+                  Back to Innovations
                 </Button>
               </Link>
               <div className="flex items-center justify-between">

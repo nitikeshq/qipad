@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Bell, Shield, Globe, Moon, Sun, Monitor, ArrowLeft, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
-import type { User } from "@/lib/auth";
+import type { User } from "@shared/schema";
 
 interface NotificationSettings {
   emailNotifications: boolean;
@@ -25,7 +25,7 @@ interface NotificationSettings {
 interface PrivacySettings {
   profileVisibility: 'public' | 'private' | 'network';
   showInvestments: boolean;
-  showProjects: boolean;
+  showInnovations: boolean;
   allowDirectMessages: boolean;
 }
 
@@ -37,6 +37,42 @@ export default function GeneralSettingsPage() {
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [language, setLanguage] = useState('en');
   const [timezone, setTimezone] = useState('Asia/Kolkata');
+
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' || 'system';
+    const savedLanguage = localStorage.getItem('language') || 'en';
+    const savedTimezone = localStorage.getItem('timezone') || 'Asia/Kolkata';
+    
+    setTheme(savedTheme);
+    setLanguage(savedLanguage);
+    setTimezone(savedTimezone);
+    
+    // Apply theme immediately without triggering mutation
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    
+    if (savedTheme === 'dark') {
+      root.classList.add('dark');
+    } else if (savedTheme === 'light') {
+      root.classList.add('light');
+    } else {
+      const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.classList.add(isDarkMode ? 'dark' : 'light');
+    }
+  }, []);
+
+  const handleLanguageChange = (newLanguage: string) => {
+    setLanguage(newLanguage);
+    localStorage.setItem('language', newLanguage);
+    updateSettingsMutation.mutate({ language: newLanguage });
+  };
+
+  const handleTimezoneChange = (newTimezone: string) => {
+    setTimezone(newTimezone);
+    localStorage.setItem('timezone', newTimezone);
+    updateSettingsMutation.mutate({ timezone: newTimezone });
+  };
   
   const [notifications, setNotifications] = useState<NotificationSettings>({
     emailNotifications: true,
@@ -50,7 +86,7 @@ export default function GeneralSettingsPage() {
   const [privacy, setPrivacy] = useState<PrivacySettings>({
     profileVisibility: 'public',
     showInvestments: false,
-    showProjects: true,
+    showInnovations: true,
     allowDirectMessages: true,
   });
 
@@ -83,6 +119,24 @@ export default function GeneralSettingsPage() {
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme);
+    
+    // Apply theme immediately to document
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    
+    if (newTheme === 'dark') {
+      root.classList.add('dark');
+    } else if (newTheme === 'light') {
+      root.classList.add('light');
+    } else {
+      // System theme - check user's system preference
+      const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.classList.add(isDarkMode ? 'dark' : 'light');
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('theme', newTheme);
+    
     updateSettingsMutation.mutate({ theme: newTheme });
   };
 
@@ -165,7 +219,7 @@ export default function GeneralSettingsPage() {
                       Select your preferred language
                     </p>
                   </div>
-                  <Select value={language} onValueChange={setLanguage}>
+                  <Select value={language} onValueChange={handleLanguageChange}>
                     <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
@@ -186,7 +240,7 @@ export default function GeneralSettingsPage() {
                       Set your local timezone
                     </p>
                   </div>
-                  <Select value={timezone} onValueChange={setTimezone}>
+                  <Select value={timezone} onValueChange={handleTimezoneChange}>
                     <SelectTrigger className="w-40">
                       <SelectValue />
                     </SelectTrigger>
@@ -346,14 +400,14 @@ export default function GeneralSettingsPage() {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-base font-medium">Show Projects</Label>
+                    <Label className="text-base font-medium">Show Innovations</Label>
                     <p className="text-sm text-muted-foreground">
-                      Display your projects on your profile
+                      Display your innovations on your profile
                     </p>
                   </div>
                   <Switch
-                    checked={privacy.showProjects}
-                    onCheckedChange={(checked) => handlePrivacyChange('showProjects', checked)}
+                    checked={privacy.showInnovations}
+                    onCheckedChange={(checked) => handlePrivacyChange('showInnovations', checked)}
                     data-testid="switch-show-projects"
                   />
                 </div>
