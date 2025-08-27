@@ -122,7 +122,7 @@ export function ProjectCard({ project, showActions = false, onInvest, onSupport 
 
         {/* Action Buttons */}
         <div className="flex space-x-2 pt-2">
-          <Link href={`/projects/${project.id}`} className="flex-1">
+          <Link href={`/innovations/${project.id}`} className="flex-1">
             <Button variant="outline" size="sm" className="w-full" data-testid={`button-view-details-${project.id}`}>
               <Eye className="h-4 w-4 mr-2" />
               View Details
