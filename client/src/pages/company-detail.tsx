@@ -34,6 +34,7 @@ type InquiryForm = z.infer<typeof inquirySchema>;
 
 interface Company {
   id: string;
+  ownerId: string;
   name: string;
   description?: string;
   logo?: string;
