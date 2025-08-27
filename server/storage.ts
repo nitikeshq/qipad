@@ -134,23 +134,13 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     try {
-      return await db.select({
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        phone: users.phone,
-        userType: users.userType,
-        isVerified: users.isVerified,
-        isKycComplete: users.isKycComplete,
-        profileImage: users.profileImage,
-        googleId: users.googleId,
-        passwordHash: users.passwordHash,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt
-      }).from(users).orderBy(desc(users.createdAt));
+      console.log("DEBUG: Starting getAllUsers query...");
+      const result = await db.select().from(users).orderBy(desc(users.createdAt));
+      console.log("DEBUG: Query completed. Found", result.length, "users");
+      return result;
     } catch (error) {
-      return [];
+      console.error("DEBUG: Error in getAllUsers:", error);
+      throw error;
     }
   }
 
@@ -159,54 +149,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllProjectsWithOwners(): Promise<any[]> {
-    try {
-      const allProjects = await this.getAllProjects();
-      const projectsWithOwners = await Promise.all(
-        allProjects.map(async (project) => {
-          const owner = await this.getUser(project.userId);
-          return {
-            ...project,
-            owner
-          };
-        })
-      );
-      return projectsWithOwners;
-    } catch (error) {
-      return [];
-    }
+    const allProjects = await this.getAllProjects();
+    const projectsWithOwners = await Promise.all(
+      allProjects.map(async (project) => {
+        const owner = await this.getUser(project.userId);
+        return {
+          ...project,
+          owner
+        };
+      })
+    );
+    return projectsWithOwners;
   }
 
   async getAllInvestmentsWithDetails(): Promise<any[]> {
-    try {
-      const allInvestments = await db.select({
-        id: investments.id,
-        projectId: investments.projectId,
-        investorId: investments.investorId,
-        amount: investments.amount,
-        type: investments.type,
-        expectedStakes: investments.expectedStakes,
-        status: investments.status,
-        investorContact: investments.investorContact,
-        investorEmail: investments.investorEmail,
-        createdAt: investments.createdAt
-      }).from(investments);
-      
-      const investmentsWithDetails = await Promise.all(
-        allInvestments.map(async (investment) => {
-          const investor = await this.getUser(investment.investorId);
-          const project = await this.getProject(investment.projectId);
-          return {
-            ...investment,
-            platformFeePaid: false, // Default value for missing column
-            investor,
-            project
-          };
-        })
-      );
-      return investmentsWithDetails;
-    } catch (error) {
-      return [];
-    }
+    const allInvestments = await db.select().from(investments);
+    const investmentsWithDetails = await Promise.all(
+      allInvestments.map(async (investment) => {
+        const investor = await this.getUser(investment.investorId);
+        const project = await this.getProject(investment.projectId);
+        return {
+          ...investment,
+          investor,
+          project
+        };
+      })
+    );
+    return investmentsWithDetails;
   }
 
   async getConnections(userId: string): Promise<Connection[]> {
@@ -283,35 +252,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllProjects(): Promise<Project[]> {
-    try {
-      return await db.select({
-        id: projects.id,
-        userId: projects.userId,
-        title: projects.title,
-        description: projects.description,
-        briefDescription: projects.briefDescription,
-        industry: projects.industry,
-        fundingGoal: projects.fundingGoal,
-        minimumInvestment: projects.minimumInvestment,
-        currentFunding: projects.currentFunding,
-        campaignDuration: projects.campaignDuration,
-        status: projects.status,
-        images: projects.images,
-        videos: projects.videos,
-        businessPlan: projects.businessPlan,
-        marketAnalysis: projects.marketAnalysis,
-        competitiveAdvantage: projects.competitiveAdvantage,
-        teamInfo: projects.teamInfo,
-        financialProjections: projects.financialProjections,
-        riskAssessment: projects.riskAssessment,
-        useOfFunds: projects.useOfFunds,
-        exitStrategy: projects.exitStrategy,
-        createdAt: projects.createdAt,
-        updatedAt: projects.updatedAt
-      }).from(projects).orderBy(desc(projects.createdAt));
-    } catch (error) {
-      return [];
-    }
+    return await db.select().from(projects).orderBy(desc(projects.createdAt));
   }
 
   async getApprovedProjects(): Promise<Project[]> {
@@ -647,11 +588,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllCompanyFormations(): Promise<CompanyFormation[]> {
-    try {
-      return await db.select().from(companyFormations).orderBy(desc(companyFormations.createdAt));
-    } catch (error) {
-      return [];
-    }
+    return await db.select().from(companyFormations).orderBy(desc(companyFormations.createdAt));
   }
 
   async getCompanyFormation(id: string): Promise<CompanyFormation | undefined> {

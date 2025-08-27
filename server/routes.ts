@@ -648,8 +648,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin route for getting all users with documents
   app.get("/api/admin/users", async (req, res) => {
     try {
+      console.log("DEBUG: Admin users route called");
       const users = await storage.getAllUsers();
+      console.log("DEBUG: Got users from storage:", users.length);
       const documents = await storage.getAllDocuments();
+      console.log("DEBUG: Got documents from storage:", documents.length);
       
       const usersWithKyc = users.map(user => {
         const userDocs = documents.filter(doc => doc.userId === user.id);
@@ -665,9 +668,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
       
+      console.log("DEBUG: Sending response with", usersWithKyc.length, "users");
       res.json(usersWithKyc);
     } catch (error: any) {
-      res.json([]);
+      console.error("Admin users route error:", error);
+      res.status(500).json({ message: "Failed to get users", error: error.message });
     }
   });
 
@@ -698,7 +703,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projects = await storage.getAllProjectsWithOwners();
       res.json(projects);
     } catch (error: any) {
-      res.json([]);
+      console.error("Admin projects route error:", error);
+      res.status(500).json({ message: "Failed to get projects", error: error.message });
     }
   });
 
