@@ -14,8 +14,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Search, MapPin, Globe, Phone, Mail, Building2, Package, Briefcase, MessageCircle, ExternalLink } from "lucide-react";
+import { Search, MapPin, Globe, Phone, Mail, Building2, Package, Briefcase, MessageCircle, ExternalLink, Plus } from "lucide-react";
 import { z } from "zod";
+import { Header } from "@/components/layout/Header";
+import { Sidebar } from "@/components/layout/Sidebar";
 
 const inquirySchema = z.object({
   message: z.string().min(10, "Message must be at least 10 characters"),
@@ -175,17 +177,27 @@ export default function Companies() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Companies Directory
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Discover companies, their services, and products in the Qipad ecosystem
-          </p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <main className="flex-1 p-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="mb-8 flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground mb-2">
+                  Companies Directory
+                </h1>
+                <p className="text-muted-foreground">
+                  Discover companies, their services, and products in the Qipad ecosystem
+                </p>
+              </div>
+              <Button onClick={() => setLocation("/company-formation")} data-testid="button-add-company">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your Company
+              </Button>
+            </div>
 
         {/* Search and Filters */}
         <div className="mb-6 flex flex-col sm:flex-row gap-4">
@@ -584,6 +596,8 @@ export default function Companies() {
             </Form>
           </DialogContent>
         </Dialog>
+          </div>
+        </main>
       </div>
     </div>
   );

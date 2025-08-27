@@ -15,6 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, MapPin, Globe, Phone, Mail, Building2, Package, Briefcase, MessageCircle, ExternalLink, Calendar, Users, Check } from "lucide-react";
 import { z } from "zod";
+import { Header } from "@/components/layout/Header";
+import { Sidebar } from "@/components/layout/Sidebar";
 
 const inquirySchema = z.object({
   message: z.string().min(10, "Message must be at least 10 characters"),
@@ -178,20 +180,24 @@ export default function CompanyDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Button 
-            variant="ghost" 
-            onClick={() => setLocation("/companies")}
-            className="mb-4"
-            data-testid="back-to-companies"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Companies
-          </Button>
-        </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <main className="flex-1 p-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <Button 
+                variant="ghost" 
+                onClick={() => setLocation("/companies")}
+                className="mb-4"
+                data-testid="back-to-companies"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Companies
+              </Button>
+            </div>
 
         {/* Company Header Card */}
         <Card className="mb-8">
@@ -586,6 +592,8 @@ export default function CompanyDetail() {
             </Form>
           </DialogContent>
         </Dialog>
+          </div>
+        </main>
       </div>
     </div>
   );
