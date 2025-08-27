@@ -86,7 +86,7 @@ export function InvestModal({ open, onOpenChange, project }: InvestModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" data-testid="dialog-invest-project">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto" data-testid="dialog-invest-project">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-green-500" />
@@ -94,7 +94,7 @@ export function InvestModal({ open, onOpenChange, project }: InvestModalProps) {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 pb-4">
           {/* Project Info */}
           <div className="space-y-2">
             <h3 className="font-medium text-lg">{project.title}</h3>
