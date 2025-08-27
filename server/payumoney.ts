@@ -32,7 +32,7 @@ export class PayUMoneyService {
     this.merchantId = process.env.PAYUMONEY_MERCHANT_ID!;
     this.merchantKey = process.env.PAYUMONEY_MERCHANT_KEY!;
     this.salt = process.env.PAYUMONEY_SALT!;
-    this.baseUrl = 'https://test.payu.in'; // Use https://secure.payu.in for production
+    this.baseUrl = 'https://secure.payu.in'; // Live PayUMoney URL
     
     if (!this.merchantId || !this.merchantKey || !this.salt) {
       throw new Error('PayUMoney credentials not configured');

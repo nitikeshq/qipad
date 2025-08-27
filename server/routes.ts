@@ -1742,7 +1742,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Check if user is KYC verified
       const user = await storage.getUser(req.user.userId);
-      if (!user || !user.isVerified) {
+      if (!user || !user.isKycComplete) {
         return res.status(403).json({ message: "KYC verification required to submit bids" });
       }
 

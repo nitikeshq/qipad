@@ -75,7 +75,7 @@ export default function Bidding() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-foreground" data-testid="text-bidding-title">
-                  Project Bidding
+                  Bidding
                 </h1>
                 <p className="text-muted-foreground mt-1">
                   Post projects for others to bid on or bid on existing projects
@@ -215,7 +215,11 @@ export default function Bidding() {
                       >
                         {project.status === 'open' ? 'Submit Bid' : 'Bidding Closed'}
                       </Button>
-                      <Button variant="outline" data-testid={`button-view-project-${project.id}`}>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => window.open(`/bidding/${project.id}`, '_blank')}
+                        data-testid={`button-view-project-${project.id}`}
+                      >
                         View Details
                       </Button>
                     </div>
