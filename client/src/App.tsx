@@ -30,6 +30,7 @@ import Events from "@/pages/events";
 import EventPayment from "@/pages/event-payment";
 import MyProjects from "@/pages/my-projects";
 import MediaCenter from "@/pages/media-center";
+import PaymentSuccess from "@/pages/payment-success";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
@@ -71,6 +72,7 @@ function Router() {
       <Route path="/companies/:id" component={() => <ProtectedRoute component={CompanyDetail} />} />
       <Route path="/companies" component={() => <ProtectedRoute component={Companies} />} />
       <Route path="/payment/event/:eventId" component={() => <ProtectedRoute component={EventPayment} />} />
+      <Route path="/payment-success" component={() => <ProtectedRoute component={PaymentSuccess} />} />
       <Route path="/events" component={() => <ProtectedRoute component={Events} />} />
       <Route path="/media-center" component={() => <ProtectedRoute component={MediaCenter} />} />
       <Route path="/profile-settings" component={() => <ProtectedRoute component={ProfileSettings} />} />

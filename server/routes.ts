@@ -2227,7 +2227,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        res.redirect('/dashboard?payment=success');
+        // Determine payment type for redirect
+        const paymentType = req.body.udf2 || 'payment';
+        res.redirect(`/payment-success?type=${paymentType}`);
       } else {
         res.redirect('/dashboard?payment=failed');
       }
@@ -2390,6 +2392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({
           success: true,
           paymentUrl: paymentResponse.paymentUrl,
+          formData: paymentResponse.formData,
           txnId: paymentResponse.txnId,
         });
       } else {
