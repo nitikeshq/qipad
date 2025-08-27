@@ -94,8 +94,15 @@ export default function Auth() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2" data-testid="logo-bizconnect-auth">BizConnect</h1>
-          <p className="text-muted-foreground">Professional Business & Investment Platform</p>
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
+              <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center">
+                <span className="text-blue-600 font-bold">Q</span>
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold text-primary" data-testid="logo-qipad-auth">Qipad</h1>
+          </div>
+          <p className="text-muted-foreground">Energized startup space for entrepreneurs and investors</p>
         </div>
 
         <Tabs defaultValue="login" className="w-full">
@@ -170,7 +177,7 @@ export default function Auth() {
           <TabsContent value="register">
             <Card>
               <CardHeader>
-                <CardTitle>Join BizConnect</CardTitle>
+                <CardTitle>Join Qipad</CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRegister} className="space-y-4">

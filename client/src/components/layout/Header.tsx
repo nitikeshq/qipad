@@ -32,9 +32,16 @@ export function Header() {
           <div className="flex items-center space-x-8">
             <div className="flex-shrink-0">
               <Link href="/dashboard">
-                <h1 className="text-2xl font-bold text-primary cursor-pointer" data-testid="logo-bizconnect">
-                  BizConnect
-                </h1>
+                <div className="flex items-center space-x-2 cursor-pointer">
+                  <div className="p-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
+                    <div className="w-6 h-6 bg-white rounded-sm flex items-center justify-center">
+                      <span className="text-blue-600 font-bold text-sm">Q</span>
+                    </div>
+                  </div>
+                  <h1 className="text-2xl font-bold text-primary" data-testid="logo-qipad">
+                    Qipad
+                  </h1>
+                </div>
               </Link>
             </div>
             <div className="hidden md:block">

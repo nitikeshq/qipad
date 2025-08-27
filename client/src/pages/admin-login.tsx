@@ -51,10 +51,12 @@ export default function AdminLogin() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Shield className="h-12 w-12 text-blue-600" />
+            <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
+              <Shield className="h-8 w-8 text-white" />
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Admin Portal</CardTitle>
-          <p className="text-muted-foreground">Access administrative dashboard</p>
+          <CardTitle className="text-2xl font-bold">Qipad Admin</CardTitle>
+          <p className="text-muted-foreground">Energized startup space management</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,8 +87,8 @@ export default function AdminLogin() {
               {loginMutation.isPending ? "Logging in..." : "Login as Admin"}
             </Button>
             <div className="text-center text-sm text-muted-foreground">
-              <p>Test credentials:</p>
-              <p>Username: admin | Password: admin123</p>
+              <p>Admin credentials:</p>
+              <p>Email: admin@qipad.com | Password: admin123</p>
             </div>
           </form>
         </CardContent>

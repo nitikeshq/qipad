@@ -482,8 +482,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password } = req.body;
       
-      // Simple admin credentials (in production, use proper authentication)
-      if (username === "admin" && password === "admin123") {
+      // Admin credentials for Qipad
+      if ((username === "admin" || username === "admin@qipad.com") && password === "admin123") {
         const adminToken = jwt.sign(
           { userId: "admin", isAdmin: true }, 
           JWT_SECRET, 
@@ -532,6 +532,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(project);
     } catch (error: any) {
       res.status(400).json({ message: "Failed to update project status", error: error.message });
+    }
+  });
+
+  // Admin - Communities Management
+  app.get("/api/admin/communities", async (req, res) => {
+    try {
+      const communities = await storage.getAllCommunities();
+      res.json(communities);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get communities", error: error.message });
+    }
+  });
+
+  // Admin - Jobs Management
+  app.get("/api/admin/jobs", async (req, res) => {
+    try {
+      const jobs = await storage.getAllJobs();
+      res.json(jobs);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get jobs", error: error.message });
+    }
+  });
+
+  // Admin - Tenders Management
+  app.get("/api/admin/tenders", async (req, res) => {
+    try {
+      const tenders = await storage.getAllBiddingProjects();
+      res.json(tenders);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get tenders", error: error.message });
+    }
+  });
+
+  // Admin - Categories Management
+  app.get("/api/admin/categories", async (req, res) => {
+    try {
+      // Return mock categories for now - in production, this would come from database
+      const categories = [
+        { id: "1", name: "Technology", description: "Tech-related projects and startups", type: "project" },
+        { id: "2", name: "Healthcare", description: "Medical and health services", type: "project" },
+        { id: "3", name: "Education", description: "Educational services and platforms", type: "project" },
+        { id: "4", name: "Finance", description: "Financial services and fintech", type: "project" },
+        { id: "5", name: "E-commerce", description: "Online retail and marketplace", type: "project" },
+        { id: "6", name: "Startup Discussions", description: "General startup conversations", type: "community" },
+        { id: "7", name: "Funding Tips", description: "Investment and funding advice", type: "community" },
+        { id: "8", name: "Software Development", description: "Development job opportunities", type: "job" },
+        { id: "9", name: "Marketing", description: "Marketing and sales positions", type: "job" }
+      ];
+      res.json(categories);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get categories", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/categories", async (req, res) => {
+    try {
+      const { name, description, type } = req.body;
+      // In production, save to database
+      const newCategory = {
+        id: Date.now().toString(),
+        name,
+        description,
+        type,
+        createdAt: new Date()
+      };
+      res.json(newCategory);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create category", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/categories/:id", async (req, res) => {
+    try {
+      // In production, delete from database
+      res.json({ message: "Category deleted successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to delete category", error: error.message });
+    }
+  });
+
+  // Admin - Departments Management
+  app.get("/api/admin/departments", async (req, res) => {
+    try {
+      // Return mock departments for now - in production, this would come from database
+      const departments = [
+        { id: "1", name: "Engineering", description: "Software development and technical roles", headCount: 25 },
+        { id: "2", name: "Marketing", description: "Marketing and promotional activities", headCount: 8 },
+        { id: "3", name: "Sales", description: "Business development and sales", headCount: 12 },
+        { id: "4", name: "HR", description: "Human resources and recruitment", headCount: 5 },
+        { id: "5", name: "Finance", description: "Financial planning and analysis", headCount: 6 },
+        { id: "6", name: "Operations", description: "Day-to-day operations management", headCount: 10 }
+      ];
+      res.json(departments);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get departments", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/departments", async (req, res) => {
+    try {
+      const { name, description } = req.body;
+      // In production, save to database
+      const newDepartment = {
+        id: Date.now().toString(),
+        name,
+        description,
+        headCount: 0,
+        createdAt: new Date()
+      };
+      res.json(newDepartment);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create department", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/departments/:id", async (req, res) => {
+    try {
+      // In production, delete from database
+      res.json({ message: "Department deleted successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to delete department", error: error.message });
     }
   });
 

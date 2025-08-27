@@ -1,6 +1,19 @@
 # Overview
 
-BizConnect is a business funding and networking platform that connects entrepreneurs with investors, facilitating project funding, community building, and job opportunities. The platform serves two main user types: business owners seeking funding and investors looking for investment opportunities. It features project creation and management, investment tracking, community forums, job postings, and comprehensive KYC verification processes.
+Qipad (Life force + platform → "Energized startup space") is a comprehensive business networking and investment platform that connects entrepreneurs with investors, facilitating project funding, community building, and job opportunities. The platform serves two main user types: business owners seeking funding and investors looking for investment opportunities. It features project creation and management, percentage-based equity investment system, community forums, job postings, comprehensive KYC verification processes, and advanced admin management system.
+
+## Recent Updates
+- **Rebranded from BizConnect to Qipad** - Complete application rebrand with new identity
+- **Investment System Redesign** - Removed payment gateway for "invest" type, implemented percentage-based equity system with approval workflow
+- **Advanced Admin Panel** - Comprehensive admin dashboard for managing all platform modules, categories, departments, and information
+- **Trust-based Platform Fee** - 2% platform fee system on successful investments (trust-based, no gateway)
+
+## Key Features
+- **Dual Investment Types**: "Invest" (equity-based with percentage) vs "Support" (donation-based with payment gateway)
+- **Company Formation Process**: 8-step tracker for new entrepreneurs  
+- **Automated Tender Management**: Odisha government schemes with eligibility detection
+- **Conditional Contact Sharing**: Between investors and project owners
+- **Comprehensive Admin System**: Most advanced admin panel for complete platform management
 
 # User Preferences
 

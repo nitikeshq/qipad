@@ -92,7 +92,7 @@ export default function CommunityPage() {
                         {community.name}
                       </h3>
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(community.category)}`} data-testid={`badge-community-category-${community.id}`}>
-                        {community.category.toUpperCase()}
+                        {community.category?.toUpperCase() || 'GENERAL'}
                       </span>
                     </div>
                     
