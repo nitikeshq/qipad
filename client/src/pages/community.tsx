@@ -73,8 +73,15 @@ export default function CommunityPage() {
         return await apiRequest("POST", `/api/communities/${community.id}/join`);
       },
       onSuccess,
-      onError: () => {
-        toast({ title: "Failed to join community", variant: "destructive" });
+      onError: (error: any) => {
+        const errorMessage = error.message?.includes("KYC verification required") 
+          ? "Complete your KYC verification to create or join communities"
+          : error.message || "Failed to join community";
+        toast({ 
+          title: "Access Restricted", 
+          description: errorMessage, 
+          variant: "destructive" 
+        });
       }
     });
 

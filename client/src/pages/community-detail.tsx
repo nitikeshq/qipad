@@ -11,7 +11,7 @@ import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { User } from "@/lib/auth";
+// Remove unused import
 
 export default function CommunityDetailPage() {
   const [, params] = useRoute("/communities/:id");
@@ -20,7 +20,7 @@ export default function CommunityDetailPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: community, isLoading: communityLoading } = useQuery({
+  const { data: community = {}, isLoading: communityLoading } = useQuery({
     queryKey: ['/api/communities', params?.id],
     enabled: !!params?.id,
   });
@@ -35,9 +35,36 @@ export default function CommunityDetailPage() {
     enabled: !!params?.id,
   });
 
-  const { data: user } = useQuery<User>({
+  const { data: user } = useQuery({
     queryKey: ['/api/user'],
   });
+
+  const joinMutation = useMutation({
+    mutationFn: () => apiRequest("POST", `/api/communities/${params?.id}/join`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/communities', params?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/communities', params?.id, 'members'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/communities"] });
+      toast({
+        title: "Success",
+        description: "Successfully joined the community!",
+      });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message?.includes("KYC verification required") 
+        ? "Complete your KYC verification to join communities. Only verified members can participate."
+        : error.message || "Failed to join community";
+      toast({
+        title: "Access Restricted",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleJoinCommunity = () => {
+    joinMutation.mutate();
+  };
 
   const createPostMutation = useMutation({
     mutationFn: async (content: string) => {
@@ -88,7 +115,7 @@ export default function CommunityDetailPage() {
     );
   }
 
-  if (!community) {
+  if (!community?.id) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -111,7 +138,7 @@ export default function CommunityDetailPage() {
     );
   }
 
-  const isUserMember = members.some((member: any) => member.userId === user?.id);
+  const isUserMember = Array.isArray(members) && members.some((member: any) => member.userId === user?.id);
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,9 +167,20 @@ export default function CommunityDetailPage() {
                     <CardTitle className="text-2xl">{community.name}</CardTitle>
                     <p className="text-muted-foreground mt-2">{community.description}</p>
                   </div>
-                  <Badge variant="secondary">
-                    {community.category || 'GENERAL'}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      {community.category || 'GENERAL'}
+                    </Badge>
+                    {!isUserMember && (
+                      <Button 
+                        onClick={handleJoinCommunity}
+                        disabled={joinMutation.isPending}
+                        data-testid="button-join-community"
+                      >
+                        {joinMutation.isPending ? 'Joining...' : 'Join Community'}
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-6 mt-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">

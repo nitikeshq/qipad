@@ -42,7 +42,7 @@ export default function CompanyFormation() {
     status: "draft" as const
   });
 
-  const { data: myFormation, isLoading } = useQuery({
+  const { data: myFormation = {}, isLoading } = useQuery({
     queryKey: ["/api/company-formations/my"],
   });
 
@@ -94,7 +94,7 @@ export default function CompanyFormation() {
       progressPercentage: Math.round((currentStep / companyFormationSteps.length) * 100)
     };
 
-    if (myFormation) {
+    if (myFormation?.id) {
       updateFormationMutation.mutate({ id: myFormation.id, data: formationData });
     } else {
       createFormationMutation.mutate(formationData);
