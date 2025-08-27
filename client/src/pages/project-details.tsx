@@ -200,27 +200,16 @@ export function ProjectDetailsPage() {
                 </div>
                 <div className="flex space-x-2">
                   {user?.id === project.userId && !isEditMode && (
-                    <>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsEditMode(true)}
-                        className="mr-2"
-                        data-testid="button-edit-project-info"
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Project Info
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsEditProjectModalOpen(true)}
-                        data-testid="button-edit-project-details"
-                      >
-                        <Settings className="h-4 w-4 mr-2" />
-                        Edit Project Details
-                      </Button>
-                    </>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditProjectModalOpen(true)}
+                      data-testid="button-edit-project-details"
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Edit Project Details
+                    </Button>
                   )}
-                  {isEditMode ? (
+                  {isEditMode && (
                     <>
                       <Button 
                         onClick={handleSave} 
@@ -239,11 +228,6 @@ export function ProjectDetailsPage() {
                         Cancel
                       </Button>
                     </>
-                  ) : (
-                    <Button onClick={handleEdit} data-testid="button-edit-project">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Project
-                    </Button>
                   )}
                   <Badge variant={project.status === 'active' ? 'default' : 'secondary'}>
                     {project.status}
