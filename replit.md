@@ -3,6 +3,10 @@
 Qipad (Life force + platform → "Energized startup space") is a comprehensive business networking and investment platform that connects entrepreneurs with investors, facilitating project funding, community building, and job opportunities. The platform serves two main user types: business owners seeking funding and investors looking for investment opportunities. It features project creation and management, percentage-based equity investment system, community forums, job postings, comprehensive KYC verification processes, and advanced admin management system.
 
 ## Recent Updates
+- **Navigation Fixed** - Changed "Find Projects" to "Find Innovations" pointing to /innovations route (January 2025)
+- **Media Center Implementation** - Created attractive admin-managed media center for press releases, videos, and startup materials
+- **KYC Events Fix** - Resolved KYC verification check for event creation; verified users can now create events properly
+- **Company Edit Feature** - Added comprehensive company profile editing with logo upload and PDF profile functionality
 - **KYC System Synchronized** - Fixed KYC verification status mismatch between documents and user records; bidding submission now works correctly (January 2025)
 - **PayUMoney Live Integration** - Switched from test to live PayUMoney credentials for production payments
 - **Bidding System Enhancement** - Changed "Project Bidding" to "Bidding" across platform; fixed view details functionality with proper routing
@@ -11,9 +15,6 @@ Qipad (Life force + platform → "Energized startup space") is a comprehensive b
 - **Investment Modal Scroll Fixed** - Resolved modal height issues with proper scrolling and accessible submit buttons
 - **Communities System Restoration** - Added missing database category column and restored full community functionality with proper error handling
 - **Enhanced User Registration** - Added "Individual" as third user type alongside Business Owner and Investor (December 2024)
-- **Admin Login System** - Implemented secure admin authentication with credentials (admin/qipad2024!) and JWT tokens
-- **Comprehensive Community System** - Complete community functionality with detail pages, join/leave, member management, posting, and admin moderation
-- **Advanced Admin Panel** - Comprehensive admin dashboard for managing all platform modules, categories, departments, and information
 
 ## Key Features
 - **Dual Investment Types**: "Invest" (equity-based with percentage) vs "Support" (donation-based with payment gateway)

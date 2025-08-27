@@ -951,6 +951,12 @@ export class DatabaseStorage implements IStorage {
     return updatedCompany;
   }
 
+  // Media Content methods
+  async getAllMediaContent(): Promise<any[]> {
+    // Return empty for now - will be populated by admin
+    return [];
+  }
+
   async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {
     const [company] = await db
       .update(companies)

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText, Gavel, Building, Building2, Scroll } from "lucide-react";
+import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText, Gavel, Building, Building2, Scroll, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,10 +21,10 @@ export function Sidebar() {
       onClick: () => setIsProjectModalOpen(true)
     },
     { 
-      label: "Find Investors", 
+      label: "Find Innovations", 
       icon: Search, 
-      action: "find-investors",
-      onClick: () => navigate("/investors")
+      action: "find-innovations",
+      onClick: () => navigate("/innovations")
     },
     { 
       label: "Post Job", 
@@ -41,7 +41,8 @@ export function Sidebar() {
     { path: "/companies", label: "Companies", icon: Building2 },
     { path: "/jobs", label: "Jobs", icon: Briefcase },
     { path: "/community", label: "Communities", icon: MessageSquare },
-    { path: "/documents", label: "Documents", icon: FileText },
+    { path: "/media-center", label: "Media Center", icon: PlayCircle },
+    { path: "/documents", label: "Documents", icon: Scroll },
   ];
 
   return (

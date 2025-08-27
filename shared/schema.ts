@@ -550,6 +550,24 @@ export const eventTickets = pgTable("event_tickets", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Media Content for Media Center (Admin managed)
+export const mediaContent = pgTable("media_content", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // press_release, video, document, image
+  url: text("url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  publishedDate: timestamp("published_date").defaultNow(),
+  views: integer("views").default(0),
+  tags: text("tags").array(),
+  featured: boolean("featured").default(false),
+  author: text("author"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations for new tables
 export const companiesRelations = relations(companies, ({ one }) => ({
   owner: one(users, {
@@ -705,6 +723,13 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
 export const insertUserInterestSchema = createInsertSchema(userInterests).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertMediaContentSchema = createInsertSchema(mediaContent).omit({
+  id: true,
+  views: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 // Types
@@ -905,3 +930,5 @@ export type ServiceInquiry = typeof serviceInquiries.$inferSelect;
 export type InsertServiceInquiry = z.infer<typeof insertServiceInquirySchema>;
 export type ServicePurchase = typeof servicePurchases.$inferSelect;
 export type InsertServicePurchase = typeof servicePurchases.$inferInsert;
+export type MediaContent = typeof mediaContent.$inferSelect;
+export type InsertMediaContent = z.infer<typeof insertMediaContentSchema>;

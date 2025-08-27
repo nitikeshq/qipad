@@ -2296,9 +2296,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      // Check if user is KYC verified
-      if (user.kycStatus !== "verified") {
-        return res.status(403).json({ message: "KYC verification required to create events" });
+      // Check if user is KYC verified - check isKycComplete instead of kycStatus
+      if (!user.isKycComplete) {
+        return res.status(403).json({ message: "Only KYC-verified members can create events. Complete your KYC verification to start creating events." });
       }
 
       const eventData = {
@@ -2312,6 +2312,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating event:", error);
       res.status(500).json({ message: "Failed to create event" });
+    }
+  });
+
+  // Media Content routes
+  app.get("/api/media-content", async (req, res) => {
+    try {
+      // For now return empty array - will be populated by admin
+      const mediaContent = await storage.getAllMediaContent();
+      res.json(mediaContent);
+    } catch (error) {
+      console.error("Error fetching media content:", error);
+      res.status(500).json({ message: "Failed to fetch media content" });
     }
   });
 

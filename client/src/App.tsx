@@ -28,6 +28,7 @@ import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
 import Events from "@/pages/events";
 import MyProjects from "@/pages/my-projects";
+import MediaCenter from "@/pages/media-center";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
@@ -69,6 +70,7 @@ function Router() {
       <Route path="/companies/:id" component={() => <ProtectedRoute component={CompanyDetail} />} />
       <Route path="/companies" component={() => <ProtectedRoute component={Companies} />} />
       <Route path="/events" component={() => <ProtectedRoute component={Events} />} />
+      <Route path="/media-center" component={() => <ProtectedRoute component={MediaCenter} />} />
       <Route path="/profile-settings" component={() => <ProtectedRoute component={ProfileSettings} />} />
       <Route path="/billing-settings" component={() => <ProtectedRoute component={BillingSettings} />} />
       <Route path="/general-settings" component={() => <ProtectedRoute component={GeneralSettings} />} />
