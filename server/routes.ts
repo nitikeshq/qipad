@@ -616,45 +616,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Support payment route (donation-based, no equity)
-  app.post("/api/payment/support", authenticateToken, async (req: any, res) => {
-    try {
-      const { projectId, amount, platformFee, finalAmount, phone, message } = req.body;
-      
-      // Create support record in investments table with type 'support'
-      const supportData = {
-        projectId,
-        investorId: req.user.userId,
-        amount,
-        type: "support", // Support type for donations
-        status: "completed", // Support payments are completed immediately
-        platformFeePaid: true,
-        investorContact: phone,
-        message,
-        expectedStakes: null // No stakes for support
-      };
-      
-      const support = await storage.createInvestment(supportData);
-
-      // Update project funding
-      const project = await storage.getProject(projectId);
-      if (project) {
-        const newFunding = parseFloat(project.currentFunding || '0') + parseFloat(finalAmount);
-        await storage.updateProject(projectId, { 
-          currentFunding: newFunding.toString() 
-        });
-      }
-
-      res.json({ 
-        success: true, 
-        support,
-        paymentUrl: `https://test.payu.in/success?amount=${amount}&fee=${platformFee}`,
-        message: "Support payment processed successfully" 
-      });
-    } catch (error: any) {
-      console.error("Support payment error:", error);
-      res.status(500).json({ message: "Failed to process support payment", error: error.message });
-    }
-  });
+  // DEPRECATED: Old mock route - DO NOT USE
+  // This route is kept for backward compatibility but should not be used
+  // Use /api/payments/support instead for real PayUMoney integration
 
   // PayUMoney mock integration
   app.post("/api/payment/initiate", authenticateToken, async (req: any, res) => {
@@ -2103,6 +2067,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({
           success: true,
           paymentUrl: paymentResponse.paymentUrl,
+          formData: paymentResponse.formData,
           txnId: paymentResponse.txnId,
         });
       } else {

@@ -34,8 +34,8 @@ export function SupportModal({ open, onOpenChange, project }: SupportModalProps)
       return response.json();
     },
     onSuccess: (data: any) => {
-      if (data.paymentUrl && data.formData) {
-        // Create a form and submit to PayUMoney
+      if (data.success && data.paymentUrl && data.formData) {
+        // PayUMoney integration - create form and submit to payment gateway
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = data.paymentUrl;
