@@ -14,7 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const upload = multer({
   dest: 'uploads/',
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
+  fileFilter: (req: any, file: any, cb: any) => {
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
@@ -63,7 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
       res.json({ user: { ...user, passwordHash: undefined }, token });
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid user data", error: error.message });
     }
   });
@@ -84,7 +84,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
       res.json({ user: { ...user, passwordHash: undefined }, token });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Login failed", error: error.message });
     }
   });
@@ -113,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
       res.json({ user: { ...user, passwordHash: undefined }, token });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Google authentication failed", error: error.message });
     }
   });
@@ -126,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       res.json({ ...user, passwordHash: undefined });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get user", error: error.message });
     }
   });
@@ -135,8 +135,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const stats = await storage.getUserStats(req.user.userId);
       res.json(stats);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get user stats", error: error.message });
+    }
+  });
+
+  app.get("/api/users/all", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users.map(user => ({ ...user, passwordHash: undefined })));
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get users", error: error.message });
     }
   });
 
@@ -145,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projects = await storage.getApprovedProjects();
       res.json(projects);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get projects", error: error.message });
     }
   });
@@ -154,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projects = await storage.getProjectsByUser(req.user.userId);
       res.json(projects);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get user projects", error: error.message });
     }
   });
@@ -166,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
       res.json(project);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get project", error: error.message });
     }
   });
@@ -176,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectData = insertProjectSchema.parse({ ...req.body, userId: req.user.userId });
       const project = await storage.createProject(projectData);
       res.json(project);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid project data", error: error.message });
     }
   });
@@ -194,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updatedProject = await storage.updateProject(req.params.id, req.body);
       res.json(updatedProject);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to update project", error: error.message });
     }
   });
@@ -216,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const document = await storage.createDocument(documentData);
       res.json(document);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to upload document", error: error.message });
     }
   });
@@ -225,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const documents = await storage.getDocumentsByProject(req.params.projectId);
       res.json(documents);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get documents", error: error.message });
     }
   });
@@ -248,7 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(investment);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to create investment", error: error.message });
     }
   });
@@ -257,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const investments = await storage.getInvestmentsByUser(req.user.userId);
       res.json(investments);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get investments", error: error.message });
     }
   });
@@ -276,7 +285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       res.json(paymentData);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Payment initiation failed", error: error.message });
     }
   });
@@ -298,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateInvestment(investmentId, { status: 'failed' });
         res.status(400).json({ success: false, message: "Payment verification failed" });
       }
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Payment verification failed", error: error.message });
     }
   });
@@ -308,7 +317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const communities = await storage.getAllCommunities();
       res.json(communities);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get communities", error: error.message });
     }
   });
@@ -325,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.joinCommunity(community.id, req.user.userId);
       
       res.json(community);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to create community", error: error.message });
     }
   });
@@ -334,7 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await storage.joinCommunity(req.params.id, req.user.userId);
       res.json({ message: "Joined community successfully" });
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to join community", error: error.message });
     }
   });
@@ -344,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const jobs = await storage.getAllJobs();
       res.json(jobs);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get jobs", error: error.message });
     }
   });
@@ -354,7 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const jobData = insertJobSchema.parse({ ...req.body, userId: req.user.userId });
       const job = await storage.createJob(jobData);
       res.json(job);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to create job", error: error.message });
     }
   });
@@ -367,7 +376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       const application = await storage.createJobApplication(applicationData);
       res.json(application);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to submit application", error: error.message });
     }
   });
@@ -381,7 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const applications = await storage.getJobApplications(req.params.id);
       res.json(applications);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get applications", error: error.message });
     }
   });
@@ -391,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const connections = await storage.getConnections(req.user.userId);
       res.json(connections);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get connections", error: error.message });
     }
   });
@@ -401,7 +410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { recipientId } = req.body;
       const connection = await storage.createConnection(req.user.userId, recipientId);
       res.json(connection);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to create connection", error: error.message });
     }
   });

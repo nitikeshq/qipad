@@ -7,7 +7,7 @@ import { Project } from "@shared/schema";
 interface ProjectCardProps {
   project: Project;
   showActions?: boolean;
-  onInvest?: (projectId: string) => void;
+  onInvest?: (project: Project) => void;
 }
 
 export function ProjectCard({ project, showActions = false, onInvest }: ProjectCardProps) {
@@ -63,7 +63,7 @@ export function ProjectCard({ project, showActions = false, onInvest }: ProjectC
           <Progress value={fundingPercentage} className="h-2" data-testid={`progress-project-funding-${project.id}`} />
           {onInvest && project.status === 'approved' && (
             <div className="mt-4">
-              <Button onClick={() => onInvest(project.id)} data-testid={`button-invest-${project.id}`}>
+              <Button onClick={() => onInvest(project)} data-testid={`button-invest-${project.id}`}>
                 Invest Now
               </Button>
             </div>
