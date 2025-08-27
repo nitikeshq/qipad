@@ -58,8 +58,6 @@ export function ProjectDetailsPage() {
     },
     onSuccess: () => {
       toast({ title: "Investment successful!" });
-      setShowCustomAmount(false);
-      setCustomAmount("");
       queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId] });
       queryClient.invalidateQueries({ queryKey: ['/api/investments/project', projectId] });
     },
@@ -376,18 +374,76 @@ export function ProjectDetailsPage() {
                                 <div className="space-y-2">
                                   <h4 className="text-sm font-medium text-muted-foreground">Project Videos</h4>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {project.videos.map((video: string, index: number) => (
-                                      <div key={index} className="aspect-video rounded-lg overflow-hidden border">
-                                        <video 
-                                          controls 
-                                          className="w-full h-full object-cover"
-                                          poster="/api/placeholder/video-thumbnail"
-                                        >
-                                          <source src={video} type="video/mp4" />
-                                          Your browser does not support the video tag.
-                                        </video>
-                                      </div>
-                                    ))}
+                                    {project.videos.map((video: string, index: number) => {
+                                      // Handle both direct video files and YouTube links
+                                      const isYouTube = video.includes('youtube.com') || video.includes('youtu.be');
+                                      
+                                      if (isYouTube) {
+                                        // Extract YouTube video ID and create embed URL
+                                        let videoId = '';
+                                        if (video.includes('youtu.be/')) {
+                                          videoId = video.split('youtu.be/')[1].split('?')[0];
+                                        } else if (video.includes('youtube.com/watch?v=')) {
+                                          videoId = video.split('v=')[1].split('&')[0];
+                                        }
+                                        
+                                        if (videoId) {
+                                          return (
+                                            <div key={index} className="aspect-video rounded-lg overflow-hidden border">
+                                              <iframe
+                                                src={`https://www.youtube.com/embed/${videoId}`}
+                                                title={`Project video ${index + 1}`}
+                                                className="w-full h-full"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                              />
+                                            </div>
+                                          );
+                                        }
+                                      }
+                                      
+                                      // For direct video files
+                                      return (
+                                        <div key={index} className="aspect-video rounded-lg overflow-hidden border">
+                                          <video 
+                                            controls 
+                                            className="w-full h-full object-cover"
+                                            poster="/api/placeholder/video-thumbnail"
+                                            preload="metadata"
+                                            onError={(e) => {
+                                              console.error('Video failed to load:', video);
+                                              // Show a fallback message
+                                              const target = e.target as HTMLVideoElement;
+                                              target.style.display = 'none';
+                                              const parent = target.parentElement;
+                                              if (parent && !parent.querySelector('.video-error')) {
+                                                const errorDiv = document.createElement('div');
+                                                errorDiv.className = 'video-error flex items-center justify-center h-full bg-muted text-muted-foreground';
+                                                errorDiv.innerHTML = `
+                                                  <div class="text-center">
+                                                    <p>Video unavailable</p>
+                                                    <a href="${video}" target="_blank" class="text-primary hover:underline text-sm">Open in new tab</a>
+                                                  </div>
+                                                `;
+                                                parent.appendChild(errorDiv);
+                                              }
+                                            }}
+                                          >
+                                            <source src={video} type="video/mp4" />
+                                            <source src={video} type="video/webm" />
+                                            <source src={video} type="video/ogg" />
+                                            <div className="flex items-center justify-center h-full bg-muted text-muted-foreground">
+                                              <div className="text-center">
+                                                <p>Your browser does not support video playback</p>
+                                                <a href={video} target="_blank" className="text-primary hover:underline text-sm">
+                                                  Open in new tab
+                                                </a>
+                                              </div>
+                                            </div>
+                                          </video>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               )}
