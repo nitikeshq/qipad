@@ -144,8 +144,8 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="divide-y divide-border">
-                  {myProjects && myProjects.length > 0 ? (
-                    myProjects.slice(0, 3).map((project: Project) => (
+                  {userProjects && userProjects.length > 0 ? (
+                    userProjects.slice(0, 3).map((project: Project) => (
                       <div key={project.id} className="p-4">
                         <div className="flex items-center justify-between">
                           <div>

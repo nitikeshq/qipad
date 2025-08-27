@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,8 +8,12 @@ import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Job } from "@shared/schema";
 import { JobModal } from "@/components/modals/JobModal";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Jobs() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('all');
@@ -19,11 +23,18 @@ export default function Jobs() {
     queryKey: ['/api/jobs'],
   });
 
-  const filteredJobs = jobs.filter((job: Job) => {
+  // Enhance jobs with user information for displaying poster name
+  const jobsWithUserInfo = jobs.map((job: any) => ({
+    ...job,
+    userFirstName: job.userFirstName || 'Unknown',
+    userLastName: job.userLastName || 'User'
+  }));
+
+  const filteredJobs = jobsWithUserInfo.filter((job: any) => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.company.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation = locationFilter === 'all' || job.location.toLowerCase().includes(locationFilter.toLowerCase());
+                         (job.company && job.company.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesLocation = locationFilter === 'all' || (job.location && job.location.toLowerCase().includes(locationFilter.toLowerCase()));
     const matchesType = typeFilter === 'all' || job.jobType === typeFilter;
     return matchesSearch && matchesLocation && matchesType;
   });
@@ -51,6 +62,54 @@ export default function Jobs() {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const applyJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      return apiRequest("POST", "/api/job-applications", { jobId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Application Submitted",
+        description: "Your job application has been submitted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/job-applications'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Application Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const saveJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      return apiRequest("POST", "/api/saved-jobs", { jobId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Job Saved",
+        description: "Job has been saved to your favorites!",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/saved-jobs'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Save Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleApplyJob = (job: Job) => {
+    applyJobMutation.mutate(job.id);
+  };
+
+  const handleSaveJob = (job: Job) => {
+    saveJobMutation.mutate(job.id);
   };
 
   return (
@@ -141,9 +200,14 @@ export default function Jobs() {
                         </span>
                       </div>
                       
-                      <p className="text-primary font-medium mb-2" data-testid={`text-job-company-${job.id}`}>
-                        {job.company}
-                      </p>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-primary font-medium" data-testid={`text-job-company-${job.id}`}>
+                          {job.company || 'Company Name'}
+                        </p>
+                        <p className="text-xs text-muted-foreground" data-testid={`text-job-poster-${job.id}`}>
+                          Posted by: {job.userFirstName} {job.userLastName}
+                        </p>
+                      </div>
                       
                       <p className="text-muted-foreground text-sm mb-3" data-testid={`text-job-description-${job.id}`}>
                         {job.description}
@@ -152,12 +216,12 @@ export default function Jobs() {
                       <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3">
                         <div className="flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
-                          <span data-testid={`text-job-location-${job.id}`}>{job.location}</span>
+                          <span data-testid={`text-job-location-${job.id}`}>{job.location || 'Location TBD'}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-4 w-4" />
                           <span data-testid={`text-job-salary-${job.id}`}>
-                            {formatSalary(job.salaryMin || 0, job.salaryMax || 0)}
+                            {job.salaryMin && job.salaryMax ? formatSalary(Number(job.salaryMin), Number(job.salaryMax)) : 'Salary TBD'}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -184,11 +248,20 @@ export default function Jobs() {
                     </div>
                     
                     <div className="flex flex-col gap-2">
-                      <Button data-testid={`button-apply-job-${job.id}`}>
-                        Apply Now
+                      <Button 
+                        data-testid={`button-apply-job-${job.id}`}
+                        onClick={() => handleApplyJob(job)}
+                        disabled={applyJobMutation.isPending}
+                      >
+                        {applyJobMutation.isPending ? "Applying..." : "Apply Now"}
                       </Button>
-                      <Button variant="outline" data-testid={`button-save-job-${job.id}`}>
-                        Save Job
+                      <Button 
+                        variant="outline" 
+                        data-testid={`button-save-job-${job.id}`}
+                        onClick={() => handleSaveJob(job)}
+                        disabled={saveJobMutation.isPending}
+                      >
+                        {saveJobMutation.isPending ? "Saving..." : "Save Job"}
                       </Button>
                     </div>
                   </div>

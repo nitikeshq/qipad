@@ -1,6 +1,6 @@
 import { 
   users, projects, documents, investments, communities, communityMembers, 
-  communityPosts, jobs, jobApplications, connections, biddingProjects, projectBids,
+  communityPosts, jobs, jobApplications, savedJobs, connections, biddingProjects, projectBids,
   companyFormations, tenders, tenderEligibility, companies, subscriptions, payments,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
@@ -64,6 +64,11 @@ export interface IStorage {
   createJob(job: InsertJob): Promise<Job>;
   createJobApplication(application: InsertJobApplication): Promise<JobApplication>;
   getJobApplications(jobId: string): Promise<JobApplication[]>;
+  getUserJobApplication(userId: string, jobId: string): Promise<JobApplication | undefined>;
+  getUserJobApplications(userId: string): Promise<JobApplication[]>;
+  createSavedJob(savedJob: any): Promise<any>;
+  getUserSavedJob(userId: string, jobId: string): Promise<any>;
+  getUserSavedJobs(userId: string): Promise<any[]>;
 
   // Connection methods
   getConnections(userId: string): Promise<Connection[]>;
@@ -500,8 +505,32 @@ export class DatabaseStorage implements IStorage {
     return !!member;
   }
 
-  async getAllJobs(): Promise<Job[]> {
-    return await db.select().from(jobs).where(eq(jobs.isActive, true)).orderBy(desc(jobs.createdAt));
+  async getAllJobs(): Promise<any[]> {
+    return await db
+      .select({
+        id: jobs.id,
+        userId: jobs.userId,
+        title: jobs.title,
+        description: jobs.description,
+        company: jobs.company,
+        location: jobs.location,
+        salaryMin: jobs.salaryMin,
+        salaryMax: jobs.salaryMax,
+        jobType: jobs.jobType,
+        requiredSkills: jobs.requiredSkills,
+        requirements: jobs.requirements,
+        benefits: jobs.benefits,
+        applicationDeadline: jobs.applicationDeadline,
+        isActive: jobs.isActive,
+        createdAt: jobs.createdAt,
+        updatedAt: jobs.updatedAt,
+        userFirstName: users.firstName,
+        userLastName: users.lastName,
+      })
+      .from(jobs)
+      .leftJoin(users, eq(jobs.userId, users.id))
+      .where(eq(jobs.isActive, true))
+      .orderBy(desc(jobs.createdAt));
   }
 
   async getJob(id: string): Promise<Job | undefined> {
@@ -533,7 +562,42 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(jobApplications).where(eq(jobApplications.jobId, jobId));
   }
 
+  async getUserJobApplication(userId: string, jobId: string): Promise<JobApplication | undefined> {
+    const [application] = await db
+      .select()
+      .from(jobApplications)
+      .where(and(eq(jobApplications.userId, userId), eq(jobApplications.jobId, jobId)));
+    return application;
+  }
 
+  async getUserJobApplications(userId: string): Promise<JobApplication[]> {
+    return await db
+      .select()
+      .from(jobApplications)
+      .where(eq(jobApplications.userId, userId))
+      .orderBy(desc(jobApplications.appliedAt));
+  }
+
+  async createSavedJob(savedJob: any): Promise<any> {
+    const [saved] = await db.insert(savedJobs).values(savedJob).returning();
+    return saved;
+  }
+
+  async getUserSavedJob(userId: string, jobId: string): Promise<any> {
+    const [saved] = await db
+      .select()
+      .from(savedJobs)
+      .where(and(eq(savedJobs.userId, userId), eq(savedJobs.jobId, jobId)));
+    return saved;
+  }
+
+  async getUserSavedJobs(userId: string): Promise<any[]> {
+    return await db
+      .select()
+      .from(savedJobs)
+      .where(eq(savedJobs.userId, userId))
+      .orderBy(desc(savedJobs.savedAt));
+  }
 
   async getAllBiddingProjects(): Promise<BiddingProject[]> {
     return await db.select().from(biddingProjects).orderBy(desc(biddingProjects.createdAt));

@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { User, Camera, Save, ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import React from "react";
 import type { User as UserType } from "@/lib/auth";
 
 const profileSchema = z.object({
@@ -42,16 +43,30 @@ export default function ProfileSettingsPage() {
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
-    defaultValues: user ? {
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phone: user.phone || '',
-      userType: user.userType,
-    } : undefined,
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      userType: 'individual',
+    },
   });
+
+  // Update form when user data is loaded
+  React.useEffect(() => {
+    if (user) {
+      reset({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        userType: user.userType || 'individual',
+      });
+    }
+  }, [user, reset]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileForm) => {

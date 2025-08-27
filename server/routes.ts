@@ -678,6 +678,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Apply to a job
+  app.post("/api/job-applications", authenticateToken, async (req: any, res) => {
+    try {
+      const { jobId, coverLetter, resume } = req.body;
+      
+      if (!jobId) {
+        return res.status(400).json({ message: "Job ID is required" });
+      }
+
+      // Check if user already applied
+      const existingApplication = await storage.getUserJobApplication(req.user.userId, jobId);
+      if (existingApplication) {
+        return res.status(400).json({ message: "You have already applied to this job" });
+      }
+
+      const application = await storage.createJobApplication({
+        jobId,
+        userId: req.user.userId,
+        coverLetter,
+        resume,
+        status: "pending",
+        appliedAt: new Date(),
+      });
+
+      res.json({ message: "Application submitted successfully", application });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to submit application", error: error.message });
+    }
+  });
+
+  // Save a job
+  app.post("/api/saved-jobs", authenticateToken, async (req: any, res) => {
+    try {
+      const { jobId } = req.body;
+      
+      if (!jobId) {
+        return res.status(400).json({ message: "Job ID is required" });
+      }
+
+      // Check if job is already saved
+      const existingSavedJob = await storage.getUserSavedJob(req.user.userId, jobId);
+      if (existingSavedJob) {
+        return res.status(400).json({ message: "Job is already saved" });
+      }
+
+      const savedJob = await storage.createSavedJob({
+        jobId,
+        userId: req.user.userId,
+        savedAt: new Date(),
+      });
+
+      res.json({ message: "Job saved successfully", savedJob });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to save job", error: error.message });
+    }
+  });
+
   // Connection routes
   app.get("/api/connections", authenticateToken, async (req: any, res) => {
     try {

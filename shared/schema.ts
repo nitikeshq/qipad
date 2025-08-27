@@ -119,22 +119,35 @@ export const jobs = pgTable("jobs", {
   userId: varchar("user_id").notNull().references(() => users.id),
   title: text("title").notNull(),
   description: text("description").notNull(),
+  company: text("company").notNull(),
+  location: text("location").notNull(),
+  salaryMin: decimal("salary_min", { precision: 15, scale: 2 }).default("0"),
+  salaryMax: decimal("salary_max", { precision: 15, scale: 2 }).default("0"),
+  jobType: text("job_type").notNull(), // full-time, part-time, contract, remote
+  requiredSkills: text("required_skills").array(),
   requirements: text("requirements"),
-  location: text("location"),
-  salary: text("salary"),
+  benefits: text("benefits"),
+  applicationDeadline: timestamp("application_deadline"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const jobApplications = pgTable("job_applications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   jobId: varchar("job_id").notNull().references(() => jobs.id),
-  applicantName: text("applicant_name").notNull(),
-  applicantEmail: text("applicant_email").notNull(),
-  applicantPhone: text("applicant_phone"),
-  resume: text("resume"),
+  userId: varchar("user_id").notNull().references(() => users.id),
   coverLetter: text("cover_letter"),
-  createdAt: timestamp("created_at").defaultNow(),
+  resume: text("resume"),
+  status: text("status").default("pending"), // pending, reviewed, accepted, rejected
+  appliedAt: timestamp("applied_at").defaultNow(),
+});
+
+export const savedJobs = pgTable("saved_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id").notNull().references(() => jobs.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  savedAt: timestamp("saved_at").defaultNow(),
 });
 
 export const connections = pgTable("connections", {
