@@ -138,7 +138,13 @@ export default function CommunityDetailPage() {
     );
   }
 
-  const isUserMember = Array.isArray(members) && members.some((member: any) => member.userId === user?.id);
+  // Check membership from both members list and user communities
+  const { data: userCommunities = [] } = useQuery({
+    queryKey: ["/api/user/communities"],
+  });
+  
+  const isUserMember = (Array.isArray(members) && members.some((member: any) => member.userId === user?.id)) ||
+                       (Array.isArray(userCommunities) && userCommunities.some((membership: any) => membership.communityId === params?.id));
 
   return (
     <div className="min-h-screen bg-background">
