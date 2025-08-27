@@ -254,8 +254,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Check if user is KYC verified
       const user = await storage.getUser(req.user.userId);
-      if (!user || !user.isVerified) {
-        return res.status(403).json({ message: "KYC verification required to create projects" });
+      if (!user || !user.isKycComplete) {
+        return res.status(403).json({ 
+          message: "KYC verification required", 
+          detail: "Only KYC-verified members can create projects" 
+        });
       }
 
       const projectData = insertProjectSchema.parse({ ...req.body, userId: req.user.userId });
@@ -663,6 +666,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/communities", authenticateToken, async (req: any, res) => {
     try {
+      // Check if user is KYC verified
+      const user = await storage.getUser(req.user.userId);
+      if (!user?.isKycComplete) {
+        return res.status(403).json({ 
+          message: "KYC verification required", 
+          detail: "Only KYC-verified members can create communities" 
+        });
+      }
+
       const communityData = insertCommunitySchema.parse({ 
         ...req.body, 
         creatorId: req.user.userId 
@@ -671,6 +683,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Auto-join creator to community
       await storage.joinCommunity(community.id, req.user.userId);
+      
+      // Set creator as admin
+      await storage.updateMemberRole(community.id, req.user.userId, "creator");
       
       res.json(community);
     } catch (error: any) {
@@ -780,6 +795,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/jobs", authenticateToken, async (req: any, res) => {
     try {
+      // Check if user is KYC verified
+      const user = await storage.getUser(req.user.userId);
+      if (!user?.isKycComplete) {
+        return res.status(403).json({ 
+          message: "KYC verification required", 
+          detail: "Only KYC-verified members can create jobs" 
+        });
+      }
+
       const jobData = insertJobSchema.parse({ ...req.body, userId: req.user.userId });
       const job = await storage.createJob(jobData);
       res.json(job);
@@ -1255,6 +1279,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin delete/deactivate community
+  app.delete("/api/admin/communities/:id", async (req, res) => {
+    try {
+      await db.delete(communities).where(eq(communities.id, req.params.id));
+      res.json({ message: "Community deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete community", error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/communities/:id/deactivate", async (req, res) => {
+    try {
+      await db.update(communities)
+        .set({ isActive: false })
+        .where(eq(communities.id, req.params.id));
+      res.json({ message: "Community deactivated successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to deactivate community", error: error.message });
+    }
+  });
+
   // Admin - Jobs Management
   app.get("/api/admin/jobs", async (req, res) => {
     try {
@@ -1262,6 +1307,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(jobs);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to get jobs", error: error.message });
+    }
+  });
+
+  // Admin delete/deactivate job
+  app.delete("/api/admin/jobs/:id", async (req, res) => {
+    try {
+      await db.delete(jobs).where(eq(jobs.id, req.params.id));
+      res.json({ message: "Job deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete job", error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/jobs/:id/deactivate", async (req, res) => {
+    try {
+      await db.update(jobs)
+        .set({ isActive: false })
+        .where(eq(jobs.id, req.params.id));
+      res.json({ message: "Job deactivated successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to deactivate job", error: error.message });
     }
   });
 
@@ -2119,6 +2185,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching participants:", error);
       res.status(500).json({ message: "Failed to fetch participants" });
+    }
+  });
+
+  // Notification system routes
+  app.get("/api/notifications", authenticateToken, async (req: any, res) => {
+    try {
+      const notifications = await storage.getUserNotifications(req.user.userId);
+      res.json(notifications);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get notifications", error: error.message });
+    }
+  });
+
+  app.post("/api/notifications", authenticateToken, async (req: any, res) => {
+    try {
+      const notification = await storage.createNotification({
+        userId: req.body.userId,
+        title: req.body.title,
+        message: req.body.message,
+        type: req.body.type || 'general',
+        isRead: false
+      });
+      res.json(notification);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to create notification", error: error.message });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", authenticateToken, async (req: any, res) => {
+    try {
+      await storage.markNotificationAsRead(req.params.id);
+      res.json({ message: "Notification marked as read" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to mark notification as read", error: error.message });
+    }
+  });
+
+  app.patch("/api/notifications/read-all", authenticateToken, async (req: any, res) => {
+    try {
+      await storage.markAllNotificationsAsRead(req.user.userId);
+      res.json({ message: "All notifications marked as read" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to mark all notifications as read", error: error.message });
     }
   });
 

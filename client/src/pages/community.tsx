@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Community } from "@shared/schema";
 import { CommunityModal } from "@/components/modals/CommunityModal";
-import type { User } from "@/lib/auth";
+import type { User } from "@shared/schema";
 
 export default function CommunityPage() {
   const [isCommunityModalOpen, setIsCommunityModalOpen] = useState(false);
@@ -66,7 +66,7 @@ export default function CommunityPage() {
 
   // Join/Enter Community Button Component
   const CommunityActionButton = ({ community, onSuccess }: { community: any; onSuccess: () => void }) => {
-    const isUserMember = userMemberships.some((membership: any) => membership.communityId === community.id);
+    const isUserMember = Array.isArray(userMemberships) && userMemberships.some((membership: any) => membership.communityId === community.id);
     
     const joinMutation = useMutation({
       mutationFn: async () => {
@@ -156,8 +156,8 @@ export default function CommunityPage() {
                       <h3 className="text-lg font-semibold text-foreground" data-testid={`text-community-name-${community.id}`}>
                         {community.name}
                       </h3>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(community.category)}`} data-testid={`badge-community-category-${community.id}`}>
-                        {community.category?.toUpperCase() || 'GENERAL'}
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor('general')}`} data-testid={`badge-community-category-${community.id}`}>
+                        GENERAL
                       </span>
                     </div>
                     
@@ -169,7 +169,7 @@ export default function CommunityPage() {
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
                         <span data-testid={`text-community-members-${community.id}`}>
-                          {community.memberCount || 0} members
+                          {(community as any).memberCount || 0} members
                         </span>
                       </div>
                       <div className="flex items-center gap-1">

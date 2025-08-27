@@ -93,6 +93,15 @@ export interface IStorage {
   acceptConnection(connectionId: string): Promise<Connection>;
   getConnectionBetweenUsers(requesterId: string, recipientId: string, projectId?: string): Promise<any>;
   updateConnectionStatus(connectionId: string, status: string): Promise<any>;
+  
+  // Community membership methods
+  getUserCommunityMemberships(userId: string): Promise<any[]>;
+
+  // Notification methods
+  getUserNotifications(userId: string): Promise<any[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(notificationId: string): Promise<void>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
 
   // Bidding project methods
   getAllBiddingProjects(): Promise<BiddingProject[]>;
@@ -265,6 +274,57 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(connections).where(
       or(eq(connections.requesterId, userId), eq(connections.recipientId, userId))
     );
+  }
+
+  async getUserConnections(userId: string): Promise<any[]> {
+    return await db.select().from(connections).where(
+      or(eq(connections.requesterId, userId), eq(connections.recipientId, userId))
+    );
+  }
+
+  async getUserCommunityMemberships(userId: string): Promise<any[]> {
+    return await db.select({
+      id: communityMembers.id,
+      communityId: communityMembers.communityId,
+      userId: communityMembers.userId,
+      role: communityMembers.role,
+      joinedAt: communityMembers.joinedAt,
+      communityName: communities.name,
+      communityDescription: communities.description
+    })
+    .from(communityMembers)
+    .leftJoin(communities, eq(communityMembers.communityId, communities.id))
+    .where(eq(communityMembers.userId, userId));
+  }
+
+  // Notification methods
+  async getUserNotifications(userId: string): Promise<any[]> {
+    return await db.select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db
+      .insert(notifications)
+      .values(notification)
+      .returning();
+    return newNotification;
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, notificationId));
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, userId));
   }
 
 
@@ -468,51 +528,6 @@ export class DatabaseStorage implements IStorage {
     await db.update(communityMembers)
       .set({ role })
       .where(and(eq(communityMembers.communityId, communityId), eq(communityMembers.userId, userId)));
-  }
-
-  async getCommunityPosts(communityId: string): Promise<any[]> {
-    return await db.select({
-      id: communityPosts.id,
-      content: communityPosts.content,
-      images: communityPosts.images,
-      videos: communityPosts.videos,
-      createdAt: communityPosts.createdAt,
-      authorId: communityPosts.authorId,
-      authorFirstName: users.firstName,
-      authorLastName: users.lastName,
-      authorProfileImage: users.profileImage
-    })
-    .from(communityPosts)
-    .leftJoin(users, eq(communityPosts.authorId, users.id))
-    .where(eq(communityPosts.communityId, communityId))
-    .orderBy(desc(communityPosts.createdAt));
-  }
-
-  async createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost> {
-    const [newPost] = await db.insert(communityPosts).values(post).returning();
-    return newPost;
-  }
-
-  async getUserCommunityMemberships(userId: string): Promise<any[]> {
-    return await db.select({
-      id: communityMembers.id,
-      communityId: communityMembers.communityId,
-      userId: communityMembers.userId,
-      role: communityMembers.role,
-      joinedAt: communityMembers.joinedAt,
-      communityName: communities.name,
-      communityDescription: communities.description
-    })
-    .from(communityMembers)
-    .leftJoin(communities, eq(communityMembers.communityId, communities.id))
-    .where(eq(communityMembers.userId, userId));
-  }
-
-  async isUserMember(communityId: string, userId: string): Promise<boolean> {
-    const [member] = await db.select()
-      .from(communityMembers)
-      .where(and(eq(communityMembers.communityId, communityId), eq(communityMembers.userId, userId)));
-    return !!member;
   }
 
   async getCommunityPosts(communityId: string): Promise<any[]> {
