@@ -579,9 +579,6 @@ export class DatabaseStorage implements IStorage {
       content: communityPosts.content,
       images: communityPosts.images,
       videos: communityPosts.videos,
-      eventId: communityPosts.eventId || null,
-      likesCount: communityPosts.likesCount || 0,
-      commentsCount: communityPosts.commentsCount || 0,
       createdAt: communityPosts.createdAt,
       authorId: communityPosts.authorId,
       authorFirstName: users.firstName,
@@ -592,28 +589,6 @@ export class DatabaseStorage implements IStorage {
     .leftJoin(users, eq(communityPosts.authorId, users.id))
     .where(eq(communityPosts.communityId, communityId))
     .orderBy(desc(communityPosts.createdAt));
-
-    // If userId provided, check like status for each post and add event details
-    if (userId) {
-      const { postLikes } = await import("@shared/schema");
-      
-      for (let post of posts) {
-        // Check if user liked this post
-        const liked = await db.select().from(postLikes)
-          .where(and(eq(postLikes.postId, post.id), eq(postLikes.userId, userId)));
-        post.isLiked = liked.length > 0;
-
-        // Add event details if eventId exists
-        if (post.eventId) {
-          const event = await this.getEvent(post.eventId);
-          if (event) {
-            post.eventTitle = event.title;
-            post.eventDate = event.date;
-            post.eventDescription = event.description;
-          }
-        }
-      }
-    }
 
     return posts;
   }
