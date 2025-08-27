@@ -17,6 +17,7 @@ import { DocumentsPage } from "@/pages/documents";
 import { InvestmentsPage } from "@/pages/investments";
 import { ProjectDetailsPage } from "@/pages/project-details";
 import CompanyFormation from "@/pages/company-formation";
+import { TendersPage } from "@/pages/tenders";
 import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
 
@@ -52,6 +53,7 @@ function Router() {
       <Route path="/community" component={() => <ProtectedRoute component={Community} />} />
       <Route path="/jobs" component={() => <ProtectedRoute component={Jobs} />} />
       <Route path="/bidding" component={() => <ProtectedRoute component={Bidding} />} />
+      <Route path="/tenders" component={() => <ProtectedRoute component={TendersPage} />} />
       <Route path="/company-formation" component={() => <ProtectedRoute component={CompanyFormation} />} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />

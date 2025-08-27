@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText, Gavel, Building } from "lucide-react";
+import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText, Gavel, Building, Scroll } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +40,7 @@ export function Sidebar() {
     { path: "/bidding", label: "Project Bidding", icon: Gavel },
     { path: "/investments", label: "Investments", icon: TrendingUp },
     { path: "/company-formation", label: "Company Formation", icon: Building },
+    { path: "/tenders", label: "Government Tenders", icon: Scroll },
     { path: "/jobs", label: "Jobs", icon: Briefcase },
     { path: "/network", label: "Network", icon: Users },
     { path: "/community", label: "Communities", icon: MessageSquare },

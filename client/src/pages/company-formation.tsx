@@ -119,10 +119,8 @@ export default function CompanyFormation() {
   // Create or update company formation
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("/api/company-formations", {
-        method: "POST",
-        body: JSON.stringify(data)
-      });
+      const response = await apiRequest("POST", "/api/company-formations", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-formations/my"] });
@@ -142,10 +140,8 @@ export default function CompanyFormation() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest(`/api/company-formations/${companyFormation?.id}`, {
-        method: "PUT",
-        body: JSON.stringify(data)
-      });
+      const response = await apiRequest("PUT", `/api/company-formations/${companyFormation?.id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-formations/my"] });
