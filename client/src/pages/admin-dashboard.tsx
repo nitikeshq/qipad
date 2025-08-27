@@ -25,6 +25,8 @@ export default function AdminDashboard() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>({ name: "", description: "", type: "" });
   const [modalType, setModalType] = useState<"category" | "department" | "tender" | "company-formation" | null>(null);
+  const [viewUserModal, setViewUserModal] = useState<any>(null);
+  const [editFormationModal, setEditFormationModal] = useState<any>(null);
 
   // Data queries
   const { data: users = [] } = useQuery<any[]>({
@@ -103,11 +105,43 @@ export default function AdminDashboard() {
       return response.json();
     },
     onSuccess: (_, { type }) => {
-      toast({ title: `${type === 'categories' ? 'Category' : 'Department'} deleted successfully!` });
+      const itemName = type === 'categories' ? 'Category' : 
+                     type === 'departments' ? 'Department' : 
+                     type === 'company-formations' ? 'Company Formation' : 'Item';
+      toast({ title: `${itemName} deleted successfully!` });
       queryClient.invalidateQueries({ queryKey: [`/api/admin/${type}`] });
     },
     onError: () => {
       toast({ title: "Failed to delete item", variant: "destructive" });
+    }
+  });
+
+  const suspendUserMutation = useMutation({
+    mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}`, { status });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "User status updated successfully!" });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+    },
+    onError: () => {
+      toast({ title: "Failed to update user status", variant: "destructive" });
+    }
+  });
+
+  const updateFormationMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await apiRequest("PUT", `/api/admin/company-formations/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Company Formation updated successfully!" });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/company-formations'] });
+      setEditFormationModal(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to update company formation", variant: "destructive" });
     }
   });
 
@@ -220,22 +254,61 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card data-testid="card-recent-activities">
                 <CardHeader>
-                  <CardTitle>Recent Activities</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    Recent Activities
+                    {companyFormations.length > 0 && (
+                      <Badge variant="secondary" className="ml-2">
+                        {companyFormations.filter((f: any) => f.status === 'pending' || f.status === 'in_progress').length} New
+                      </Badge>
+                    )}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {/* Company Formation Notifications */}
+                    {companyFormations.slice(0, 2).map((formation: any) => (
+                      <div key={formation.id} className="flex items-center space-x-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                        <Building className="h-5 w-5 text-yellow-600" />
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            Company Formation: {formation.companyName}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Step {formation.currentStep || 1} of 9 - {formation.status || 'pending'}
+                          </p>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setActiveTab('company-formations');
+                            setEditFormationModal(formation);
+                          }}
+                        >
+                          Review
+                        </Button>
+                      </div>
+                    ))}
+                    
+                    {/* Recent Projects */}
                     <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <FileText className="h-5 w-5 text-blue-600" />
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">New project submitted</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">2 minutes ago</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {projects.filter((p: any) => p.status === 'pending_review').length} projects pending review
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Requires admin approval</p>
                       </div>
                     </div>
+                    
+                    {/* Recent Investments */}
                     <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <DollarSign className="h-5 w-5 text-green-600" />
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">Investment completed</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">5 minutes ago</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {investments.filter((i: any) => i.status === 'pending_approval').length} investments pending
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Awaiting admin review</p>
                       </div>
                     </div>
                   </div>
@@ -257,8 +330,8 @@ export default function AdminDashboard() {
                       <span className="font-bold text-green-600">87%</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-300">Total Revenue</span>
-                      <span className="font-bold text-purple-600">₹{(investments.length * 50000).toLocaleString()}</span>
+                      <span className="text-gray-600 dark:text-gray-300">Total Funding Raised</span>
+                      <span className="font-bold text-purple-600">₹{investments.reduce((total: number, inv: any) => total + parseFloat(inv.amount || 0), 0).toLocaleString()}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -396,11 +469,24 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell className="space-x-2">
-                          <Button size="sm" variant="outline" data-testid={`button-view-user-${user.id}`}>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => setViewUserModal(user)}
+                            data-testid={`button-view-user-${user.id}`}
+                          >
                             View
                           </Button>
-                          <Button size="sm" variant="destructive" data-testid={`button-suspend-user-${user.id}`}>
-                            Suspend
+                          <Button 
+                            size="sm" 
+                            variant={user.status === 'suspended' ? 'default' : 'destructive'}
+                            onClick={() => suspendUserMutation.mutate({ 
+                              userId: user.id, 
+                              status: user.status === 'suspended' ? 'active' : 'suspended' 
+                            })}
+                            data-testid={`button-suspend-user-${user.id}`}
+                          >
+                            {user.status === 'suspended' ? 'Activate' : 'Suspend'}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -745,7 +831,12 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="sm" data-testid={`button-edit-formation-${formation.id}`}>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setEditFormationModal(formation)}
+                              data-testid={`button-edit-formation-${formation.id}`}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button 
@@ -822,6 +913,236 @@ export default function AdminDashboard() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* User Details Modal */}
+      <Dialog open={!!viewUserModal} onOpenChange={() => setViewUserModal(null)}>
+        <DialogContent className="sm:max-w-2xl" data-testid="dialog-view-user">
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+          </DialogHeader>
+          {viewUserModal && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Full Name</Label>
+                  <p className="font-medium">{viewUserModal.firstName} {viewUserModal.lastName}</p>
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <p className="font-medium">{viewUserModal.email}</p>
+                </div>
+                <div>
+                  <Label>User Type</Label>
+                  <Badge variant={viewUserModal.userType === 'investor' ? 'default' : 'secondary'}>
+                    {viewUserModal.userType}
+                  </Badge>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Badge variant={viewUserModal.status === 'active' ? 'default' : 'destructive'}>
+                    {viewUserModal.status}
+                  </Badge>
+                </div>
+                <div>
+                  <Label>KYC Status</Label>
+                  <Badge variant={viewUserModal.kycStatus === 'verified' ? 'default' : 'secondary'}>
+                    {viewUserModal.kycStatus || 'pending'}
+                  </Badge>
+                </div>
+                <div>
+                  <Label>Joined Date</Label>
+                  <p className="font-medium">{new Date(viewUserModal.createdAt).toLocaleDateString()}</p>
+                </div>
+              </div>
+              {viewUserModal.phone && (
+                <div>
+                  <Label>Phone</Label>
+                  <p className="font-medium">{viewUserModal.phone}</p>
+                </div>
+              )}
+              {viewUserModal.documents && viewUserModal.documents.length > 0 && (
+                <div>
+                  <Label>KYC Documents</Label>
+                  <div className="space-y-2">
+                    {viewUserModal.documents.map((doc: any) => (
+                      <div key={doc.id} className="flex justify-between items-center p-2 border rounded">
+                        <span>{doc.fileName}</span>
+                        <Badge variant={doc.status === 'approved' ? 'default' : doc.status === 'rejected' ? 'destructive' : 'secondary'}>
+                          {doc.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Company Formation Edit Modal */}
+      <Dialog open={!!editFormationModal} onOpenChange={() => setEditFormationModal(null)}>
+        <DialogContent className="sm:max-w-2xl" data-testid="dialog-edit-formation">
+          <DialogHeader>
+            <DialogTitle>Edit Company Formation</DialogTitle>
+          </DialogHeader>
+          {editFormationModal && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="companyName">Company Name</Label>
+                  <Input
+                    id="companyName"
+                    value={editFormationModal.companyName || ''}
+                    onChange={(e) => setEditFormationModal({...editFormationModal, companyName: e.target.value})}
+                    data-testid="input-edit-company-name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="currentStep">Current Step</Label>
+                  <Select 
+                    value={editFormationModal.currentStep?.toString() || '1'} 
+                    onValueChange={(value) => setEditFormationModal({...editFormationModal, currentStep: parseInt(value)})}
+                  >
+                    <SelectTrigger data-testid="select-edit-current-step">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1,2,3,4,5,6,7,8,9].map(step => (
+                        <SelectItem key={step} value={step.toString()}>
+                          Step {step}: {
+                            step === 1 ? 'Company Registration' :
+                            step === 2 ? 'DIN Generation' :
+                            step === 3 ? 'Document Collection' :
+                            step === 4 ? 'Trademark Application' :
+                            step === 5 ? 'Bank Account Creation' :
+                            step === 6 ? 'Certifications' :
+                            step === 7 ? 'Project Posting' :
+                            step === 8 ? 'Government Schemes' :
+                            'Completion'
+                          }
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <Select 
+                    value={editFormationModal.status || 'in_progress'} 
+                    onValueChange={(value) => setEditFormationModal({...editFormationModal, status: value})}
+                  >
+                    <SelectTrigger data-testid="select-edit-status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="assignedConsultant">Assigned Consultant</Label>
+                  <Input
+                    id="assignedConsultant"
+                    value={editFormationModal.assignedConsultant || ''}
+                    onChange={(e) => setEditFormationModal({...editFormationModal, assignedConsultant: e.target.value})}
+                    placeholder="Consultant name"
+                    data-testid="input-edit-consultant"
+                  />
+                </div>
+              </div>
+              
+              {/* Step Details */}
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-3">Step Progress Details</h4>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      checked={editFormationModal.companyCreated || false}
+                      onChange={(e) => setEditFormationModal({...editFormationModal, companyCreated: e.target.checked})}
+                    />
+                    <span>Company Created</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      checked={editFormationModal.dinGenerated || false}
+                      onChange={(e) => setEditFormationModal({...editFormationModal, dinGenerated: e.target.checked})}
+                    />
+                    <span>DIN Generated</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      checked={editFormationModal.documentsObtained || false}
+                      onChange={(e) => setEditFormationModal({...editFormationModal, documentsObtained: e.target.checked})}
+                    />
+                    <span>Documents Obtained</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      checked={editFormationModal.trademarkApplied || false}
+                      onChange={(e) => setEditFormationModal({...editFormationModal, trademarkApplied: e.target.checked})}
+                    />
+                    <span>Trademark Applied</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      checked={editFormationModal.bankAccountCreated || false}
+                      onChange={(e) => setEditFormationModal({...editFormationModal, bankAccountCreated: e.target.checked})}
+                    />
+                    <span>Bank Account Created</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      checked={editFormationModal.certificationsObtained || false}
+                      onChange={(e) => setEditFormationModal({...editFormationModal, certificationsObtained: e.target.checked})}
+                    />
+                    <span>Certifications Obtained</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      checked={editFormationModal.projectPosted || false}
+                      onChange={(e) => setEditFormationModal({...editFormationModal, projectPosted: e.target.checked})}
+                    />
+                    <span>Project Posted</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      checked={editFormationModal.governmentSchemesApplied || false}
+                      onChange={(e) => setEditFormationModal({...editFormationModal, governmentSchemesApplied: e.target.checked})}
+                    />
+                    <span>Gov Schemes Applied</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setEditFormationModal(null)} data-testid="button-cancel-edit-formation">
+                  Cancel
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={() => updateFormationMutation.mutate({ id: editFormationModal.id, data: editFormationModal })}
+                  disabled={updateFormationMutation.isPending} 
+                  data-testid="button-save-edit-formation"
+                >
+                  {updateFormationMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

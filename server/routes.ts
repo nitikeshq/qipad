@@ -858,6 +858,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/admin/company-formations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      const updatedFormation = await storage.updateCompanyFormation(id, updateData);
+      res.json(updatedFormation);
+    } catch (error: any) {
+      console.error("Update company formation error:", error);
+      res.status(400).json({ message: "Failed to update company formation", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/company-formations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteCompanyFormation(id);
+      res.json({ message: "Company formation deleted successfully" });
+    } catch (error: any) {
+      console.error("Delete company formation error:", error);
+      res.status(400).json({ message: "Failed to delete company formation", error: error.message });
+    }
+  });
+
   app.post("/api/admin/company-formations", async (req, res) => {
     try {
       const formation = await storage.createCompanyFormation(req.body);

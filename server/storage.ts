@@ -193,6 +193,19 @@ export class DatabaseStorage implements IStorage {
     await db.delete(investments).where(eq(investments.id, id));
   }
 
+  async updateCompanyFormation(id: string, updateData: Partial<any>): Promise<any> {
+    const [updatedFormation] = await db
+      .update(companyFormations)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(companyFormations.id, id))
+      .returning();
+    return updatedFormation;
+  }
+
+  async deleteCompanyFormation(id: string): Promise<void> {
+    await db.delete(companyFormations).where(eq(companyFormations.id, id));
+  }
+
   async getAllInvestmentsWithDetails(): Promise<any[]> {
     const allInvestments = await db.select().from(investments);
     const investmentsWithDetails = await Promise.all(
