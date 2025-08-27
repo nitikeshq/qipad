@@ -1071,12 +1071,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin route for KYC verification
+  // Admin route for KYC verification with user sync
   app.patch("/api/admin/documents/:id/verify", async (req, res) => {
     try {
       const { status, feedback } = req.body; // 'approved' or 'rejected'
-      const document = await storage.updateDocument(req.params.id, { status, feedback });
-      res.json({ message: "Document verification updated", document });
+      
+      // Update the document
+      const document = await storage.updateDocument(req.params.id, { 
+        status, 
+        feedback,
+        isVerified: status === 'approved' 
+      });
+      
+      // Get user's documents to check overall verification status
+      const userDocs = await storage.getDocumentsByUser(document.userId);
+      const allApproved = userDocs.length > 0 && userDocs.every(doc => doc.status === 'approved');
+      const hasRejected = userDocs.some(doc => doc.status === 'rejected');
+      
+      // Update user verification status based on their documents
+      await storage.updateUser(document.userId, { 
+        isVerified: allApproved,
+        isKycComplete: userDocs.length > 0 && !hasRejected
+      });
+      
+      res.json({ 
+        message: "Document verification updated and user status synchronized", 
+        document,
+        userVerificationStatus: {
+          isVerified: allApproved,
+          isKycComplete: userDocs.length > 0 && !hasRejected
+        }
+      });
     } catch (error: any) {
       res.status(400).json({ message: "Failed to update document status", error: error.message });
     }
