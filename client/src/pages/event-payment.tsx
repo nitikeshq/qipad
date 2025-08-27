@@ -65,8 +65,41 @@ export default function EventPayment() {
 
       const data = await response.json();
 
-      if (data.paymentUrl) {
-        // Paid event - redirect to PayUMoney
+      if (data.success && data.formData) {
+        // Paid event - create form and submit to PayUMoney (following reference implementation)
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = data.paymentUrl;
+        form.style.display = 'none';
+
+        // Add all form fields from PayUMoney service
+        Object.entries(data.formData).forEach(([key, value]) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = value as string;
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        
+        // Show loading toast before redirect
+        toast({
+          title: "Redirecting to Payment Gateway",
+          description: "Please wait while we redirect you to the secure payment page...",
+        });
+
+        // Submit form to PayUMoney
+        form.submit();
+        
+        // Cleanup after submission
+        setTimeout(() => {
+          if (document.body.contains(form)) {
+            document.body.removeChild(form);
+          }
+        }, 1000);
+      } else if (data.paymentUrl) {
+        // Fallback for simple redirect
         window.location.href = data.paymentUrl;
       } else {
         // Free event registration

@@ -62,6 +62,62 @@ export class PayUMoneyService {
     return hash.toLowerCase() === expectedHash.toLowerCase();
   }
 
+  /**
+   * Generate payment form following PayUMoney reference implementation
+   */
+  generatePaymentForm(paymentData: PayUMoneyPaymentData): {
+    action: string;
+    method: string;
+    fields: Record<string, string>;
+  } {
+    // Validate and format amount
+    let amount = typeof paymentData.amount === 'string' ? parseFloat(paymentData.amount) : Number(paymentData.amount);
+    if (isNaN(amount) || amount <= 0) {
+      throw new Error('Invalid amount: Amount must be a positive number');
+    }
+    
+    // Format amount to 2 decimal places
+    const formattedAmount = amount.toFixed(2);
+    
+    // Generate hash with properly formatted data
+    const hashData = { ...paymentData, amount: formattedAmount };
+    const hash = this.generateHash(hashData);
+    
+    // Ensure HTTPS URLs for security (following reference code pattern)
+    const secureSuccessUrl = paymentData.successUrl.replace('http://', 'https://');
+    const secureFailureUrl = paymentData.failureUrl.replace('http://', 'https://');
+    
+    const fields = {
+      key: this.merchantKey,
+      txnid: paymentData.txnId,
+      amount: formattedAmount,
+      productinfo: paymentData.productInfo,
+      firstname: paymentData.firstName,
+      email: paymentData.email,
+      phone: paymentData.phone || '',
+      surl: secureSuccessUrl,
+      furl: secureFailureUrl,
+      hash: hash,
+      udf1: paymentData.userId || '',
+      udf2: paymentData.paymentType || '',
+      udf3: paymentData.metadata ? JSON.stringify(paymentData.metadata) : '',
+      udf4: '',
+      udf5: '',
+      service_provider: 'payu_paisa',
+      enforce_paymethod: 'creditcard,debitcard,netbanking,upi',
+      pg: 'CC,DC,NB,UPI',
+      bankcode: 'CC',
+      drop_category: '0',
+      show_payment_mode: '1'
+    };
+
+    return {
+      action: this.baseUrl + '/_payment',
+      method: 'POST',
+      fields
+    };
+  }
+
   async createPayment(data: PayUMoneyPaymentData): Promise<PayUMoneyResponse> {
     try {
       console.log('PayUMoney createPayment - Input data:', JSON.stringify(data, null, 2));
@@ -90,55 +146,24 @@ export class PayUMoneyService {
         };
       }
 
-      // Format amount to exactly 2 decimal places (PayUMoney requirement)
-      const formattedAmount = amount.toFixed(2);
-      console.log('PayUMoney - Formatted amount:', formattedAmount);
+      // Use the reference code pattern for payment form generation
+      const paymentForm = this.generatePaymentForm(data);
       
-      const paymentDataForHash = { ...data, amount: formattedAmount };
-      const hash = this.generateHash(paymentDataForHash);
-      console.log('PayUMoney - Generated hash:', hash.substring(0, 20) + '...');
-      
-      // Generate UDF fields for hash calculation
-      const udf1 = data.userId || '';
-      const udf2 = data.paymentType || '';
-      const udf3 = data.metadata ? JSON.stringify(data.metadata) : '';
-      const udf4 = '';
-      const udf5 = '';
-      
-      const paymentData = {
-        key: this.merchantKey,
-        txnid: data.txnId,
-        amount: formattedAmount,
-        productinfo: data.productInfo,
-        firstname: data.firstName,
-        email: data.email,
-        phone: data.phone || '',
-        surl: data.successUrl,
-        furl: data.failureUrl,
-        hash: hash,
-        service_provider: 'payu_paisa',
-        udf1: udf1,
-        udf2: udf2,
-        udf3: udf3,
-        udf4: udf4,
-        udf5: udf5,
-        pg: 'CC', // Credit Card as default payment gateway
-      };
-
-      console.log('PayUMoney - Final payment data:', {
-        ...paymentData,
-        hash: hash.substring(0, 20) + '...',
-        key: this.merchantKey.substring(0, 10) + '...'
+      console.log('PayUMoney - Generated payment form:', {
+        action: paymentForm.action,
+        method: paymentForm.method,
+        fields: {
+          ...paymentForm.fields,
+          key: paymentForm.fields.key.substring(0, 6) + '...',
+          hash: paymentForm.fields.hash.substring(0, 20) + '...',
+        }
       });
 
-      // For PayUMoney, we need to redirect to their payment page
-      const paymentUrl = `${this.baseUrl}/_payment`;
-      
       return {
         success: true,
-        paymentUrl,
+        paymentUrl: paymentForm.action,
         txnId: data.txnId,
-        formData: paymentData, // Return form data for frontend to POST
+        formData: paymentForm.fields,
       };
     } catch (error) {
       console.error('PayUMoney payment creation failed:', error);
