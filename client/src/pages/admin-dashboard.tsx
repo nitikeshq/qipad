@@ -71,6 +71,22 @@ export default function AdminDashboard() {
     queryKey: ['/api/admin/departments'],
   });
 
+  const { data: companies = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/companies'],
+  });
+
+  const { data: services = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/services'],
+  });
+
+  const { data: events = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/events'],
+  });
+
+  const { data: profitAnalytics = {} } = useQuery<any>({
+    queryKey: ['/api/admin/analytics/profit'],
+  });
+
   // Mutations
   const updateProjectStatusMutation = useMutation({
     mutationFn: async ({ projectId, status }: { projectId: string; status: string }) => {
@@ -174,12 +190,12 @@ export default function AdminDashboard() {
   const stats = [
     { title: "Total Users", value: users.length, icon: Users, color: "text-blue-600", bgColor: "bg-blue-50" },
     { title: "Total Projects", value: projects.length, icon: FileText, color: "text-green-600", bgColor: "bg-green-50" },
-    { title: "Total Investments", value: investments.length, icon: DollarSign, color: "text-purple-600", bgColor: "bg-purple-50" },
-    { title: "Communities", value: communities.length, icon: MessageSquare, color: "text-indigo-600", bgColor: "bg-indigo-50" },
-    { title: "Jobs Posted", value: jobs.length, icon: Briefcase, color: "text-pink-600", bgColor: "bg-pink-50" },
-    { title: "Active Tenders", value: tenders.length, icon: Target, color: "text-yellow-600", bgColor: "bg-yellow-50" },
-    { title: "Categories", value: categories.length, icon: Building, color: "text-cyan-600", bgColor: "bg-cyan-50" },
-    { title: "Pending Reviews", value: projects.filter((p: any) => p.status === 'pending_review').length, icon: Settings, color: "text-orange-600", bgColor: "bg-orange-50" }
+    { title: "Total Revenue", value: `₹${(profitAnalytics.totalRevenue || 0).toLocaleString('en-IN')}`, icon: DollarSign, color: "text-purple-600", bgColor: "bg-purple-50" },
+    { title: "Total Profit", value: `₹${(profitAnalytics.totalProfit || 0).toLocaleString('en-IN')}`, icon: BarChart3, color: "text-emerald-600", bgColor: "bg-emerald-50" },
+    { title: "Companies", value: companies.length, icon: Building, color: "text-indigo-600", bgColor: "bg-indigo-50" },
+    { title: "Services", value: services.length, icon: Settings, color: "text-pink-600", bgColor: "bg-pink-50" },
+    { title: "Events", value: events.length, icon: Target, color: "text-yellow-600", bgColor: "bg-yellow-50" },
+    { title: "Communities", value: communities.length, icon: MessageSquare, color: "text-cyan-600", bgColor: "bg-cyan-50" }
   ];
 
   const openCreateModal = (type: "category" | "department" | "tender" | "company-formation") => {
@@ -249,19 +265,21 @@ export default function AdminDashboard() {
         {/* Advanced Management Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-            <TabsList className="grid w-full grid-cols-10">
+            <TabsList className="grid w-full grid-cols-12">
               <TabsTrigger value="overview" data-testid="tab-overview">
                 <Home className="h-4 w-4 mr-1" />
                 Overview
               </TabsTrigger>
               <TabsTrigger value="projects" data-testid="tab-projects">Projects</TabsTrigger>
               <TabsTrigger value="users" data-testid="tab-users">Users</TabsTrigger>
+              <TabsTrigger value="companies" data-testid="tab-companies">Companies</TabsTrigger>
+              <TabsTrigger value="services" data-testid="tab-services">Services</TabsTrigger>
+              <TabsTrigger value="events" data-testid="tab-events">Events</TabsTrigger>
               <TabsTrigger value="investments" data-testid="tab-investments">Investments</TabsTrigger>
               <TabsTrigger value="tenders" data-testid="tab-tenders">Tenders</TabsTrigger>
               <TabsTrigger value="company-formations" data-testid="tab-company-formations">Formations</TabsTrigger>
               <TabsTrigger value="categories" data-testid="tab-categories">Categories</TabsTrigger>
               <TabsTrigger value="departments" data-testid="tab-departments">Departments</TabsTrigger>
-              <TabsTrigger value="communities" data-testid="tab-communities">Communities</TabsTrigger>
               <TabsTrigger value="analytics" data-testid="tab-analytics">
                 <BarChart3 className="h-4 w-4 mr-1" />
                 Analytics
@@ -916,6 +934,180 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Companies Tab */}
+          <TabsContent value="companies">
+            <Card data-testid="card-companies-management">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Companies Management
+                  <Badge variant="secondary">{companies.length} Total</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Company Name</TableHead>
+                      <TableHead>Industry</TableHead>
+                      <TableHead>Owner</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {companies.map((company: any) => (
+                      <TableRow key={company.id}>
+                        <TableCell className="font-medium">{company.companyName}</TableCell>
+                        <TableCell>{company.industry || 'N/A'}</TableCell>
+                        <TableCell>{company.ownerName || 'Unknown'}</TableCell>
+                        <TableCell>{new Date(company.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Badge variant={company.isActive ? "default" : "secondary"}>
+                            {company.isActive ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Services Tab */}
+          <TabsContent value="services">
+            <Card data-testid="card-services-management">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Services Management
+                  <Badge variant="secondary">{services.length} Total</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Service Name</TableHead>
+                      <TableHead>Company</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {services.map((service: any) => (
+                      <TableRow key={service.id}>
+                        <TableCell className="font-medium">{service.name}</TableCell>
+                        <TableCell>{service.companyName || 'Unknown'}</TableCell>
+                        <TableCell>{service.category || 'N/A'}</TableCell>
+                        <TableCell>₹{parseFloat(service.price || 0).toLocaleString('en-IN')}</TableCell>
+                        <TableCell>
+                          <Badge variant="default">Active</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Events Tab */}
+          <TabsContent value="events">
+            <Card data-testid="card-events-management">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Events Management
+                  <Badge variant="secondary">{events.length} Total</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Event Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Attendees</TableHead>
+                      <TableHead>Revenue</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {events.map((event: any) => (
+                      <TableRow key={event.id}>
+                        <TableCell className="font-medium">{event.title}</TableCell>
+                        <TableCell>
+                          <Badge variant={event.isPaid ? "default" : "secondary"}>
+                            {event.isPaid ? 'Paid' : 'Free'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(event.eventDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{event.attendeeCount || 0}</TableCell>
+                        <TableCell>
+                          {event.isPaid ? `₹${parseFloat(event.price || 0).toLocaleString('en-IN')}` : 'Free'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card data-testid="card-profit-overview">
+                <CardHeader>
+                  <CardTitle>Profit Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <h3 className="font-semibold text-green-800 dark:text-green-200">Total Revenue</h3>
+                      <p className="text-2xl font-bold text-green-600">
+                        ₹{(profitAnalytics.totalRevenue || 0).toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <h3 className="font-semibold text-blue-800 dark:text-blue-200">Total Profit</h3>
+                      <p className="text-2xl font-bold text-blue-600">
+                        ₹{(profitAnalytics.totalProfit || 0).toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card data-testid="card-revenue-breakdown">
+                <CardHeader>
+                  <CardTitle>Revenue Breakdown</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span>Event Revenue:</span>
+                      <span className="font-semibold">₹{(profitAnalytics.breakdown?.eventRevenue || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Subscription Revenue:</span>
+                      <span className="font-semibold">₹{(profitAnalytics.breakdown?.subscriptionRevenue || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Service Inquiry Fees:</span>
+                      <span className="font-semibold">₹{(profitAnalytics.breakdown?.serviceInquiryFees || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Company Formation Fees:</span>
+                      <span className="font-semibold">₹{(profitAnalytics.breakdown?.companyFormationFees || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
         </Tabs>
       </div>
 

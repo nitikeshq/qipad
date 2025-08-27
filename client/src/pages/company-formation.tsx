@@ -42,7 +42,7 @@ export default function CompanyFormation() {
     status: "draft" as const
   });
 
-  const { data: myFormation = {}, isLoading } = useQuery({
+  const { data: myFormation, isLoading } = useQuery({
     queryKey: ["/api/company-formations/my"],
   });
 
@@ -94,8 +94,8 @@ export default function CompanyFormation() {
       progressPercentage: Math.round((currentStep / companyFormationSteps.length) * 100)
     };
 
-    if (myFormation?.id) {
-      updateFormationMutation.mutate({ id: myFormation.id, data: formationData });
+    if (myFormation && (myFormation as any).id) {
+      updateFormationMutation.mutate({ id: (myFormation as any).id, data: formationData });
     } else {
       createFormationMutation.mutate(formationData);
     }
@@ -140,7 +140,7 @@ export default function CompanyFormation() {
               Formation Progress
             </CardTitle>
             <CardDescription>
-              {myFormation ? `Step ${myFormation.currentStep || 1} of ${companyFormationSteps.length}` : "Ready to start"}
+              {myFormation ? `Step ${(myFormation as any).currentStep || 1} of ${companyFormationSteps.length}` : "Ready to start"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -158,8 +158,8 @@ export default function CompanyFormation() {
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           {companyFormationSteps.map((step) => {
             const Icon = step.icon;
-            const isCompleted = myFormation && step.id < (myFormation.currentStep || 1);
-            const isCurrent = step.id === (myFormation?.currentStep || 1);
+            const isCompleted = myFormation && step.id < ((myFormation as any).currentStep || 1);
+            const isCurrent = step.id === ((myFormation as any)?.currentStep || 1);
             
             return (
               <Card key={step.id} className={`relative ${isCurrent ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
@@ -201,7 +201,7 @@ export default function CompanyFormation() {
                   <Label htmlFor="companyName">Company Name</Label>
                   <Input
                     id="companyName"
-                    value={formData.companyName || myFormation?.companyName || ""}
+                    value={formData.companyName || (myFormation as any)?.companyName || ""}
                     onChange={(e) => setFormData({...formData, companyName: e.target.value})}
                     placeholder="Enter proposed company name"
                     required
@@ -211,7 +211,7 @@ export default function CompanyFormation() {
                 <div>
                   <Label htmlFor="companyType">Company Type</Label>
                   <Select 
-                    value={formData.companyType || myFormation?.companyType || ""} 
+                    value={formData.companyType || (myFormation as any)?.companyType || ""} 
                     onValueChange={(value) => setFormData({...formData, companyType: value})}
                   >
                     <SelectTrigger data-testid="select-company-type">
@@ -235,7 +235,7 @@ export default function CompanyFormation() {
                   <Input
                     id="authorizedCapital"
                     type="number"
-                    value={formData.authorizedCapital || myFormation?.authorizedCapital || ""}
+                    value={formData.authorizedCapital || (myFormation as any)?.authorizedCapital || ""}
                     onChange={(e) => setFormData({...formData, authorizedCapital: e.target.value})}
                     placeholder="1000000"
                     data-testid="input-authorized-capital"
@@ -246,7 +246,7 @@ export default function CompanyFormation() {
                   <Input
                     id="paidUpCapital"
                     type="number"
-                    value={formData.paidUpCapital || myFormation?.paidUpCapital || ""}
+                    value={formData.paidUpCapital || (myFormation as any)?.paidUpCapital || ""}
                     onChange={(e) => setFormData({...formData, paidUpCapital: e.target.value})}
                     placeholder="100000"
                     data-testid="input-paid-capital"
@@ -258,7 +258,7 @@ export default function CompanyFormation() {
                 <Label htmlFor="registeredAddress">Registered Address</Label>
                 <Textarea
                   id="registeredAddress"
-                  value={formData.registeredAddress || myFormation?.registeredAddress || ""}
+                  value={formData.registeredAddress || (myFormation as any)?.registeredAddress || ""}
                   onChange={(e) => setFormData({...formData, registeredAddress: e.target.value})}
                   placeholder="Enter complete registered address"
                   required
@@ -270,7 +270,7 @@ export default function CompanyFormation() {
                 <Label htmlFor="businessActivity">Main Business Activity</Label>
                 <Textarea
                   id="businessActivity"
-                  value={formData.businessActivity || myFormation?.businessActivity || ""}
+                  value={formData.businessActivity || (myFormation as any)?.businessActivity || ""}
                   onChange={(e) => setFormData({...formData, businessActivity: e.target.value})}
                   placeholder="Describe your main business activities"
                   required
@@ -283,7 +283,7 @@ export default function CompanyFormation() {
                   <Label htmlFor="directorDetails">Director Details</Label>
                   <Textarea
                     id="directorDetails"
-                    value={formData.directorDetails || myFormation?.directorDetails || ""}
+                    value={formData.directorDetails || (myFormation as any)?.directorDetails || ""}
                     onChange={(e) => setFormData({...formData, directorDetails: e.target.value})}
                     placeholder="Name, PAN, address of directors"
                     data-testid="textarea-directors"
@@ -293,7 +293,7 @@ export default function CompanyFormation() {
                   <Label htmlFor="shareholderDetails">Shareholder Details</Label>
                   <Textarea
                     id="shareholderDetails"
-                    value={formData.shareholderDetails || myFormation?.shareholderDetails || ""}
+                    value={formData.shareholderDetails || (myFormation as any)?.shareholderDetails || ""}
                     onChange={(e) => setFormData({...formData, shareholderDetails: e.target.value})}
                     placeholder="Name, shares allocation details"
                     data-testid="textarea-shareholders"

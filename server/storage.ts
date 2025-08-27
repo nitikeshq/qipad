@@ -1258,6 +1258,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(servicePurchases.customerId, userId))
       .orderBy(desc(servicePurchases.createdAt));
   }
+
+  // Payment and Subscription methods for analytics
+  async getAllPayments(): Promise<Payment[]> {
+    return await db.select().from(payments).orderBy(desc(payments.createdAt));
+  }
+
+  async getAllSubscriptions(): Promise<Subscription[]> {
+    return await db.select().from(subscriptions).orderBy(desc(subscriptions.createdAt));
+  }
 }
 
 export const storage = new DatabaseStorage();

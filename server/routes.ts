@@ -1,6 +1,39 @@
 import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
+
+// Helper function for calculating monthly profits
+async function calculateMonthlyProfits(payments: any[], subscriptions: any[]) {
+  const monthlyData = [];
+  const now = new Date();
+  
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+    const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    
+    const monthPayments = payments.filter(p => {
+      const payDate = new Date(p.createdAt);
+      return payDate >= monthStart && payDate <= monthEnd;
+    });
+    
+    const monthSubs = subscriptions.filter(s => {
+      const subDate = new Date(s.createdAt);
+      return subDate >= monthStart && subDate <= monthEnd && s.status === 'active';
+    });
+    
+    const revenue = monthPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0) +
+                   monthSubs.reduce((sum, s) => sum + parseFloat(s.amount), 0);
+    
+    monthlyData.push({
+      month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      revenue,
+      profit: revenue * 0.85
+    });
+  }
+  
+  return monthlyData;
+}
 import { storage } from "./storage";
 import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema, insertCompanySchema, insertPaymentSchema, insertSubscriptionSchema, insertCompanyServiceSchema, insertCompanyProductSchema, insertServiceInquirySchema } from "@shared/schema";
 import { payumoneyService } from "./payumoney";
@@ -1354,6 +1387,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Delete company formation error:", error);
       res.status(400).json({ message: "Failed to delete company formation", error: error.message });
+    }
+  });
+
+  // Admin - Companies Management
+  app.get("/api/admin/companies", async (req, res) => {
+    try {
+      const companies = await storage.getAllCompanies();
+      res.json(companies);
+    } catch (error: any) {
+      console.error("Admin companies route error:", error);
+      res.status(500).json({ message: "Failed to get companies", error: error.message });
+    }
+  });
+
+  // Admin - Services Management  
+  app.get("/api/admin/services", async (req, res) => {
+    try {
+      const services = await storage.getAllCompanyServices();
+      res.json(services);
+    } catch (error: any) {
+      console.error("Admin services route error:", error);
+      res.status(500).json({ message: "Failed to get services", error: error.message });
+    }
+  });
+
+  // Admin - Events Management
+  app.get("/api/admin/events", async (req, res) => {
+    try {
+      const events = await storage.getAllEvents();
+      res.json(events);
+    } catch (error: any) {
+      console.error("Admin events route error:", error);
+      res.status(500).json({ message: "Failed to get events", error: error.message });
+    }
+  });
+
+  // Admin - Profit Analytics
+  app.get("/api/admin/analytics/profit", async (req, res) => {
+    try {
+      // Calculate profit from various sources
+      const payments = await storage.getAllPayments();
+      const subscriptions = await storage.getAllSubscriptions();
+      const events = await storage.getAllEvents();
+      
+      // Calculate profits
+      const eventRevenue = payments
+        .filter(p => p.type === 'event_fee')
+        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      
+      const subscriptionRevenue = subscriptions
+        .filter(s => s.status === 'active')
+        .reduce((sum, s) => sum + parseFloat(s.amount), 0);
+      
+      const serviceInquiryFees = payments
+        .filter(p => p.type === 'service_inquiry')
+        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      
+      const companyFormationFees = payments
+        .filter(p => p.type === 'company_formation')
+        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      
+      const totalRevenue = eventRevenue + subscriptionRevenue + serviceInquiryFees + companyFormationFees;
+      const totalProfit = totalRevenue * 0.85; // Assuming 15% operational costs
+      
+      res.json({
+        totalRevenue,
+        totalProfit,
+        breakdown: {
+          eventRevenue,
+          subscriptionRevenue, 
+          serviceInquiryFees,
+          companyFormationFees
+        },
+        monthlyData: await calculateMonthlyProfits(payments, subscriptions)
+      });
+    } catch (error: any) {
+      console.error("Admin analytics error:", error);
+      res.status(500).json({ message: "Failed to get analytics", error: error.message });
     }
   });
 
