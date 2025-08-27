@@ -137,19 +137,19 @@ export function DocumentsPage() {
                   <p className="text-muted-foreground">Manage your KYC and verification documents</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {user?.kycStatus === 'verified' && (
+                  {user?.isVerified && (
                     <Badge className="bg-green-100 text-green-800 border-green-200" data-testid="badge-kyc-verified">
                       <CheckCircle className="h-3 w-3 mr-1" />
                       KYC Verified
                     </Badge>
                   )}
-                  {user?.kycStatus === 'pending' && (
+                  {user?.isKycComplete && !user?.isVerified && (
                     <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200" data-testid="badge-kyc-pending">
                       <Clock className="h-3 w-3 mr-1" />
                       Under Review
                     </Badge>
                   )}
-                  {(!user?.kycStatus || user?.kycStatus === 'not_verified') && (
+                  {!user?.isVerified && !user?.isKycComplete && (
                     <Badge className="bg-red-100 text-red-800 border-red-200" data-testid="badge-kyc-not-verified">
                       <AlertCircle className="h-3 w-3 mr-1" />
                       Not Verified
@@ -159,23 +159,43 @@ export function DocumentsPage() {
               </div>
             </div>
 
-            {/* KYC Application Notice */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-              <div className="flex items-center mb-4">
-                <AlertCircle className="h-5 w-5 text-blue-600 mr-2" />
-                <h2 className="text-lg font-semibold text-blue-900">Complete Your KYC Verification</h2>
-              </div>
-              <p className="text-blue-800 mb-4">
-                To unlock all features of Qipad including project creation, investment opportunities, and community participation, 
-                please complete your KYC (Know Your Customer) verification by uploading the required documents below.
-              </p>
-              <div className="bg-blue-100 rounded-md p-3">
-                <p className="text-sm text-blue-800">
-                  <strong>Required documents:</strong> Upload clear images of your PAN card, GST certificate (for business), 
-                  and incorporation certificate to complete verification.
+            {/* KYC Application Notice - only show if not verified */}
+            {!user?.isVerified && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                <div className="flex items-center mb-4">
+                  <AlertCircle className="h-5 w-5 text-blue-600 mr-2" />
+                  <h2 className="text-lg font-semibold text-blue-900">Complete Your KYC Verification</h2>
+                </div>
+                <p className="text-blue-800 mb-4">
+                  To unlock all features of Qipad including project creation, investment opportunities, and community participation, 
+                  please complete your KYC (Know Your Customer) verification by uploading the required documents below.
                 </p>
+                <div className="bg-blue-100 rounded-md p-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Required documents:</strong> Upload clear images of your PAN card, GST certificate (for business), 
+                    and incorporation certificate to complete verification.
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Verification Success Notice - show if verified */}
+            {user?.isVerified && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                <div className="flex items-center mb-4">
+                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                  <h2 className="text-lg font-semibold text-green-900">KYC Verification Complete</h2>
+                </div>
+                <p className="text-green-800 mb-4">
+                  Congratulations! Your KYC verification has been successfully completed. You now have access to all Qipad features including project creation, investment opportunities, and full community participation.
+                </p>
+                <div className="bg-green-100 rounded-md p-3">
+                  <p className="text-sm text-green-800">
+                    <strong>Benefits unlocked:</strong> Full platform access, verified badge, priority support, and enhanced investment opportunities.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Upload Section */}
             <Card className="mb-6">
