@@ -154,10 +154,22 @@ export default function CommunityPage() {
                     </div>
                     
                     <div className="flex gap-2">
-                      <Button size="sm" className="flex-1" data-testid={`button-join-community-${community.id}`}>
-                        Join Community
-                      </Button>
-                      <Button size="sm" variant="outline" data-testid={`button-view-community-${community.id}`}>
+                      <JoinCommunityButton 
+                        communityId={community.id}
+                        onSuccess={() => {
+                          toast({
+                            title: "Success",
+                            description: `Joined ${community.name} community!`,
+                          });
+                          queryClient.invalidateQueries({ queryKey: ['/api/communities'] });
+                        }}
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => setLocation(`/communities/${community.id}`)}
+                        data-testid={`button-view-community-${community.id}`}
+                      >
                         <MessageCircle className="h-4 w-4" />
                       </Button>
                     </div>
