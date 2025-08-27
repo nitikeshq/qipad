@@ -99,7 +99,7 @@ export default function AdminDashboard() {
       return response.json();
     },
     onSuccess: (_, { type }) => {
-      toast({ title: `${type.slice(0, -1)} deleted successfully!` });
+      toast({ title: `${type === 'categories' ? 'Category' : 'Department'} deleted successfully!` });
       queryClient.invalidateQueries({ queryKey: [`/api/admin/${type}`] });
     },
     onError: () => {

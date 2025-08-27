@@ -38,6 +38,24 @@ export function TendersPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
 
+  const handleViewDetails = (tender: Tender) => {
+    alert(`Viewing details for: ${tender.title}\n\nDescription: ${tender.description}\n\nReference: ${tender.referenceNumber}`);
+  };
+
+  const handleDownloadDocument = (tender: Tender) => {
+    if (tender.documentUrl) {
+      window.open(tender.documentUrl, '_blank');
+    } else {
+      alert(`Document for tender "${tender.title}" is not available yet.`);
+    }
+  };
+
+  const handleContact = (tender: Tender) => {
+    const subject = encodeURIComponent(`Inquiry about ${tender.title} - ${tender.referenceNumber}`);
+    const body = encodeURIComponent(`Dear ${tender.department},\n\nI am interested in the tender: ${tender.title}\nReference Number: ${tender.referenceNumber}\n\nPlease provide more information.\n\nBest regards`);
+    window.open(`mailto:${tender.contactEmail}?subject=${subject}&body=${body}`, '_self');
+  };
+
   // Mock data for now - in production this would come from API
   const mockTenders: Tender[] = [
     {
@@ -215,15 +233,30 @@ export function TendersPage() {
         </div>
 
         <div className="flex gap-2 pt-4 border-t">
-          <Button variant="outline" size="sm" data-testid={`button-view-tender-${tender.id}`}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            data-testid={`button-view-tender-${tender.id}`}
+            onClick={() => handleViewDetails(tender)}
+          >
             <Eye className="h-4 w-4 mr-2" />
             View Details
           </Button>
-          <Button variant="outline" size="sm" data-testid={`button-download-tender-${tender.id}`}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            data-testid={`button-download-tender-${tender.id}`}
+            onClick={() => handleDownloadDocument(tender)}
+          >
             <Download className="h-4 w-4 mr-2" />
             Download Document
           </Button>
-          <Button variant="outline" size="sm" data-testid={`button-contact-tender-${tender.id}`}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            data-testid={`button-contact-tender-${tender.id}`}
+            onClick={() => handleContact(tender)}
+          >
             <ExternalLink className="h-4 w-4 mr-2" />
             Contact
           </Button>

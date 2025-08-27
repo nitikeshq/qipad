@@ -449,6 +449,28 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  async getUserInvestmentStats(userId: string): Promise<any> {
+    const userInvestments = await this.getInvestmentsByUser(userId);
+    
+    const totalInvested = userInvestments.reduce((sum, inv) => sum + parseFloat(inv.amount), 0);
+    const activeInvestments = userInvestments.filter(inv => inv.status === 'pending' || inv.status === 'approved').length;
+    const uniqueProjects = new Set(userInvestments.map(inv => inv.projectId)).size;
+    const investmentTypes = userInvestments.reduce((acc, inv) => {
+      acc[inv.type] = (acc[inv.type] || 0) + 1;
+      return acc;
+    }, {} as any);
+
+    return {
+      totalInvested: totalInvested.toLocaleString(),
+      activeInvestments,
+      uniqueProjects,
+      totalTransactions: userInvestments.length,
+      investmentTypes,
+      averageInvestment: userInvestments.length > 0 ? (totalInvested / userInvestments.length).toFixed(0) : '0',
+      lastInvestment: userInvestments[0]?.createdAt || null
+    };
+  }
+
   // Company Formation methods
   async createCompanyFormation(formation: InsertCompanyFormation): Promise<CompanyFormation> {
     const [newFormation] = await db

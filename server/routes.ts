@@ -311,6 +311,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/investments/my/stats", authenticateToken, async (req: any, res) => {
+    try {
+      const stats = await storage.getUserInvestmentStats(req.user.userId);
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get investment stats", error: error.message });
+    }
+  });
+
   app.get("/api/investments/project/:projectId", authenticateToken, async (req: any, res) => {
     try {
       const investments = await storage.getInvestmentsByProject(req.params.projectId);
@@ -474,8 +483,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/connections", authenticateToken, async (req: any, res) => {
     try {
-      const { recipientId } = req.body;
-      const connection = await storage.createConnection(req.user.userId, recipientId);
+      const { userId } = req.body;
+      const connection = await storage.createConnection(req.user.userId, userId);
       res.json(connection);
     } catch (error: any) {
       res.status(400).json({ message: "Failed to create connection", error: error.message });

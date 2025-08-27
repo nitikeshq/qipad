@@ -137,7 +137,7 @@ export default function Jobs() {
                           {job.title}
                         </h3>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${getJobTypeColor(job.jobType)}`} data-testid={`badge-job-type-${job.id}`}>
-                          {job.jobType.replace('-', ' ').toUpperCase()}
+                          {job.jobType?.replace('-', ' ').toUpperCase() || 'N/A'}
                         </span>
                       </div>
                       

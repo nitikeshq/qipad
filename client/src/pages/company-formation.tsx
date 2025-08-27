@@ -199,24 +199,47 @@ export default function CompanyFormation() {
         <main className="flex-1 p-6">
           <div className="max-w-6xl mx-auto space-y-6">
             {/* Header */}
-            <div className="text-center space-y-4">
-              <h1 className="text-4xl font-bold">Start Your Entrepreneurial Journey</h1>
-              <p className="text-xl text-muted-foreground">
-                Complete step-by-step company formation process with expert guidance
-              </p>
-              <div className="flex items-center justify-center space-x-4">
-                <Progress value={progressPercentage} className="w-64" />
-                <span className="text-sm font-medium">{completedSteps}/9 Steps Complete</span>
+            <div className="text-center space-y-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/50 dark:to-purple-950/50 p-8 rounded-2xl border-2 border-blue-200 dark:border-blue-800">
+              <div className="space-y-2">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Start Your Entrepreneurial Journey
+                </h1>
+                <p className="text-xl text-muted-foreground">
+                  Complete step-by-step company formation process with expert guidance
+                </p>
+              </div>
+              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-lg border max-w-lg mx-auto">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-semibold text-blue-600">Journey Progress</span>
+                  <span className="text-sm font-bold bg-blue-100 dark:bg-blue-900 px-3 py-1 rounded-full">
+                    {completedSteps}/9 Complete
+                  </span>
+                </div>
+                <Progress value={progressPercentage} className="h-3 bg-gray-200 dark:bg-gray-700">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-700 ease-out" 
+                    style={{ width: `${progressPercentage}%` }} 
+                  />
+                </Progress>
+                <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                  <span>Just Started</span>
+                  <span className="font-semibold text-blue-600">{Math.round(progressPercentage)}%</span>
+                  <span>Company Ready</span>
+                </div>
               </div>
             </div>
 
             {/* Steps Progress */}
-            <Card>
+            <Card className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border-2 shadow-lg">
               <CardHeader>
-                <CardTitle>Company Formation Process</CardTitle>
+                <CardTitle className="flex items-center text-xl">
+                  <Building className="h-5 w-5 mr-2 text-blue-600" />
+                  Company Formation Roadmap
+                </CardTitle>
+                <p className="text-muted-foreground">Follow these steps to transform your idea into a registered company</p>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap justify-center items-center gap-2">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   {COMPANY_FORMATION_STEPS.map((step, index) => {
                     const Icon = step.icon;
                     const isCompleted = companyFormation ? 

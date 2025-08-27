@@ -10,12 +10,32 @@ import { TrendingUp, DollarSign, PieChart, Calendar, Eye, Download } from "lucid
 
 export function InvestmentsPage() {
   const { data: investments = [], isLoading } = useQuery<any[]>({
-    queryKey: ['/api/investments']
+    queryKey: ['/api/investments/my']
   });
 
   const { data: stats = {}, isLoading: statsLoading } = useQuery<any>({
-    queryKey: ['/api/investments/stats']
+    queryKey: ['/api/investments/my/stats']
   });
+
+  const generateReport = (type: 'monthly' | 'annual' | 'tax') => {
+    const reportData = {
+      type,
+      investments,
+      stats,
+      generatedAt: new Date().toISOString(),
+      period: type === 'monthly' ? 'Last 30 days' : type === 'annual' ? 'Last 12 months' : 'Current tax year'
+    };
+
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `investment-report-${type}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -176,11 +196,57 @@ export function InvestmentsPage() {
                     <CardTitle>Portfolio Analysis</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center py-8 text-muted-foreground">
-                      <PieChart className="mx-auto h-12 w-12 mb-4 text-muted-foreground/50" />
-                      <p>Portfolio analysis coming soon</p>
-                      <p className="text-sm mt-2">Detailed charts and analytics will be available here</p>
-                    </div>
+                    {investments.length > 0 ? (
+                      <div className="space-y-6">
+                        {/* Portfolio Summary */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+                            <h4 className="font-semibold text-blue-900 dark:text-blue-100">Investment Distribution</h4>
+                            <div className="mt-2 space-y-1">
+                              <div className="text-sm">Equity: {stats.investmentTypes?.invest || 0} investments</div>
+                              <div className="text-sm">Support: {stats.investmentTypes?.support || 0} donations</div>
+                            </div>
+                          </div>
+                          <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
+                            <h4 className="font-semibold text-green-900 dark:text-green-100">Average Investment</h4>
+                            <div className="text-2xl font-bold text-green-600">₹{stats.averageInvestment || '0'}</div>
+                          </div>
+                          <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg">
+                            <h4 className="font-semibold text-purple-900 dark:text-purple-100">Projects Invested</h4>
+                            <div className="text-2xl font-bold text-purple-600">{stats.uniqueProjects || 0}</div>
+                          </div>
+                        </div>
+
+                        {/* Investment Timeline */}
+                        <div>
+                          <h4 className="font-semibold mb-4">Recent Investment Activity</h4>
+                          <div className="space-y-3">
+                            {investments.slice(0, 5).map((investment: any) => (
+                              <div key={investment.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                                <div>
+                                  <p className="font-medium">{investment.project?.title || 'Project'}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {new Date(investment.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-semibold">₹{investment.amount}</p>
+                                  <Badge variant={getStatusColor(investment.status)} className="text-xs">
+                                    {getStatusText(investment.status)}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <PieChart className="mx-auto h-12 w-12 mb-4 text-muted-foreground/50" />
+                        <p>No portfolio data available</p>
+                        <p className="text-sm mt-2">Start investing to see your portfolio analysis</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -191,21 +257,69 @@ export function InvestmentsPage() {
                     <CardTitle>Investment Reports</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Download className="mx-auto h-12 w-12 mb-4 text-muted-foreground/50" />
-                      <p>Generate and download investment reports</p>
-                      <div className="mt-4 space-x-4">
-                        <Button variant="outline" data-testid="button-monthly-report">
-                          Monthly Report
-                        </Button>
-                        <Button variant="outline" data-testid="button-annual-report">
-                          Annual Report
-                        </Button>
-                        <Button variant="outline" data-testid="button-tax-report">
-                          Tax Report
-                        </Button>
+                    {investments.length > 0 ? (
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <h4 className="font-semibold">Quick Reports</h4>
+                            <div className="space-y-2">
+                              <Button 
+                                variant="outline" 
+                                className="w-full justify-start"
+                                onClick={() => generateReport('monthly')}
+                                data-testid="button-monthly-report"
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Monthly Investment Summary
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                className="w-full justify-start"
+                                onClick={() => generateReport('annual')}
+                                data-testid="button-annual-report"
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Annual Investment Report
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                className="w-full justify-start"
+                                onClick={() => generateReport('tax')}
+                                data-testid="button-tax-report"
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Tax Documentation
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <h4 className="font-semibold">Report Statistics</h4>
+                            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-sm">Total Investments:</span>
+                                <span className="font-semibold">{investments.length}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm">Total Amount:</span>
+                                <span className="font-semibold">₹{stats.totalInvested || '0'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm">Last Investment:</span>
+                                <span className="font-semibold">
+                                  {stats.lastInvestment ? new Date(stats.lastInvestment).toLocaleDateString() : 'N/A'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Download className="mx-auto h-12 w-12 mb-4 text-muted-foreground/50" />
+                        <p>No investment data to generate reports</p>
+                        <p className="text-sm mt-2">Start investing to access detailed reports and analytics</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

@@ -10,6 +10,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { BiddingProject } from "@shared/schema";
 import { BiddingProjectModal } from "@/components/modals/BiddingProjectModal";
 import { ProjectBidModal } from "@/components/modals/ProjectBidModal";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Bidding() {
   const [isBiddingProjectModalOpen, setIsBiddingProjectModalOpen] = useState(false);
@@ -138,84 +139,88 @@ export default function Bidding() {
               </div>
             ) : filteredProjects.length > 0 ? (
               filteredProjects.map((project: BiddingProject) => (
-                <div key={project.id} className="bg-card rounded-lg border border-border p-6 shadow-sm" data-testid={`card-project-${project.id}`}>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-foreground mb-2" data-testid={`text-project-title-${project.id}`}>
-                        {project.title}
-                      </h3>
-                      <p className="text-muted-foreground text-sm mb-3" data-testid={`text-project-description-${project.id}`}>
-                        {project.description}
-                      </p>
-                    </div>
-                    <Badge className={getStatusColor(project.status)} data-testid={`badge-project-status-${project.id}`}>
-                      {project.status.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <DollarSign className="h-4 w-4" />
-                        <span>Budget:</span>
+                <Card key={project.id} className="hover:shadow-lg transition-shadow" data-testid={`card-project-${project.id}`}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg mb-2" data-testid={`text-project-title-${project.id}`}>
+                          {project.title}
+                        </CardTitle>
+                        <p className="text-muted-foreground text-sm" data-testid={`text-project-description-${project.id}`}>
+                          {project.description}
+                        </p>
                       </div>
-                      <span className="font-semibold text-foreground" data-testid={`text-project-budget-${project.id}`}>
-                        {formatBudget(project.budget)}
-                      </span>
+                      <Badge className={getStatusColor(project.status)} data-testid={`badge-project-status-${project.id}`}>
+                        {project.status.replace('_', ' ').toUpperCase()}
+                      </Badge>
                     </div>
-
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        <span>Timeline:</span>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <DollarSign className="h-4 w-4" />
+                          <span>Budget:</span>
+                        </div>
+                        <span className="font-semibold text-foreground" data-testid={`text-project-budget-${project.id}`}>
+                          {formatBudget(project.budget)}
+                        </span>
                       </div>
-                      <span className="text-foreground" data-testid={`text-project-timeline-${project.id}`}>
-                        {project.timeline}
-                      </span>
-                    </div>
 
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <FileText className="h-4 w-4" />
-                        <span>Category:</span>
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span>Timeline:</span>
+                        </div>
+                        <span className="text-foreground" data-testid={`text-project-timeline-${project.id}`}>
+                          {project.timeline}
+                        </span>
                       </div>
-                      <span className="text-foreground" data-testid={`text-project-category-${project.id}`}>
-                        {project.category.replace('-', ' ')}
-                      </span>
-                    </div>
-                  </div>
 
-                  {project.skillsRequired && project.skillsRequired.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-sm text-muted-foreground mb-2">Required Skills:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {project.skillsRequired.map((skill, index) => (
-                          <span 
-                            key={index} 
-                            className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded"
-                            data-testid={`tag-skill-${project.id}-${index}`}
-                          >
-                            {skill}
-                          </span>
-                        ))}
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <FileText className="h-4 w-4" />
+                          <span>Category:</span>
+                        </div>
+                        <span className="text-foreground" data-testid={`text-project-category-${project.id}`}>
+                          {project.category.replace('-', ' ')}
+                        </span>
                       </div>
                     </div>
-                  )}
 
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={() => handleBidOnProject(project)} 
-                      disabled={project.status !== 'open'}
-                      className="flex-1"
-                      data-testid={`button-bid-project-${project.id}`}
-                    >
-                      {project.status === 'open' ? 'Submit Bid' : 'Bidding Closed'}
-                    </Button>
-                    <Button variant="outline" data-testid={`button-view-project-${project.id}`}>
-                      View Details
-                    </Button>
-                  </div>
-                </div>
+                    {project.skillsRequired && project.skillsRequired.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-sm text-muted-foreground mb-2">Required Skills:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {project.skillsRequired.map((skill, index) => (
+                            <span 
+                              key={index} 
+                              className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded"
+                              data-testid={`tag-skill-${project.id}-${index}`}
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => handleBidOnProject(project)} 
+                        disabled={project.status !== 'open'}
+                        className="flex-1"
+                        data-testid={`button-bid-project-${project.id}`}
+                      >
+                        {project.status === 'open' ? 'Submit Bid' : 'Bidding Closed'}
+                      </Button>
+                      <Button variant="outline" data-testid={`button-view-project-${project.id}`}>
+                        View Details
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ))
             ) : (
               <div className="col-span-full text-center py-12 bg-card rounded-lg border border-border">

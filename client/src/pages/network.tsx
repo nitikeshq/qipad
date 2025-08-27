@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Search, Users, MessageCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { UserPlus, Search, Users, MessageCircle, Mail } from "lucide-react";
 
 export function NetworkPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/users/all']
@@ -19,6 +23,41 @@ export function NetworkPage() {
   const { data: connections = [] } = useQuery<any[]>({
     queryKey: ['/api/connections']
   });
+
+  const connectMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await apiRequest('POST', '/api/connections', { userId });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Connection Request Sent",
+        description: "Your connection request has been sent successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/connections'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Connection Failed",
+        description: error.message || "Failed to send connection request",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleConnect = (userId: string) => {
+    connectMutation.mutate(userId);
+  };
+
+  const handleViewProfile = (userId: string) => {
+    window.open(`/profile/${userId}`, '_blank');
+  };
+
+  const isConnected = (userId: string) => {
+    return connections.some((conn: any) => 
+      conn.userId === userId || conn.connectedUserId === userId
+    );
+  };
 
   const filteredUsers = users.filter((user: any) => 
     user.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -113,13 +152,40 @@ export function NetworkPage() {
                       </div>
 
                       <div className="flex space-x-2">
-                        <Button size="sm" className="flex-1" data-testid={`button-connect-${user.id}`}>
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Connect
+                        {isConnected(user.id) ? (
+                          <Button size="sm" variant="outline" className="flex-1" disabled>
+                            Connected
+                          </Button>
+                        ) : (
+                          <Button 
+                            size="sm" 
+                            className="flex-1" 
+                            onClick={() => handleConnect(user.id)}
+                            disabled={connectMutation.isPending}
+                            data-testid={`button-connect-${user.id}`}
+                          >
+                            <UserPlus className="h-4 w-4 mr-1" />
+                            Connect
+                          </Button>
+                        )}
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleViewProfile(user.id)}
+                          data-testid={`button-view-profile-${user.id}`}
+                        >
+                          View Profile
                         </Button>
-                        <Button size="sm" variant="outline" data-testid={`button-message-${user.id}`}>
-                          <MessageCircle className="h-4 w-4" />
-                        </Button>
+                        {isConnected(user.id) && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => window.open(`mailto:${user.email}`)}
+                            data-testid={`button-email-${user.id}`}
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
