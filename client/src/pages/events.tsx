@@ -129,7 +129,7 @@ export default function Events() {
     );
   }
 
-  const canCreateEvent = user?.kycStatus === "verified";
+  const canCreateEvent = user?.isVerified === true;
 
   return (
     <div className="min-h-screen bg-background">
