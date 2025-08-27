@@ -18,6 +18,7 @@ import { Search, MapPin, Globe, Phone, Mail, Building2, Package, Briefcase, Mess
 import { z } from "zod";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { AddCompanyModal } from "@/components/modals/AddCompanyModal";
 
 const inquirySchema = z.object({
   message: z.string().min(10, "Message must be at least 10 characters"),
@@ -80,6 +81,7 @@ export default function Companies() {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedItem, setSelectedItem] = useState<{type: 'service' | 'product', item: CompanyService | CompanyProduct, company: Company} | null>(null);
   const [showInquiryModal, setShowInquiryModal] = useState(false);
+  const [showAddCompanyModal, setShowAddCompanyModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -193,10 +195,15 @@ export default function Companies() {
                   Discover companies, their services, and products in the Qipad ecosystem
                 </p>
               </div>
-              <Button onClick={() => setLocation("/company-formation")} data-testid="button-add-company">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your Company
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setShowAddCompanyModal(true)} data-testid="button-add-company">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your Company
+                </Button>
+                <Button variant="outline" onClick={() => setLocation("/company-formation")} data-testid="button-start-company">
+                  Start New Company
+                </Button>
+              </div>
             </div>
 
         {/* Search and Filters */}
@@ -475,6 +482,18 @@ export default function Companies() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Add Company Modal */}
+        <AddCompanyModal 
+          open={showAddCompanyModal} 
+          onOpenChange={setShowAddCompanyModal}
+          onSuccess={() => {
+            toast({
+              title: "Company Added",
+              description: "Your company has been added to the directory!",
+            });
+          }}
+        />
 
         {/* Inquiry Modal */}
         <Dialog open={showInquiryModal} onOpenChange={setShowInquiryModal}>

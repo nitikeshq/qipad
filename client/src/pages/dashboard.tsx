@@ -46,7 +46,7 @@ export default function Dashboard() {
 
   const stats = [
     {
-      title: "Active Projects",
+      title: "Active Innovations",
       value: userStats?.activeProjects || 0,
       icon: FolderOpen,
       change: "+2 this month",

@@ -118,10 +118,24 @@ export function DocumentsPage() {
       'business_pan': 'Business PAN',
       'gst_certificate': 'GST Certificate',
       'incorporation_certificate': 'Incorporation Certificate',
-      'personal_pan': 'Personal PAN'
+      'personal_pan': 'Personal PAN',
+      'company_pan': 'Company PAN Card',
+      'company_gst': 'Company GST Certificate',
+      'company_incorporation': 'Company Incorporation Certificate'
     };
     return labels[type] || type;
   };
+
+  // Define document types with categories
+  const personalDocumentTypes = [
+    { key: 'personal_pan', label: 'Personal PAN Card', required: true },
+  ];
+
+  const companyDocumentTypes = [
+    { key: 'company_pan', label: 'Company PAN Card', required: true },
+    { key: 'company_gst', label: 'GST Certificate', required: true },
+    { key: 'company_incorporation', label: 'Incorporation Certificate', required: true },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -167,13 +181,13 @@ export function DocumentsPage() {
                   <h2 className="text-lg font-semibold text-blue-900">Complete Your KYC Verification</h2>
                 </div>
                 <p className="text-blue-800 mb-4">
-                  To unlock all features of Qipad including project creation, investment opportunities, and community participation, 
+                  To unlock all features of Qipad including innovation creation, investment opportunities, and community participation, 
                   please complete your KYC (Know Your Customer) verification by uploading the required documents below.
                 </p>
                 <div className="bg-blue-100 rounded-md p-3">
                   <p className="text-sm text-blue-800">
-                    <strong>Required documents:</strong> Upload clear images of your PAN card, GST certificate (for business), 
-                    and incorporation certificate to complete verification.
+                    <strong>Personal KYC:</strong> Upload your Personal PAN card for basic platform access.<br />
+                    <strong>Company KYC:</strong> Upload Business PAN, GST certificate, and incorporation certificate for company features.
                   </p>
                 </div>
               </div>
@@ -187,7 +201,7 @@ export function DocumentsPage() {
                   <h2 className="text-lg font-semibold text-green-900">KYC Verification Complete</h2>
                 </div>
                 <p className="text-green-800 mb-4">
-                  Congratulations! Your KYC verification has been successfully completed. You now have access to all Qipad features including project creation, investment opportunities, and full community participation.
+                  Congratulations! Your KYC verification has been successfully completed. You now have access to all Qipad features including innovation creation, investment opportunities, and full community participation.
                 </p>
                 <div className="bg-green-100 rounded-md p-3">
                   <p className="text-sm text-green-800">
@@ -197,59 +211,108 @@ export function DocumentsPage() {
               </div>
             )}
 
-            {/* Upload Section */}
+            {/* Personal KYC Section */}
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Upload className="h-5 w-5 mr-2" />
-                  Upload KYC Documents
+                  Personal KYC Documents
                 </CardTitle>
                 <CardDescription>
-                  Upload clear, readable images of your verification documents
+                  Upload your personal verification documents
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { type: 'personal_pan', label: 'Personal PAN Card', required: true },
-                    { type: 'business_pan', label: 'Business PAN Card', required: false },
-                    { type: 'gst_certificate', label: 'GST Certificate', required: false },
-                    { type: 'incorporation_certificate', label: 'Incorporation Certificate', required: false }
-                  ].map((doc) => (
-                    <div key={doc.type} className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-secondary/50 transition-colors">
+                  {personalDocumentTypes.map((doc) => (
+                    <div key={doc.key} className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-secondary/50 transition-colors">
                       <FileText className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
                       <p className="text-sm font-medium mb-1">{doc.label}</p>
                       {doc.required && (
                         <p className="text-xs text-red-600 mb-3">Required</p>
                       )}
                       <input
-                        ref={(el) => (fileInputRefs.current[doc.type] = el)}
+                        ref={(el) => (fileInputRefs.current[doc.key] = el)}
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
                         style={{ display: 'none' }}
-                        onChange={(e) => handleFileChange(e, doc.type)}
+                        onChange={(e) => handleFileChange(e, doc.key)}
                       />
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        data-testid={`button-upload-${doc.type}`}
-                        onClick={() => handleUploadClick(doc.type)}
-                        disabled={uploadingStates[doc.type]}
+                        data-testid={`button-upload-${doc.key}`}
+                        onClick={() => handleUploadClick(doc.key)}
+                        disabled={uploadingStates[doc.key]}
                       >
                         <Upload className="h-4 w-4 mr-1" />
-                        {uploadingStates[doc.type] ? 'Uploading...' : 'Upload Document'}
+                        {uploadingStates[doc.key] ? 'Uploading...' : 'Upload Document'}
                       </Button>
                     </div>
                   ))}
                 </div>
                 
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium mb-2">Document Guidelines:</h4>
+                  <h4 className="font-medium mb-2">Personal KYC Guidelines:</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Personal PAN Card is required for platform access</li>
                     <li>• Ensure documents are clearly visible and not blurred</li>
                     <li>• Upload high-quality images (JPG, PNG formats)</li>
-                    <li>• Make sure all text and details are readable</li>
                     <li>• File size should be less than 5MB per document</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Company KYC Section */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Upload className="h-5 w-5 mr-2" />
+                  Company KYC Documents
+                </CardTitle>
+                <CardDescription>
+                  Upload company verification documents (required for company verification)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {companyDocumentTypes.map((doc) => (
+                    <div key={doc.key} className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-secondary/50 transition-colors">
+                      <FileText className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+                      <p className="text-sm font-medium mb-1">{doc.label}</p>
+                      {doc.required && (
+                        <p className="text-xs text-red-600 mb-3">Required for company verification</p>
+                      )}
+                      <input
+                        ref={(el) => (fileInputRefs.current[doc.key] = el)}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        style={{ display: 'none' }}
+                        onChange={(e) => handleFileChange(e, doc.key)}
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        data-testid={`button-upload-${doc.key}`}
+                        onClick={() => handleUploadClick(doc.key)}
+                        disabled={uploadingStates[doc.key]}
+                      >
+                        <Upload className="h-4 w-4 mr-1" />
+                        {uploadingStates[doc.key] ? 'Uploading...' : 'Upload Document'}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium mb-2 text-blue-900">Company KYC Guidelines:</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Business PAN Card/Company PAN Card - Mandatory for company verification</li>
+                    <li>• GST Certificate - Required for tax compliance verification</li>
+                    <li>• Incorporation Certificate - Proves company legal existence</li>
+                    <li>• All documents must be valid and clearly readable</li>
+                    <li>• Company documents enable business features and higher transaction limits</li>
                   </ul>
                 </div>
               </CardContent>

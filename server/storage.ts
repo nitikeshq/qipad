@@ -143,6 +143,7 @@ export interface IStorage {
   // Company methods
   getAllCompanies(): Promise<Company[]>;
   getCompanyById(id: string): Promise<Company | undefined>;
+  getCompaniesByOwner(ownerId: string): Promise<Company[]>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: string, updates: Partial<Company>): Promise<Company>;
 
@@ -922,6 +923,15 @@ export class DatabaseStorage implements IStorage {
   async getCompanyById(id: string): Promise<Company | undefined> {
     const [company] = await db.select().from(companies).where(eq(companies.id, id));
     return company || undefined;
+  }
+
+  async getCompaniesByOwner(ownerId: string): Promise<Company[]> {
+    const result = await db
+      .select()
+      .from(companies)
+      .where(eq(companies.ownerId, ownerId))
+      .orderBy(desc(companies.createdAt));
+    return result;
   }
 
   async createCompany(insertCompany: InsertCompany): Promise<Company> {

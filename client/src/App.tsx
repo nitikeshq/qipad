@@ -52,9 +52,9 @@ function Router() {
     <Switch>
       <Route path="/auth" component={Auth} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
-      <Route path="/projects/:id" component={() => <ProtectedRoute component={ProjectDetailsPage} />} />
-      <Route path="/projects" component={() => <ProtectedRoute component={Projects} />} />
-      <Route path="/my-projects" component={() => <ProtectedRoute component={MyProjects} />} />
+      <Route path="/innovations/:id" component={() => <ProtectedRoute component={ProjectDetailsPage} />} />
+      <Route path="/innovations" component={() => <ProtectedRoute component={Projects} />} />
+      <Route path="/my-innovations" component={() => <ProtectedRoute component={MyProjects} />} />
       <Route path="/investors" component={() => <ProtectedRoute component={Investors} />} />
       <Route path="/network" component={() => <ProtectedRoute component={NetworkPage} />} />
       <Route path="/documents" component={() => <ProtectedRoute component={DocumentsPage} />} />

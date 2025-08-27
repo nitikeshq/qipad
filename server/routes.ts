@@ -1827,6 +1827,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/companies/my', authenticateToken, async (req: any, res) => {
+    try {
+      const companies = await storage.getCompaniesByOwner(req.user.userId);
+      res.json(companies);
+    } catch (error: any) {
+      console.error('Error fetching user companies:', error);
+      res.status(500).json({ message: 'Failed to fetch user companies' });
+    }
+  });
+
+  app.post('/api/companies', authenticateToken, async (req: any, res) => {
+    try {
+      const companyData = insertCompanySchema.parse({ ...req.body, ownerId: req.user.userId });
+      const company = await storage.createCompany(companyData);
+      res.status(201).json(company);
+    } catch (error: any) {
+      console.error('Error creating company:', error);
+      res.status(400).json({ message: 'Failed to create company', error: error.message });
+    }
+  });
+
   app.get('/api/companies/:id', async (req, res) => {
     try {
       const company = await storage.getCompanyById(req.params.id);

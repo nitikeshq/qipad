@@ -15,9 +15,9 @@ export function Sidebar() {
 
   const quickActions = [
     { 
-      label: "Create Project", 
+      label: "Create Innovation", 
       icon: Plus, 
-      action: "create-project",
+      action: "create-innovation",
       onClick: () => setIsProjectModalOpen(true)
     },
     { 
@@ -36,8 +36,8 @@ export function Sidebar() {
 
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
-    { path: "/my-projects", label: "My Projects", icon: FolderOpen },
-    { path: "/bidding", label: "Project Bidding", icon: Gavel },
+    { path: "/my-innovations", label: "My Innovations", icon: FolderOpen },
+    { path: "/bidding", label: "Bidding", icon: Gavel },
     { path: "/investments", label: "Investments", icon: TrendingUp },
     { path: "/company-formation", label: "Company Formation", icon: Building },
     { path: "/companies", label: "Companies Directory", icon: Building2 },
