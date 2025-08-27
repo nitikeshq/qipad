@@ -37,7 +37,7 @@ export default function Investors() {
   const filteredInvestors = allUsers.filter((investor: User) => {
     const matchesSearch = investor.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          investor.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         investor.email.toLowerCase().includes(searchTerm.toLowerCase());
+                         (connectedInvestors.has(investor.id) && investor.email.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesLocation = locationFilter === 'all' || 
                            (investor.phone && investor.phone.includes(locationFilter));
@@ -175,14 +175,14 @@ export default function Investors() {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Mail className="h-4 w-4" />
                       <span data-testid={`text-investor-email-${investor.id}`} className="truncate">
-                        {investor.email}
+                        {connectedInvestors.has(investor.id) ? investor.email : '••••••@••••.com'}
                       </span>
                     </div>
                     {investor.phone && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Phone className="h-4 w-4" />
                         <span data-testid={`text-investor-phone-${investor.id}`}>
-                          {investor.phone}
+                          {connectedInvestors.has(investor.id) ? investor.phone : '••••••••••'}
                         </span>
                       </div>
                     )}
@@ -201,7 +201,7 @@ export default function Investors() {
                       disabled={connectedInvestors.has(investor.id) || connectMutation.isPending}
                       data-testid={`button-connect-investor-${investor.id}`}
                     >
-                      {connectedInvestors.has(investor.id) ? 'Connected' : 'Connect'}
+                      {connectedInvestors.has(investor.id) ? 'Connected' : 'Connect to View Contact'}
                     </Button>
                     <Button 
                       variant="outline" 
