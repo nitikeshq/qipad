@@ -3,12 +3,12 @@
 Qipad (Life force + platform → "Energized startup space") is a comprehensive business networking and investment platform that connects entrepreneurs with investors, facilitating project funding, community building, and job opportunities. The platform serves two main user types: business owners seeking funding and investors looking for investment opportunities. It features project creation and management, percentage-based equity investment system, community forums, job postings, comprehensive KYC verification processes, and advanced admin management system.
 
 ## Recent Updates
-- **Fixed Document Upload System** - Documents now save to uploads/{userId}/ directory structure with proper user-specific folders (January 2025)
-- **Events PayUMoney Integration** - Complete payment flow for paid event registration with 2% platform fee and free event support
-- **Investment Modal Component** - Created InvestModal with equity-based investment and PayUMoney payment gateway integration
-- **KYC Document Management** - Renamed Documents page to "My KYC" with functional upload buttons for PDF/PNG/JPG files
-- **Admin KYC Approval System** - Added KYC approval buttons and API endpoints for admins to verify user applications
-- **Database Schema Sync** - Updated and synchronized all tables including events table for proper functionality
+- **Critical Bug Fixes Completed** - Fixed React hooks rendering error, communities 500 error, NaN fund values, and currency symbol duplication (January 2025)
+- **Communities System Restoration** - Added missing database category column and restored full community functionality with proper error handling
+- **Investment Display Fixes** - Resolved double rupee symbol (₹₹) issue in portfolio analysis by using server-formatted values directly
+- **Admin Panel Enhancements** - Fixed company formation updates with proper date handling and added comprehensive pagination
+- **Dashboard Statistics Fix** - Resolved NaN fund raised values by using pre-formatted server statistics instead of client-side parsing
+- **Database Schema Sync** - Updated and synchronized all tables including missing community category column for proper functionality
 - **Enhanced User Registration** - Added "Individual" as third user type alongside Business Owner and Investor (December 2024)
 - **Admin Login System** - Implemented secure admin authentication with credentials (admin/qipad2024!) and JWT tokens
 - **Comprehensive Community System** - Complete community functionality with detail pages, join/leave, member management, posting, and admin moderation
