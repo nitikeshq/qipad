@@ -11,6 +11,7 @@ export const investmentStatusEnum = pgEnum('investment_status', ['pending', 'app
 export const subscriptionStatusEnum = pgEnum('subscription_status', ['active', 'inactive', 'trial', 'cancelled']);
 export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'completed', 'failed', 'refunded']);
 export const companyStatusEnum = pgEnum('company_status', ['pending', 'approved', 'rejected']);
+export const connectionStatusEnum = pgEnum('connection_status', ['pending', 'accepted', 'rejected']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -301,23 +301,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // INVESTOR CONNECTION ROUTES
-  app.post("/api/investors/connect", async (req, res) => {
+  app.post("/api/investors/connect", authenticateToken, async (req: any, res) => {
     try {
       const { investorId } = req.body;
       if (!investorId) {
         return res.status(400).json({ message: "Investor ID is required" });
       }
       
-      // In a real app, you would store this connection in the database
-      // For now, we'll just return success
+      const userId = req.user.userId;
+      
+      // Check if connection already exists
+      const existingConnection = await storage.getConnectionBetweenUsers(userId, investorId);
+      if (existingConnection) {
+        return res.status(400).json({ 
+          message: "Connection already exists", 
+          status: existingConnection.status 
+        });
+      }
+      
+      // Create connection request
+      const connection = await storage.createConnection(userId, investorId);
+      
       res.json({ 
         message: "Connection request sent successfully",
-        connected: true,
-        investorId 
+        connection,
+        status: "pending"
       });
     } catch (error: any) {
       console.error("Connect investor error:", error);
       res.status(500).json({ message: "Failed to send connection request", error: error.message });
+    }
+  });
+
+  // Get user's connections
+  app.get("/api/connections/my", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      const connections = await storage.getConnections(userId);
+      res.json(connections);
+    } catch (error: any) {
+      console.error("Get connections error:", error);
+      res.status(500).json({ message: "Failed to get connections", error: error.message });
+    }
+  });
+
+  // Accept/reject connection request
+  app.put("/api/connections/:connectionId", authenticateToken, async (req: any, res) => {
+    try {
+      const { connectionId } = req.params;
+      const { status } = req.body; // 'accepted' or 'rejected'
+      
+      if (!['accepted', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'accepted' or 'rejected'" });
+      }
+      
+      const connection = await storage.updateConnectionStatus(connectionId, status);
+      res.json(connection);
+    } catch (error: any) {
+      console.error("Update connection error:", error);
+      res.status(500).json({ message: "Failed to update connection", error: error.message });
     }
   });
 

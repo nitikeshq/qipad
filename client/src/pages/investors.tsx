@@ -1,4 +1,5 @@
 import { useState } from "react";
+import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Search, Filter, Mail, Phone, MapPin, DollarSign } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/queryClient";
 import { User } from "@shared/schema";
 
@@ -20,9 +22,12 @@ export default function Investors() {
   const [selectedInvestor, setSelectedInvestor] = useState<User | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [connectedInvestors, setConnectedInvestors] = useState<Set<string>>(new Set());
+  const [pendingConnections, setPendingConnections] = useState<Set<string>>(new Set());
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const userId = user?.id;
 
   // Query to get all investors (users with userType = 'investor')
   const { data: allUsers = [], isLoading } = useQuery<User[]>({
@@ -33,6 +38,39 @@ export default function Investors() {
       return users.filter((user: User) => user.userType === 'investor');
     }
   });
+
+  // Query to get user's connections to check which investors are actually connected
+  const { data: userConnections = [] } = useQuery({
+    queryKey: ['/api/connections/my'],
+    queryFn: async () => {
+      const response = await fetch('/api/connections/my', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.json();
+    }
+  });
+
+  // Set up connected and pending investors based on actual connection data
+  React.useEffect(() => {
+    if (userConnections?.length > 0) {
+      const accepted = new Set<string>();
+      const pending = new Set<string>();
+      
+      userConnections.forEach((connection: any) => {
+        const otherUserId = connection.requesterId === userId ? connection.recipientId : connection.requesterId;
+        if (connection.status === 'accepted' || connection.isAccepted) {
+          accepted.add(otherUserId);
+        } else if (connection.status === 'pending') {
+          pending.add(otherUserId);
+        }
+      });
+      
+      setConnectedInvestors(accepted);
+      setPendingConnections(pending);
+    }
+  }, [userConnections]);
 
   const filteredInvestors = allUsers.filter((investor: User) => {
     const matchesSearch = investor.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -47,15 +85,23 @@ export default function Investors() {
 
   const connectMutation = useMutation({
     mutationFn: async (investorId: string) => {
-      const response = await apiRequest("POST", "/api/investors/connect", { investorId });
-      return response.json();
+      const response = await apiRequest("/api/investors/connect", {
+        method: "POST",
+        body: JSON.stringify({ investorId }),
+      });
+      return response;
     },
     onSuccess: (data, investorId) => {
       toast({ title: "Connection request sent successfully!" });
-      setConnectedInvestors(prev => new Set(prev).add(investorId));
+      setPendingConnections(prev => new Set(prev).add(investorId));
+      queryClient.invalidateQueries({ queryKey: ['/api/connections/my'] });
     },
-    onError: () => {
-      toast({ title: "Failed to send connection request", variant: "destructive" });
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to send connection request", 
+        description: error.message,
+        variant: "destructive" 
+      });
     }
   });
 
@@ -198,10 +244,14 @@ export default function Investors() {
                     <Button 
                       className="w-full" 
                       onClick={() => handleConnect(investor)}
-                      disabled={connectedInvestors.has(investor.id) || connectMutation.isPending}
+                      disabled={connectedInvestors.has(investor.id) || pendingConnections.has(investor.id) || connectMutation.isPending}
                       data-testid={`button-connect-investor-${investor.id}`}
                     >
-                      {connectedInvestors.has(investor.id) ? 'Connected' : 'Connect to View Contact'}
+                      {connectedInvestors.has(investor.id) 
+                        ? 'Connected' 
+                        : pendingConnections.has(investor.id)
+                        ? 'Request Sent'
+                        : 'Connect to View Contact'}
                     </Button>
                     <Button 
                       variant="outline" 
