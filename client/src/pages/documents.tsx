@@ -17,6 +17,7 @@ export function DocumentsPage() {
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [uploadingStates, setUploadingStates] = useState<{ [key: string]: boolean }>({});
   
   const uploadMutation = useMutation({
     mutationFn: async ({ file, documentType }: { file: File; documentType: string }) => {
@@ -24,16 +25,19 @@ export function DocumentsPage() {
       formData.append('file', file);
       formData.append('documentType', documentType);
       
+      // Use apiRequest which handles authentication properly
       return await apiRequest('POST', '/api/documents', formData);
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/documents'] });
+      setUploadingStates(prev => ({ ...prev, [variables.documentType]: false }));
       toast({
         title: "Document Uploaded",
         description: "Your document has been uploaded successfully and is under review.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: any, variables) => {
+      setUploadingStates(prev => ({ ...prev, [variables.documentType]: false }));
       toast({
         title: "Upload Failed",
         description: error.message || "Failed to upload document. Please try again.",
@@ -73,8 +77,13 @@ export function DocumentsPage() {
         return;
       }
       
+      // Set uploading state for this specific document type
+      setUploadingStates(prev => ({ ...prev, [documentType]: true }));
       uploadMutation.mutate({ file, documentType });
     }
+    
+    // Reset the input value so the same file can be selected again if needed
+    event.target.value = '';
   };
 
   const getStatusIcon = (isVerified: boolean) => {
@@ -163,10 +172,10 @@ export function DocumentsPage() {
                         variant="outline" 
                         data-testid={`button-upload-${doc.type}`}
                         onClick={() => handleUploadClick(doc.type)}
-                        disabled={uploadMutation.isPending}
+                        disabled={uploadingStates[doc.type]}
                       >
                         <Upload className="h-4 w-4 mr-1" />
-                        {uploadMutation.isPending ? 'Uploading...' : 'Upload Document'}
+                        {uploadingStates[doc.type] ? 'Uploading...' : 'Upload Document'}
                       </Button>
                     </div>
                   ))}
