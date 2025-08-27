@@ -1270,15 +1270,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/company-formations/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const updateData = req.body;
+      const updateData = { ...req.body };
       
       // Handle date conversion for step update
       if (updateData.steps && Array.isArray(updateData.steps)) {
         updateData.steps = updateData.steps.map((step: any) => ({
           ...step,
-          completedAt: step.completedAt ? new Date(step.completedAt) : null
+          completedAt: step.completedAt && step.completedAt !== '' ? new Date(step.completedAt) : null
         }));
       }
+      
+      // Handle timestamp fields that might be strings
+      const timestampFields = ['incorporationDate', 'gstRegistrationDate', 'bankAccountOpenDate', 'createdAt', 'updatedAt'];
+      timestampFields.forEach(field => {
+        if (updateData[field] && typeof updateData[field] === 'string' && updateData[field] !== '') {
+          try {
+            updateData[field] = new Date(updateData[field]);
+          } catch (e) {
+            // If conversion fails, set to null
+            updateData[field] = null;
+          }
+        } else if (updateData[field] === '' || updateData[field] === null) {
+          updateData[field] = null;
+        }
+      });
       
       const updatedFormation = await storage.updateCompanyFormation(id, updateData);
       res.json(updatedFormation);
@@ -1308,14 +1323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/company-formations/:id", async (req, res) => {
-    try {
-      const formation = await storage.updateCompanyFormation(req.params.id, req.body);
-      res.json(formation);
-    } catch (error: any) {
-      res.status(400).json({ message: "Failed to update company formation", error: error.message });
-    }
-  });
+
 
   app.patch("/api/admin/company-formations/:id/status", async (req, res) => {
     try {
