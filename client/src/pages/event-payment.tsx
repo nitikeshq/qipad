@@ -119,7 +119,11 @@ export default function EventPayment() {
     );
   }
 
-  const totalAmount = parseFloat(event.price) + parseFloat(event.platformFee);
+  // Platform fee is INCLUSIVE - user pays event price, platform fee is deducted from it
+  const eventPrice = parseFloat(event.price);
+  const platformFee = parseFloat(event.platformFee);
+  const totalAmount = eventPrice; // User pays the event price only
+  const creatorAmount = eventPrice - platformFee; // Creator gets event price minus platform fee
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -168,13 +172,19 @@ export default function EventPayment() {
               <h4 className="font-medium mb-3">Payment Summary</h4>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span>Event Fee</span>
-                  <span>₹{parseFloat(event.price).toFixed(2)}</span>
+                  <span>Event Registration</span>
+                  <span>₹{eventPrice.toFixed(2)}</span>
                 </div>
-                {parseFloat(event.platformFee) > 0 && (
-                  <div className="flex justify-between">
-                    <span>Platform Fee</span>
-                    <span>₹{parseFloat(event.platformFee).toFixed(2)}</span>
+                {platformFee > 0 && (
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Platform Fee (included)</span>
+                    <span>₹{platformFee.toFixed(2)}</span>
+                  </div>
+                )}
+                {platformFee > 0 && (
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Event Creator Receives</span>
+                    <span>₹{creatorAmount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-semibold border-t pt-2">
