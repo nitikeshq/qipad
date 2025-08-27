@@ -1271,6 +1271,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const updateData = req.body;
+      
+      // Handle date conversion for step update
+      if (updateData.steps && Array.isArray(updateData.steps)) {
+        updateData.steps = updateData.steps.map((step: any) => ({
+          ...step,
+          completedAt: step.completedAt ? new Date(step.completedAt) : null
+        }));
+      }
+      
       const updatedFormation = await storage.updateCompanyFormation(id, updateData);
       res.json(updatedFormation);
     } catch (error: any) {

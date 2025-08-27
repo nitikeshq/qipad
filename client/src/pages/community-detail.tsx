@@ -42,6 +42,14 @@ export default function CommunityDetailPage() {
     queryKey: ['/api/user'],
   });
 
+  const { data: userCommunities = [] } = useQuery({
+    queryKey: ["/api/user/communities"],
+  });
+
+  const { data: events = [] } = useQuery({
+    queryKey: ["/api/events"],
+  });
+
   const joinMutation = useMutation({
     mutationFn: () => apiRequest("POST", `/api/communities/${params?.id}/join`),
     onSuccess: () => {
@@ -194,14 +202,7 @@ export default function CommunityDetailPage() {
     );
   }
 
-  // Check membership from both members list and user communities
-  const { data: userCommunities = [] } = useQuery({
-    queryKey: ["/api/user/communities"],
-  });
-
-  const { data: events = [] } = useQuery({
-    queryKey: ["/api/events"],
-  });
+  // This was moved up to avoid hooks order issues
   
   const isUserMember = (Array.isArray(members) && members.some((member: any) => member.userId === user?.id)) ||
                        (Array.isArray(userCommunities) && userCommunities.some((membership: any) => membership.communityId === params?.id));

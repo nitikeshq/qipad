@@ -469,21 +469,34 @@ export class DatabaseStorage implements IStorage {
     return investment;
   }
 
-  async getAllCommunities(): Promise<any[]> {
-    const communitiesList = await db.select().from(communities).orderBy(desc(communities.createdAt));
-    
-    // Add member count for each community
-    const communitiesWithCounts = await Promise.all(
-      communitiesList.map(async (community) => {
-        const members = await this.getCommunityMembers(community.id);
-        return {
-          ...community,
-          memberCount: members.length
-        };
-      })
-    );
-    
-    return communitiesWithCounts;
+  async getAllCommunities(): Promise<Community[]> {
+    try {
+      const communitiesList = await db.select().from(communities).orderBy(desc(communities.createdAt));
+      
+      // Add member count for each community
+      const communitiesWithCounts = await Promise.all(
+        communitiesList.map(async (community) => {
+          try {
+            const members = await this.getCommunityMembers(community.id);
+            return {
+              ...community,
+              memberCount: members.length
+            };
+          } catch (error) {
+            console.error(`Error getting members for community ${community.id}:`, error);
+            return {
+              ...community,
+              memberCount: 0
+            };
+          }
+        })
+      );
+      
+      return communitiesWithCounts;
+    } catch (error) {
+      console.error('Error in getAllCommunities:', error);
+      throw error;
+    }
   }
 
   async getCommunity(id: string): Promise<Community | undefined> {

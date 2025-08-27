@@ -54,7 +54,7 @@ export default function Dashboard() {
     },
     {
       title: "Funds Raised",
-      value: `₹${parseFloat(userStats?.totalFunding || '0').toLocaleString()}`,
+      value: userStats?.totalFunding || "₹0",
       icon: DollarSign,
       change: "+15% this month",
       changeType: "positive" as const,

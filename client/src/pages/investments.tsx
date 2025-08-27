@@ -215,7 +215,7 @@ export function InvestmentsPage() {
                           </div>
                           <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
                             <h4 className="font-semibold text-green-900 dark:text-green-100">Average Investment</h4>
-                            <div className="text-2xl font-bold text-green-600">₹{stats.averageInvestment || '0'}</div>
+                            <div className="text-2xl font-bold text-green-600">{stats.averageInvestment || '₹0'}</div>
                           </div>
                           <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg">
                             <h4 className="font-semibold text-purple-900 dark:text-purple-100">Projects Invested</h4>
