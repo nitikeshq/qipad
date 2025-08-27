@@ -48,10 +48,7 @@ export default function CompanyFormation() {
 
   const createFormationMutation = useMutation({
     mutationFn: async (formationData: any) => {
-      return apiRequest("/api/company-formations", {
-        method: "POST",
-        body: JSON.stringify(formationData),
-      });
+      return apiRequest("POST", "/api/company-formations", formationData);
     },
     onSuccess: () => {
       toast({
@@ -71,10 +68,7 @@ export default function CompanyFormation() {
 
   const updateFormationMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      return apiRequest(`/api/company-formations/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("PUT", `/api/company-formations/${id}`, data);
     },
     onSuccess: () => {
       toast({
