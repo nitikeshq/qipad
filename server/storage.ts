@@ -66,9 +66,11 @@ export interface IStorage {
 
   // Connection methods
   getConnections(userId: string): Promise<Connection[]>;
-  getUserConnections(userId: string): Promise<Connection[]>;
+  getUserConnections(userId: string): Promise<any[]>;
   createConnection(requesterId: string, recipientId: string): Promise<Connection>;
   acceptConnection(connectionId: string): Promise<Connection>;
+  getConnectionBetweenUsers(requesterId: string, recipientId: string, projectId?: string): Promise<any>;
+  updateConnectionStatus(connectionId: string, status: string): Promise<any>;
 
   // Bidding project methods
   getAllBiddingProjects(): Promise<BiddingProject[]>;
@@ -97,6 +99,13 @@ export interface IStorage {
   getCompanyFormation(id: string): Promise<CompanyFormation | undefined>;
   getCompanyFormationByUser(userId: string): Promise<CompanyFormation | undefined>;
   updateCompanyFormation(id: string, formation: Partial<InsertCompanyFormation>): Promise<CompanyFormation>;
+
+  // Tender management
+  createTender(tender: InsertTender): Promise<Tender>;
+  getAllTenders(): Promise<Tender[]>;
+  getTender(id: string): Promise<Tender | undefined>;
+  updateTender(id: string, updates: Partial<Tender>): Promise<Tender>;
+  deleteTender(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -591,6 +600,34 @@ export class DatabaseStorage implements IStorage {
       .where(eq(companyFormations.id, id))
       .returning();
     return formation;
+  }
+
+  // Tender management methods
+  async createTender(tender: InsertTender): Promise<Tender> {
+    const [newTender] = await db.insert(tenders).values(tender).returning();
+    return newTender;
+  }
+
+  async getAllTenders(): Promise<Tender[]> {
+    return await db.select().from(tenders).orderBy(desc(tenders.createdAt));
+  }
+
+  async getTender(id: string): Promise<Tender | undefined> {
+    const [tender] = await db.select().from(tenders).where(eq(tenders.id, id));
+    return tender || undefined;
+  }
+
+  async updateTender(id: string, updates: Partial<Tender>): Promise<Tender> {
+    const [tender] = await db
+      .update(tenders)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(tenders.id, id))
+      .returning();
+    return tender;
+  }
+
+  async deleteTender(id: string): Promise<void> {
+    await db.delete(tenders).where(eq(tenders.id, id));
   }
 }
 

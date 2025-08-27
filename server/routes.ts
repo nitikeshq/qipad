@@ -593,7 +593,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Company Formation routes - TODO: Implement company formation process
+  // Company Formation routes for users
+  app.get("/api/company-formations/my", authenticateToken, async (req: any, res) => {
+    try {
+      const formation = await storage.getCompanyFormationByUser(req.user.userId);
+      res.json(formation);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get company formation", error: error.message });
+    }
+  });
+
+  app.post("/api/company-formations", authenticateToken, async (req: any, res) => {
+    try {
+      const formationData = { ...req.body, userId: req.user.userId };
+      const formation = await storage.createCompanyFormation(formationData);
+      res.json(formation);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create company formation", error: error.message });
+    }
+  });
+
+  app.put("/api/company-formations/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const formation = await storage.updateCompanyFormation(req.params.id, req.body);
+      res.json(formation);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update company formation", error: error.message });
+    }
+  });
+
+  // Public tender routes
+  app.get("/api/tenders", async (req, res) => {
+    try {
+      const tenders = await storage.getAllTenders();
+      res.json(tenders);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get tenders", error: error.message });
+    }
+  });
+
+  app.get("/api/tenders/eligible", authenticateToken, async (req: any, res) => {
+    try {
+      // In production, this would check user KYC and business profile
+      const allTenders = await storage.getAllTenders();
+      const eligibleTenders = allTenders.filter((tender: any) => tender.status === 'open');
+      res.json(eligibleTenders);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get eligible tenders", error: error.message });
+    }
+  });
   
   // ADMIN ROUTES
 
@@ -673,6 +721,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // TENDER MANAGEMENT ROUTES
+  app.get("/api/admin/tenders", async (req, res) => {
+    try {
+      const tenders = await storage.getAllTenders();
+      res.json(tenders);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get tenders", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/tenders", async (req, res) => {
+    try {
+      const tender = await storage.createTender(req.body);
+      res.json(tender);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create tender", error: error.message });
+    }
+  });
+
+  app.put("/api/admin/tenders/:id", async (req, res) => {
+    try {
+      const tender = await storage.updateTender(req.params.id, req.body);
+      res.json(tender);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update tender", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/tenders/:id", async (req, res) => {
+    try {
+      await storage.deleteTender(req.params.id);
+      res.json({ message: "Tender deleted successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to delete tender", error: error.message });
+    }
+  });
+
+  // COMPANY FORMATION MANAGEMENT ROUTES
+  app.get("/api/admin/company-formations", async (req, res) => {
+    try {
+      const formations = await storage.getAllCompanyFormations();
+      const formationsWithUsers = await Promise.all(
+        formations.map(async (formation) => {
+          const user = await storage.getUser(formation.userId);
+          return {
+            ...formation,
+            user: user ? { 
+              id: user.id, 
+              firstName: user.firstName, 
+              lastName: user.lastName, 
+              email: user.email 
+            } : null
+          };
+        })
+      );
+      res.json(formationsWithUsers);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get company formations", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/company-formations", async (req, res) => {
+    try {
+      const formation = await storage.createCompanyFormation(req.body);
+      res.json(formation);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create company formation", error: error.message });
+    }
+  });
+
+  app.put("/api/admin/company-formations/:id", async (req, res) => {
+    try {
+      const formation = await storage.updateCompanyFormation(req.params.id, req.body);
+      res.json(formation);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update company formation", error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/company-formations/:id/status", async (req, res) => {
+    try {
+      const { status } = req.body;
+      const formation = await storage.updateCompanyFormation(req.params.id, { status });
+      res.json(formation);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update company formation status", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/company-formations/:id", async (req, res) => {
+    try {
+      const { companyFormations } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      await db.delete(companyFormations).where(eq(companyFormations.id, req.params.id));
+      res.json({ message: "Company formation deleted successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to delete company formation", error: error.message });
+    }
+  });
+
   // Admin - Communities Management
   app.get("/api/admin/communities", async (req, res) => {
     try {
@@ -727,7 +875,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/categories", async (req, res) => {
     try {
       const { name, description, type } = req.body;
-      // In production, save to database
+      // Note: In full production, this would use a categories table
       const newCategory = {
         id: Date.now().toString(),
         name,
@@ -741,9 +889,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/admin/categories/:id", async (req, res) => {
+    try {
+      const { name, description, type } = req.body;
+      // Note: In full production, this would update the categories table
+      const updatedCategory = {
+        id: req.params.id,
+        name,
+        description,
+        type,
+        updatedAt: new Date()
+      };
+      res.json(updatedCategory);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update category", error: error.message });
+    }
+  });
+
   app.delete("/api/admin/categories/:id", async (req, res) => {
     try {
-      // In production, delete from database
+      // Note: In full production, this would delete from categories table
       res.json({ message: "Category deleted successfully" });
     } catch (error: any) {
       res.status(400).json({ message: "Failed to delete category", error: error.message });
@@ -771,7 +936,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/departments", async (req, res) => {
     try {
       const { name, description } = req.body;
-      // In production, save to database
+      // Note: In full production, this would use a departments table
       const newDepartment = {
         id: Date.now().toString(),
         name,
@@ -785,9 +950,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/admin/departments/:id", async (req, res) => {
+    try {
+      const { name, description } = req.body;
+      // Note: In full production, this would update the departments table
+      const updatedDepartment = {
+        id: req.params.id,
+        name,
+        description,
+        headCount: 0,
+        updatedAt: new Date()
+      };
+      res.json(updatedDepartment);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update department", error: error.message });
+    }
+  });
+
   app.delete("/api/admin/departments/:id", async (req, res) => {
     try {
-      // In production, delete from database
+      // Note: In full production, this would delete from departments table
       res.json({ message: "Department deleted successfully" });
     } catch (error: any) {
       res.status(400).json({ message: "Failed to delete department", error: error.message });

@@ -18,7 +18,7 @@ import { DocumentsPage } from "@/pages/documents";
 import { InvestmentsPage } from "@/pages/investments";
 import { ProjectDetailsPage } from "@/pages/project-details";
 import CompanyFormation from "@/pages/company-formation";
-import { TendersPage } from "@/pages/tenders";
+import Tenders from "@/pages/tenders";
 import ProfileSettings from "@/pages/profile-settings";
 import BillingSettings from "@/pages/billing-settings";
 import GeneralSettings from "@/pages/general-settings";
@@ -59,7 +59,7 @@ function Router() {
       <Route path="/communities" component={() => <ProtectedRoute component={Community} />} />
       <Route path="/jobs" component={() => <ProtectedRoute component={Jobs} />} />
       <Route path="/bidding" component={() => <ProtectedRoute component={Bidding} />} />
-      <Route path="/tenders" component={() => <ProtectedRoute component={TendersPage} />} />
+      <Route path="/tenders" component={() => <ProtectedRoute component={Tenders} />} />
       <Route path="/company-formation" component={() => <ProtectedRoute component={CompanyFormation} />} />
       <Route path="/profile-settings" component={() => <ProtectedRoute component={ProfileSettings} />} />
       <Route path="/billing-settings" component={() => <ProtectedRoute component={BillingSettings} />} />
