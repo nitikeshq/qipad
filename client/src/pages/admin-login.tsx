@@ -88,7 +88,7 @@ export default function AdminLogin() {
             </Button>
             <div className="text-center text-sm text-muted-foreground">
               <p>Admin credentials:</p>
-              <p>Email: admin@qipad.com | Password: admin123</p>
+              <p>Username: admin | Password: qipad2024!</p>
             </div>
           </form>
         </CardContent>

@@ -756,12 +756,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/admin/login', async (req, res) => {
     try {
       const { username, password } = req.body;
+      console.log('Admin login attempt:', { username, passwordLength: password?.length });
       
       // Simple admin credentials check (in production, use proper authentication)
       if (username === 'admin' && password === 'qipad2024!') {
         const token = jwt.sign(
           { userId: 'admin', isAdmin: true },
-          process.env.JWT_SECRET!,
+          process.env.JWT_SECRET || 'fallback-secret-key',
           { expiresIn: '24h' }
         );
         
