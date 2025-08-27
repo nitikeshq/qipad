@@ -20,6 +20,7 @@ export interface PayUMoneyResponse {
   paymentUrl?: string;
   txnId?: string;
   error?: string;
+  formData?: any;
 }
 
 export class PayUMoneyService {
@@ -52,9 +53,14 @@ export class PayUMoneyService {
 
   async createPayment(data: PayUMoneyPaymentData): Promise<PayUMoneyResponse> {
     try {
+      console.log('PayUMoney createPayment - Input data:', JSON.stringify(data, null, 2));
+      
       // Validate amount - ensure it's a positive number with max 2 decimal places
       const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+      console.log('PayUMoney - Parsed amount:', amount, 'Type:', typeof amount);
+      
       if (isNaN(amount) || amount <= 0) {
+        console.error('PayUMoney - Invalid amount validation failed:', amount);
         return {
           success: false,
           error: 'Invalid amount: Amount must be a positive number',
@@ -63,6 +69,7 @@ export class PayUMoneyService {
 
       // PayUMoney minimum amount is ₹10
       if (amount < 10) {
+        console.error('PayUMoney - Amount below minimum:', amount);
         return {
           success: false,
           error: 'Minimum amount is ₹10 for PayUMoney payments',
@@ -71,9 +78,11 @@ export class PayUMoneyService {
 
       // Format amount to 2 decimal places
       const formattedAmount = amount.toFixed(2);
+      console.log('PayUMoney - Formatted amount:', formattedAmount);
       
       const paymentDataForHash = { ...data, amount: formattedAmount };
       const hash = this.generateHash(paymentDataForHash);
+      console.log('PayUMoney - Generated hash:', hash.substring(0, 20) + '...');
       
       const paymentData = {
         key: this.merchantKey,
@@ -87,10 +96,19 @@ export class PayUMoneyService {
         furl: data.failureUrl,
         hash: hash,
         service_provider: 'payu_paisa',
-        udf1: data.userId,
-        udf2: data.paymentType,
+        udf1: data.userId || '',
+        udf2: data.paymentType || '',
         udf3: JSON.stringify(data.metadata || {}),
+        udf4: '',
+        udf5: '',
+        pg: 'CC', // Credit Card as default payment gateway
       };
+
+      console.log('PayUMoney - Final payment data:', {
+        ...paymentData,
+        hash: hash.substring(0, 20) + '...',
+        key: this.merchantKey.substring(0, 10) + '...'
+      });
 
       // For PayUMoney, we need to redirect to their payment page
       const paymentUrl = `${this.baseUrl}/_payment`;
@@ -99,6 +117,7 @@ export class PayUMoneyService {
         success: true,
         paymentUrl,
         txnId: data.txnId,
+        formData: paymentData, // Return form data for frontend to POST
       };
     } catch (error) {
       console.error('PayUMoney payment creation failed:', error);

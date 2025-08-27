@@ -34,9 +34,23 @@ export function SupportModal({ open, onOpenChange, project }: SupportModalProps)
       return response.json();
     },
     onSuccess: (data: any) => {
-      if (data.paymentUrl) {
-        // Redirect to PayUMoney payment gateway
-        window.location.href = data.paymentUrl;
+      if (data.paymentUrl && data.formData) {
+        // Create a form and submit to PayUMoney
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = data.paymentUrl;
+        
+        // Add all form data as hidden inputs
+        Object.keys(data.formData).forEach(key => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = data.formData[key];
+          form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
       } else {
         toast({ title: "Support payment initiated successfully!" });
         queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
