@@ -67,8 +67,13 @@ export const investments = pgTable("investments", {
   projectId: varchar("project_id").notNull().references(() => projects.id),
   investorId: varchar("investor_id").notNull().references(() => users.id),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  type: text("type").notNull().default("invest"), // "invest" or "support"
+  expectedStakes: decimal("expected_stakes", { precision: 5, scale: 2 }), // percentage for investments
   status: investmentStatusEnum("status").default("pending"),
   paymentGatewayId: text("payment_gateway_id"),
+  investorContact: text("investor_contact"), // shared with project owner
+  investorEmail: text("investor_email"), // shared with project owner
+  message: text("message"), // investor's message to project owner
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -158,6 +163,73 @@ export const projectBids = pgTable("project_bids", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Company Formation Tables
+export const companyFormations = pgTable("company_formations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  companyName: text("company_name"),
+  companyType: text("company_type"), // Private Limited, Partnership, Proprietary, LLP, Public Limited
+  currentStep: integer("current_step").default(1), // 1-8 process steps
+  contactPhone: text("contact_phone"),
+  contactEmail: text("contact_email"),
+  preferredLocation: text("preferred_location"),
+  businessIdea: text("business_idea"),
+  estimatedCapital: decimal("estimated_capital", { precision: 15, scale: 2 }),
+  
+  // Step completion tracking
+  companyCreated: boolean("company_created").default(false),
+  dinGenerated: boolean("din_generated").default(false),
+  documentsObtained: boolean("documents_obtained").default(false),
+  trademarkApplied: boolean("trademark_applied").default(false),
+  bankAccountCreated: boolean("bank_account_created").default(false),
+  projectPosted: boolean("project_posted").default(false),
+  governmentSchemesApplied: boolean("government_schemes_applied").default(false),
+  
+  // Documents and details
+  incorporationCertificate: text("incorporation_certificate"),
+  gstNumber: text("gst_number"),
+  panNumber: text("pan_number"),
+  dinNumber: text("din_number"),
+  trademarkNumber: text("trademark_number"),
+  bankAccountDetails: text("bank_account_details"),
+  
+  status: text("status").default("in_progress"), // in_progress, completed, on_hold
+  assignedConsultant: varchar("assigned_consultant").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Tender Management
+export const tenders = pgTable("tenders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  organization: text("organization").notNull(),
+  category: text("category").notNull(),
+  eligibilityCriteria: text("eligibility_criteria").notNull(),
+  estimatedValue: decimal("estimated_value", { precision: 15, scale: 2 }),
+  submissionDeadline: timestamp("submission_deadline").notNull(),
+  openingDate: timestamp("opening_date"),
+  location: text("location"),
+  documentUrl: text("document_url"),
+  contactDetails: text("contact_details"),
+  tags: text("tags").array(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Tender Eligibility Tracking
+export const tenderEligibility = pgTable("tender_eligibility", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenderId: varchar("tender_id").notNull().references(() => tenders.id),
+  companyFormationId: varchar("company_formation_id").notNull().references(() => companyFormations.id),
+  isEligible: boolean("is_eligible").notNull(),
+  eligibilityScore: integer("eligibility_score"), // 0-100
+  missingRequirements: text("missing_requirements").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   projects: many(projects),
@@ -171,6 +243,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   projectBids: many(projectBids),
   connectionsSent: many(connections, { relationName: "requester" }),
   connectionsReceived: many(connections, { relationName: "recipient" }),
+  companyFormations: many(companyFormations),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -282,6 +355,33 @@ export const projectBidsRelations = relations(projectBids, ({ one }) => ({
   }),
 }));
 
+export const companyFormationsRelations = relations(companyFormations, ({ one, many }) => ({
+  user: one(users, {
+    fields: [companyFormations.userId],
+    references: [users.id],
+  }),
+  consultant: one(users, {
+    fields: [companyFormations.assignedConsultant],
+    references: [users.id],
+  }),
+  tenderEligibilities: many(tenderEligibility),
+}));
+
+export const tendersRelations = relations(tenders, ({ many }) => ({
+  eligibilities: many(tenderEligibility),
+}));
+
+export const tenderEligibilityRelations = relations(tenderEligibility, ({ one }) => ({
+  tender: one(tenders, {
+    fields: [tenderEligibility.tenderId],
+    references: [tenders.id],
+  }),
+  companyFormation: one(companyFormations, {
+    fields: [tenderEligibility.companyFormationId],
+    references: [companyFormations.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -342,6 +442,33 @@ export const insertProjectBidSchema = createInsertSchema(projectBids).omit({
   updatedAt: true,
 });
 
+export const insertCompanyFormationSchema = createInsertSchema(companyFormations).omit({
+  id: true,
+  currentStep: true,
+  companyCreated: true,
+  dinGenerated: true,
+  documentsObtained: true,
+  trademarkApplied: true,
+  bankAccountCreated: true,
+  projectPosted: true,
+  governmentSchemesApplied: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTenderSchema = createInsertSchema(tenders).omit({
+  id: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTenderEligibilitySchema = createInsertSchema(tenderEligibility).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -362,3 +489,9 @@ export type BiddingProject = typeof biddingProjects.$inferSelect;
 export type InsertBiddingProject = z.infer<typeof insertBiddingProjectSchema>;
 export type ProjectBid = typeof projectBids.$inferSelect;
 export type InsertProjectBid = z.infer<typeof insertProjectBidSchema>;
+export type CompanyFormation = typeof companyFormations.$inferSelect;
+export type InsertCompanyFormation = z.infer<typeof insertCompanyFormationSchema>;
+export type Tender = typeof tenders.$inferSelect;
+export type InsertTender = z.infer<typeof insertTenderSchema>;
+export type TenderEligibility = typeof tenderEligibility.$inferSelect;
+export type InsertTenderEligibility = z.infer<typeof insertTenderEligibilitySchema>;

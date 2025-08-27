@@ -1,11 +1,13 @@
 import { 
   users, projects, documents, investments, communities, communityMembers, 
   communityPosts, jobs, jobApplications, connections, biddingProjects, projectBids,
+  companyFormations,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
   type Community, type InsertCommunity, type Job, type InsertJob,
   type JobApplication, type InsertJobApplication, type Connection,
-  type BiddingProject, type InsertBiddingProject, type ProjectBid, type InsertProjectBid
+  type BiddingProject, type InsertBiddingProject, type ProjectBid, type InsertProjectBid,
+  type CompanyFormation, type InsertCompanyFormation
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -79,6 +81,13 @@ export interface IStorage {
     investorCount: number;
     connectionCount: number;
   }>;
+
+  // Company formations
+  createCompanyFormation(formation: InsertCompanyFormation): Promise<CompanyFormation>;
+  getAllCompanyFormations(): Promise<CompanyFormation[]>;
+  getCompanyFormation(id: string): Promise<CompanyFormation | undefined>;
+  getCompanyFormationByUser(userId: string): Promise<CompanyFormation | undefined>;
+  updateCompanyFormation(id: string, formation: Partial<InsertCompanyFormation>): Promise<CompanyFormation>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -367,6 +376,38 @@ export class DatabaseStorage implements IStorage {
       investorCount: uniqueInvestors.size,
       connectionCount: userConnections.length,
     };
+  }
+
+  // Company Formation methods
+  async createCompanyFormation(formation: InsertCompanyFormation): Promise<CompanyFormation> {
+    const [newFormation] = await db
+      .insert(companyFormations)
+      .values(formation)
+      .returning();
+    return newFormation;
+  }
+
+  async getAllCompanyFormations(): Promise<CompanyFormation[]> {
+    return await db.select().from(companyFormations).orderBy(desc(companyFormations.createdAt));
+  }
+
+  async getCompanyFormation(id: string): Promise<CompanyFormation | undefined> {
+    const [formation] = await db.select().from(companyFormations).where(eq(companyFormations.id, id));
+    return formation || undefined;
+  }
+
+  async getCompanyFormationByUser(userId: string): Promise<CompanyFormation | undefined> {
+    const [formation] = await db.select().from(companyFormations).where(eq(companyFormations.userId, userId));
+    return formation || undefined;
+  }
+
+  async updateCompanyFormation(id: string, updates: Partial<InsertCompanyFormation>): Promise<CompanyFormation> {
+    const [formation] = await db
+      .update(companyFormations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(companyFormations.id, id))
+      .returning();
+    return formation;
   }
 }
 

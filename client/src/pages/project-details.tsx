@@ -138,8 +138,27 @@ export function ProjectDetailsPage() {
   const fundingProgress = (parseFloat(project.currentFunding) / parseFloat(project.fundingGoal)) * 100;
   const daysRemaining = Math.max(0, project.campaignDuration - Math.floor((Date.now() - new Date(project.createdAt).getTime()) / (1000 * 60 * 60 * 24)));
 
-  const handleInvest = (amount: number) => {
-    investMutation.mutate(amount);
+  const handleInvest = async (amount: number, type: "invest" | "support" = "invest") => {
+    try {
+      await investMutation.mutateAsync({
+        projectId: projectId!,
+        amount: amount.toString(),
+        type,
+        message: type === "invest" ? "Interested in getting stakes in your company" : "Supporting your project"
+      });
+      toast({
+        title: type === "invest" ? "Investment Request Sent" : "Support Sent",
+        description: type === "invest" 
+          ? `Your investment request of ₹${amount} for stakes in ${project?.title} has been sent to the project owner`
+          : `Your support of ₹${amount} for ${project?.title} has been sent`,
+      });
+    } catch (error) {
+      toast({
+        title: "Request Failed",
+        description: "There was an error processing your request",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -399,19 +418,72 @@ export function ProjectDetailsPage() {
                     </div>
 
                     {!isEditMode && (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
+                        <div className="text-sm text-muted-foreground">
+                          <p className="font-medium">Choose investment type:</p>
+                        </div>
                         <Button 
-                          className="w-full" 
-                          onClick={() => handleInvest(parseFloat(project.minimumInvestment))}
+                          className="w-full bg-green-600 hover:bg-green-700" 
+                          onClick={() => handleInvest(parseFloat(project.minimumInvestment), "invest")}
                           disabled={investMutation.isPending}
                           data-testid="button-invest"
                         >
-                          Invest ₹{project.minimumInvestment}
+                          💼 Invest ₹{project.minimumInvestment}
+                          <span className="text-xs block">Want stakes in company</span>
                         </Button>
-                        <Button variant="outline" className="w-full" data-testid="button-custom-investment">
+                        <Button 
+                          variant="outline" 
+                          className="w-full border-blue-200 hover:bg-blue-50" 
+                          onClick={() => handleInvest(parseFloat(project.minimumInvestment), "support")}
+                          disabled={investMutation.isPending}
+                          data-testid="button-support"
+                        >
+                          🤝 Support ₹{project.minimumInvestment}
+                          <span className="text-xs block">No stakes, just support</span>
+                        </Button>
+                        <Button variant="ghost" className="w-full text-sm" data-testid="button-custom-investment">
                           Custom Amount
                         </Button>
                       </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Project Owner Contact */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Users className="h-5 w-5 mr-2" />
+                      Project Owner
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {project.owner ? (
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Name</span>
+                          <span className="font-medium">{project.owner.firstName} {project.owner.lastName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">User Type</span>
+                          <span className="font-medium capitalize">{project.owner.userType?.replace('_', ' ')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Email</span>
+                          <span className="font-medium text-sm">{project.owner.email}</span>
+                        </div>
+                        {project.owner.phone && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Phone</span>
+                            <span className="font-medium">{project.owner.phone}</span>
+                          </div>
+                        )}
+                        <div className="text-xs text-muted-foreground mt-2">
+                          * Contact details shared after investment/support
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">Owner information not available</p>
                     )}
                   </CardContent>
                 </Card>
@@ -422,6 +494,14 @@ export function ProjectDetailsPage() {
                     <CardTitle>Project Stats</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Total Investors</span>
+                      <span className="font-medium">{investments?.length || 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Supporters</span>
+                      <span className="font-medium">{investments?.filter(inv => inv.type === 'support')?.length || 0}</span>
+                    </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Minimum Investment</span>
                       <span className="font-medium">₹{project.minimumInvestment}</span>

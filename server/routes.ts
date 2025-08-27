@@ -174,7 +174,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
-      res.json(project);
+
+      // Get project owner information for investor contact
+      const projectOwner = await storage.getUser(project.userId);
+      const projectWithOwner = {
+        ...project,
+        owner: projectOwner ? {
+          id: projectOwner.id,
+          firstName: projectOwner.firstName,
+          lastName: projectOwner.lastName,
+          email: projectOwner.email,
+          phone: projectOwner.phone,
+          userType: projectOwner.userType
+        } : null
+      };
+
+      res.json(projectWithOwner);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to get project", error: error.message });
     }
@@ -260,9 +275,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Investment routes
   app.post("/api/investments", authenticateToken, async (req: any, res) => {
     try {
+      // Get investor's contact information for sharing with project owner
+      const investor = await storage.getUser(req.user.userId);
+      
       const investmentData = insertInvestmentSchema.parse({ 
         ...req.body, 
-        investorId: req.user.userId 
+        investorId: req.user.userId,
+        investorContact: investor?.phone || '',
+        investorEmail: investor?.email || ''
       });
       
       const investment = await storage.createInvestment(investmentData);
@@ -286,6 +306,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(investments);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to get investments", error: error.message });
+    }
+  });
+
+  app.get("/api/investments/project/:projectId", authenticateToken, async (req: any, res) => {
+    try {
+      const investments = await storage.getInvestmentsByProject(req.params.projectId);
+      
+      // Include investor details for project owners to contact
+      const investmentsWithInvestors = await Promise.all(
+        investments.map(async (investment) => {
+          const investor = await storage.getUser(investment.investorId);
+          return {
+            ...investment,
+            investor: investor ? {
+              id: investor.id,
+              firstName: investor.firstName,
+              lastName: investor.lastName,
+              email: investment.investorEmail,
+              phone: investment.investorContact,
+              userType: investor.userType
+            } : null
+          };
+        })
+      );
+
+      res.json(investmentsWithInvestors);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get project investments", error: error.message });
     }
   });
 
@@ -430,6 +478,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(connection);
     } catch (error: any) {
       res.status(400).json({ message: "Failed to create connection", error: error.message });
+    }
+  });
+
+  // Company Formation routes
+  app.post("/api/company-formations", authenticateToken, async (req: any, res) => {
+    try {
+      const formationData = { 
+        ...req.body, 
+        userId: req.user.userId 
+      };
+      
+      const formation = await storage.createCompanyFormation(formationData);
+      res.json(formation);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create company formation", error: error.message });
+    }
+  });
+
+  app.get("/api/company-formations/my", authenticateToken, async (req: any, res) => {
+    try {
+      const formation = await storage.getCompanyFormationByUser(req.user.userId);
+      res.json(formation);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get company formation", error: error.message });
+    }
+  });
+
+  app.get("/api/company-formations", authenticateToken, async (req: any, res) => {
+    try {
+      const formations = await storage.getAllCompanyFormations();
+      res.json(formations);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get company formations", error: error.message });
+    }
+  });
+
+  app.put("/api/company-formations/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const formation = await storage.updateCompanyFormation(req.params.id, req.body);
+      res.json(formation);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update company formation", error: error.message });
     }
   });
 
