@@ -93,6 +93,7 @@ export const communityMembers = pgTable("community_members", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   communityId: varchar("community_id").notNull().references(() => communities.id),
   userId: varchar("user_id").notNull().references(() => users.id),
+  role: text("role").default("member"), // member, admin, banned
   joinedAt: timestamp("joined_at").defaultNow(),
 });
 
@@ -101,6 +102,8 @@ export const communityPosts = pgTable("community_posts", {
   communityId: varchar("community_id").notNull().references(() => communities.id),
   authorId: varchar("author_id").notNull().references(() => users.id),
   content: text("content").notNull(),
+  images: text("images").array(),
+  videos: text("videos").array(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -432,6 +435,16 @@ export const insertCommunitySchema = createInsertSchema(communities).omit({
   createdAt: true,
 });
 
+export const insertCommunityMemberSchema = createInsertSchema(communityMembers).omit({
+  id: true,
+  joinedAt: true,
+});
+
+export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertJobSchema = createInsertSchema(jobs).omit({
   id: true,
   isActive: true,
@@ -495,6 +508,10 @@ export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type Investment = typeof investments.$inferSelect;
 export type InsertInvestment = z.infer<typeof insertInvestmentSchema>;
 export type Community = typeof communities.$inferSelect;
+export type InsertCommunityMember = z.infer<typeof insertCommunityMemberSchema>;
+export type CommunityMember = typeof communityMembers.$inferSelect;
+export type InsertCommunityPost = z.infer<typeof insertCommunityPostSchema>;
+export type CommunityPost = typeof communityPosts.$inferSelect;
 export type InsertCommunity = z.infer<typeof insertCommunitySchema>;
 export type Job = typeof jobs.$inferSelect;
 export type InsertJob = z.infer<typeof insertJobSchema>;

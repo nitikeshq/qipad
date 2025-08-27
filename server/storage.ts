@@ -1,16 +1,18 @@
 import { 
   users, projects, documents, investments, communities, communityMembers, 
   communityPosts, jobs, jobApplications, connections, biddingProjects, projectBids,
-  companyFormations,
+  companyFormations, tenders, tenderEligibility,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
-  type Community, type InsertCommunity, type Job, type InsertJob,
+  type Community, type InsertCommunity, type CommunityMember, type InsertCommunityMember,
+  type CommunityPost, type InsertCommunityPost, type Job, type InsertJob,
   type JobApplication, type InsertJobApplication, type Connection,
   type BiddingProject, type InsertBiddingProject, type ProjectBid, type InsertProjectBid,
-  type CompanyFormation, type InsertCompanyFormation
+  type CompanyFormation, type InsertCompanyFormation, type Tender, type InsertTender,
+  type TenderEligibility, type InsertTenderEligibility
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, sql, ne } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -47,6 +49,11 @@ export interface IStorage {
   createCommunity(community: InsertCommunity): Promise<Community>;
   joinCommunity(communityId: string, userId: string): Promise<void>;
   leaveCommunity(communityId: string, userId: string): Promise<void>;
+  getCommunityMembers(communityId: string): Promise<any[]>;
+  updateMemberRole(communityId: string, userId: string, role: string): Promise<void>;
+  getCommunityPosts(communityId: string): Promise<any[]>;
+  createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost>;
+  isUserMember(communityId: string, userId: string): Promise<boolean>;
 
   // Job methods
   getAllJobs(): Promise<Job[]>;
@@ -323,12 +330,98 @@ export class DatabaseStorage implements IStorage {
   }
 
   async joinCommunity(communityId: string, userId: string): Promise<void> {
-    await db.insert(communityMembers).values({ communityId, userId });
+    await db.insert(communityMembers).values({ communityId, userId, role: "member" });
   }
 
   async leaveCommunity(communityId: string, userId: string): Promise<void> {
     await db.delete(communityMembers)
       .where(and(eq(communityMembers.communityId, communityId), eq(communityMembers.userId, userId)));
+  }
+
+  async getCommunityMembers(communityId: string): Promise<any[]> {
+    return await db.select({
+      id: communityMembers.id,
+      userId: communityMembers.userId,
+      role: communityMembers.role,
+      joinedAt: communityMembers.joinedAt,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      email: users.email,
+      profileImage: users.profileImage
+    })
+    .from(communityMembers)
+    .leftJoin(users, eq(communityMembers.userId, users.id))
+    .where(eq(communityMembers.communityId, communityId));
+  }
+
+  async updateMemberRole(communityId: string, userId: string, role: string): Promise<void> {
+    await db.update(communityMembers)
+      .set({ role })
+      .where(and(eq(communityMembers.communityId, communityId), eq(communityMembers.userId, userId)));
+  }
+
+  async getCommunityPosts(communityId: string): Promise<any[]> {
+    return await db.select({
+      id: communityPosts.id,
+      content: communityPosts.content,
+      images: communityPosts.images,
+      videos: communityPosts.videos,
+      createdAt: communityPosts.createdAt,
+      authorId: communityPosts.authorId,
+      authorFirstName: users.firstName,
+      authorLastName: users.lastName,
+      authorProfileImage: users.profileImage
+    })
+    .from(communityPosts)
+    .leftJoin(users, eq(communityPosts.authorId, users.id))
+    .where(eq(communityPosts.communityId, communityId))
+    .orderBy(desc(communityPosts.createdAt));
+  }
+
+  async createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost> {
+    const [newPost] = await db.insert(communityPosts).values(post).returning();
+    return newPost;
+  }
+
+  async isUserMember(communityId: string, userId: string): Promise<boolean> {
+    const [member] = await db.select()
+      .from(communityMembers)
+      .where(and(eq(communityMembers.communityId, communityId), eq(communityMembers.userId, userId)));
+    return !!member;
+  }
+
+  async getCommunityPosts(communityId: string): Promise<any[]> {
+    return await db.select({
+      id: communityPosts.id,
+      content: communityPosts.content,
+      images: communityPosts.images,
+      videos: communityPosts.videos,
+      createdAt: communityPosts.createdAt,
+      authorId: communityPosts.authorId,
+      authorFirstName: users.firstName,
+      authorLastName: users.lastName,
+      authorProfileImage: users.profileImage
+    })
+    .from(communityPosts)
+    .leftJoin(users, eq(communityPosts.authorId, users.id))
+    .where(eq(communityPosts.communityId, communityId))
+    .orderBy(desc(communityPosts.createdAt));
+  }
+
+  async createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost> {
+    const [newPost] = await db.insert(communityPosts).values(post).returning();
+    return newPost;
+  }
+
+  async isUserMember(communityId: string, userId: string): Promise<boolean> {
+    const [member] = await db.select()
+      .from(communityMembers)
+      .where(and(
+        eq(communityMembers.communityId, communityId), 
+        eq(communityMembers.userId, userId),
+        ne(communityMembers.role, "banned")
+      ));
+    return !!member;
   }
 
   async getAllJobs(): Promise<Job[]> {

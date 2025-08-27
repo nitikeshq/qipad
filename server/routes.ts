@@ -415,12 +415,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/communities/:id", async (req, res) => {
+    try {
+      const community = await storage.getCommunity(req.params.id);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      res.json(community);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get community", error: error.message });
+    }
+  });
+
+  app.get("/api/communities/:id/members", async (req, res) => {
+    try {
+      const members = await storage.getCommunityMembers(req.params.id);
+      res.json(members);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get community members", error: error.message });
+    }
+  });
+
+  app.get("/api/communities/:id/posts", async (req, res) => {
+    try {
+      const posts = await storage.getCommunityPosts(req.params.id);
+      res.json(posts);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get community posts", error: error.message });
+    }
+  });
+
   app.post("/api/communities/:id/join", authenticateToken, async (req: any, res) => {
     try {
+      const isMember = await storage.isUserMember(req.params.id, req.user.userId);
+      if (isMember) {
+        return res.status(400).json({ message: "Already a member of this community" });
+      }
+      
       await storage.joinCommunity(req.params.id, req.user.userId);
       res.json({ message: "Joined community successfully" });
     } catch (error: any) {
       res.status(400).json({ message: "Failed to join community", error: error.message });
+    }
+  });
+
+  app.post("/api/communities/:id/leave", authenticateToken, async (req: any, res) => {
+    try {
+      await storage.leaveCommunity(req.params.id, req.user.userId);
+      res.json({ message: "Left community successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to leave community", error: error.message });
+    }
+  });
+
+  app.post("/api/communities/:id/posts", authenticateToken, async (req: any, res) => {
+    try {
+      const isMember = await storage.isUserMember(req.params.id, req.user.userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "Must be a community member to post" });
+      }
+
+      const post = await storage.createCommunityPost({
+        communityId: req.params.id,
+        authorId: req.user.userId,
+        content: req.body.content,
+        images: req.body.images || [],
+        videos: req.body.videos || []
+      });
+      res.status(201).json(post);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create post", error: error.message });
+    }
+  });
+
+  app.put("/api/communities/:id/members/:userId/role", authenticateToken, async (req: any, res) => {
+    try {
+      // Check if current user is admin of the community
+      const members = await storage.getCommunityMembers(req.params.id);
+      const currentUserMember = members.find(m => m.userId === req.user.userId);
+      
+      if (!currentUserMember || (currentUserMember.role !== "admin" && currentUserMember.role !== "creator")) {
+        return res.status(403).json({ message: "Only admins can change member roles" });
+      }
+
+      await storage.updateMemberRole(req.params.id, req.params.userId, req.body.role);
+      res.json({ message: "Member role updated successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update member role", error: error.message });
     }
   });
 

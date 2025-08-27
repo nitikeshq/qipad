@@ -10,6 +10,7 @@ import Dashboard from "@/pages/dashboard";
 import Projects from "@/pages/projects";
 import Investors from "@/pages/investors";
 import Community from "@/pages/community";
+import CommunityDetail from "@/pages/community-detail";
 import Jobs from "@/pages/jobs";
 import Bidding from "@/pages/bidding";
 import { NetworkPage } from "@/pages/network";
@@ -18,6 +19,9 @@ import { InvestmentsPage } from "@/pages/investments";
 import { ProjectDetailsPage } from "@/pages/project-details";
 import CompanyFormation from "@/pages/company-formation";
 import { TendersPage } from "@/pages/tenders";
+import ProfileSettings from "@/pages/profile-settings";
+import BillingSettings from "@/pages/billing-settings";
+import GeneralSettings from "@/pages/general-settings";
 import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
 
@@ -50,11 +54,16 @@ function Router() {
       <Route path="/network" component={() => <ProtectedRoute component={NetworkPage} />} />
       <Route path="/documents" component={() => <ProtectedRoute component={DocumentsPage} />} />
       <Route path="/investments" component={() => <ProtectedRoute component={InvestmentsPage} />} />
+      <Route path="/communities/:id" component={() => <ProtectedRoute component={CommunityDetail} />} />
       <Route path="/community" component={() => <ProtectedRoute component={Community} />} />
+      <Route path="/communities" component={() => <ProtectedRoute component={Community} />} />
       <Route path="/jobs" component={() => <ProtectedRoute component={Jobs} />} />
       <Route path="/bidding" component={() => <ProtectedRoute component={Bidding} />} />
       <Route path="/tenders" component={() => <ProtectedRoute component={TendersPage} />} />
       <Route path="/company-formation" component={() => <ProtectedRoute component={CompanyFormation} />} />
+      <Route path="/profile-settings" component={() => <ProtectedRoute component={ProfileSettings} />} />
+      <Route path="/billing-settings" component={() => <ProtectedRoute component={BillingSettings} />} />
+      <Route path="/general-settings" component={() => <ProtectedRoute component={GeneralSettings} />} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />

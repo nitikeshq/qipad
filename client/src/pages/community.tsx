@@ -1,19 +1,32 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, MessageCircle, Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Search, Users, MessageCircle, Calendar, Eye } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Community } from "@shared/schema";
 import { CommunityModal } from "@/components/modals/CommunityModal";
+import type { User } from "@/lib/auth";
 
 export default function CommunityPage() {
   const [isCommunityModalOpen, setIsCommunityModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: communities = [], isLoading } = useQuery<Community[]>({
     queryKey: ['/api/communities'],
+  });
+
+  const { data: user } = useQuery<User>({
+    queryKey: ['/api/user'],
   });
 
   const filteredCommunities = communities.filter((community: Community) => {
@@ -37,6 +50,31 @@ export default function CommunityPage() {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // Join Community Button Component
+  const JoinCommunityButton = ({ communityId, onSuccess }: { communityId: string; onSuccess: () => void }) => {
+    const joinMutation = useMutation({
+      mutationFn: async () => {
+        return await apiRequest("POST", `/api/communities/${communityId}/join`);
+      },
+      onSuccess,
+      onError: () => {
+        toast({ title: "Failed to join community", variant: "destructive" });
+      }
+    });
+
+    return (
+      <Button 
+        size="sm" 
+        className="flex-1"
+        onClick={() => joinMutation.mutate()}
+        disabled={joinMutation.isPending}
+        data-testid={`join-community-${communityId}`}
+      >
+        {joinMutation.isPending ? 'Joining...' : 'Join Community'}
+      </Button>
+    );
   };
 
   return (
