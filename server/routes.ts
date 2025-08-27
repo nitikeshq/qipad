@@ -43,6 +43,27 @@ const authenticateToken = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Admin login route
+  app.post('/api/admin/login', (req, res) => {
+    const { username, password } = req.body;
+    
+    if (username === 'admin' && password === 'qipad2024!') {
+      const token = jwt.sign(
+        { userId: 'admin', isAdmin: true },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+      
+      return res.json({ 
+        message: "Admin login successful",
+        token,
+        user: { id: 'admin', username: 'admin', isAdmin: true }
+      });
+    }
+    
+    return res.status(401).json({ message: "Invalid admin credentials" });
+  });
+
   // Auth routes
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -752,32 +773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin login route
-  app.post('/api/admin/login', async (req, res) => {
-    try {
-      const { username, password } = req.body;
-      console.log('Admin login attempt:', { username, passwordLength: password?.length });
-      
-      // Simple admin credentials check (in production, use proper authentication)
-      if (username === 'admin' && password === 'qipad2024!') {
-        const token = jwt.sign(
-          { userId: 'admin', isAdmin: true },
-          process.env.JWT_SECRET || 'fallback-secret-key',
-          { expiresIn: '24h' }
-        );
-        
-        res.json({ 
-          message: "Admin login successful",
-          token,
-          user: { id: 'admin', username: 'admin', isAdmin: true }
-        });
-      } else {
-        res.status(401).json({ message: "Invalid admin credentials" });
-      }
-    } catch (error: any) {
-      res.status(500).json({ message: "Admin login failed", error: error.message });
-    }
-  });
+
 
   // Connection routes
   app.post("/api/connections", authenticateToken, async (req: any, res) => {
