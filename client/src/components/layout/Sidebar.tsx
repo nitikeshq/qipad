@@ -44,7 +44,7 @@ export function Sidebar() {
     { path: "/jobs", label: "Jobs", icon: Briefcase },
     { path: "/network", label: "Network", icon: Users },
     { path: "/community", label: "Communities", icon: MessageSquare },
-    { path: "/documents", label: "Documents", icon: FileText },
+    { path: "/documents", label: "My KYC", icon: FileText },
   ];
 
   return (
