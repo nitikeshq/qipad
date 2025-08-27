@@ -1,10 +1,11 @@
 import { 
   users, projects, documents, investments, communities, communityMembers, 
-  communityPosts, jobs, jobApplications, connections,
+  communityPosts, jobs, jobApplications, connections, biddingProjects, projectBids,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
   type Community, type InsertCommunity, type Job, type InsertJob,
-  type JobApplication, type InsertJobApplication, type Connection
+  type JobApplication, type InsertJobApplication, type Connection,
+  type BiddingProject, type InsertBiddingProject, type ProjectBid, type InsertProjectBid
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -57,6 +58,19 @@ export interface IStorage {
   getConnections(userId: string): Promise<Connection[]>;
   createConnection(requesterId: string, recipientId: string): Promise<Connection>;
   acceptConnection(connectionId: string): Promise<Connection>;
+
+  // Bidding project methods
+  getAllBiddingProjects(): Promise<BiddingProject[]>;
+  getBiddingProject(id: string): Promise<BiddingProject | undefined>;
+  getBiddingProjectsByUser(userId: string): Promise<BiddingProject[]>;
+  createBiddingProject(project: InsertBiddingProject): Promise<BiddingProject>;
+  updateBiddingProject(id: string, updates: Partial<BiddingProject>): Promise<BiddingProject>;
+
+  // Project bid methods
+  getProjectBids(projectId: string): Promise<ProjectBid[]>;
+  getBidsByUser(userId: string): Promise<ProjectBid[]>;
+  createProjectBid(bid: InsertProjectBid): Promise<ProjectBid>;
+  updateProjectBid(id: string, updates: Partial<ProjectBid>): Promise<ProjectBid>;
 
   // Stats methods
   getUserStats(userId: string): Promise<{
@@ -270,6 +284,61 @@ export class DatabaseStorage implements IStorage {
       .where(eq(connections.id, connectionId))
       .returning();
     return connection;
+  }
+
+  async getAllBiddingProjects(): Promise<BiddingProject[]> {
+    return await db.select().from(biddingProjects).orderBy(desc(biddingProjects.createdAt));
+  }
+
+  async getBiddingProject(id: string): Promise<BiddingProject | undefined> {
+    const [project] = await db.select().from(biddingProjects).where(eq(biddingProjects.id, id));
+    return project || undefined;
+  }
+
+  async getBiddingProjectsByUser(userId: string): Promise<BiddingProject[]> {
+    return await db.select().from(biddingProjects).where(eq(biddingProjects.userId, userId)).orderBy(desc(biddingProjects.createdAt));
+  }
+
+  async createBiddingProject(project: InsertBiddingProject): Promise<BiddingProject> {
+    const [newProject] = await db
+      .insert(biddingProjects)
+      .values(project)
+      .returning();
+    return newProject;
+  }
+
+  async updateBiddingProject(id: string, updates: Partial<BiddingProject>): Promise<BiddingProject> {
+    const [project] = await db
+      .update(biddingProjects)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(biddingProjects.id, id))
+      .returning();
+    return project;
+  }
+
+  async getProjectBids(projectId: string): Promise<ProjectBid[]> {
+    return await db.select().from(projectBids).where(eq(projectBids.projectId, projectId)).orderBy(desc(projectBids.createdAt));
+  }
+
+  async getBidsByUser(userId: string): Promise<ProjectBid[]> {
+    return await db.select().from(projectBids).where(eq(projectBids.userId, userId)).orderBy(desc(projectBids.createdAt));
+  }
+
+  async createProjectBid(bid: InsertProjectBid): Promise<ProjectBid> {
+    const [newBid] = await db
+      .insert(projectBids)
+      .values(bid)
+      .returning();
+    return newBid;
+  }
+
+  async updateProjectBid(id: string, updates: Partial<ProjectBid>): Promise<ProjectBid> {
+    const [bid] = await db
+      .update(projectBids)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(projectBids.id, id))
+      .returning();
+    return bid;
   }
 
   async getUserStats(userId: string): Promise<{

@@ -29,6 +29,7 @@ export const projects = pgTable("projects", {
   userId: varchar("user_id").notNull().references(() => users.id),
   title: text("title").notNull(),
   description: text("description").notNull(),
+  briefDescription: text("brief_description"),
   industry: text("industry").notNull(),
   fundingGoal: decimal("funding_goal", { precision: 15, scale: 2 }).notNull(),
   minimumInvestment: decimal("minimum_investment", { precision: 15, scale: 2 }).notNull(),
@@ -36,6 +37,16 @@ export const projects = pgTable("projects", {
   campaignDuration: integer("campaign_duration").notNull(), // in days
   status: projectStatusEnum("status").default("draft"),
   isKycComplete: boolean("is_kyc_complete").default(false),
+  images: text("images").array(),
+  videos: text("videos").array(),
+  businessPlan: text("business_plan"),
+  marketAnalysis: text("market_analysis"),
+  competitiveAdvantage: text("competitive_advantage"),
+  teamInfo: text("team_info"),
+  financialProjections: text("financial_projections"),
+  riskAssessment: text("risk_assessment"),
+  useOfFunds: text("use_of_funds"),
+  exitStrategy: text("exit_strategy"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -116,6 +127,37 @@ export const connections = pgTable("connections", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// New bidding project system
+export const biddingProjects = pgTable("bidding_projects", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(),
+  budget: decimal("budget", { precision: 15, scale: 2 }).notNull(),
+  timeline: text("timeline").notNull(),
+  skillsRequired: text("skills_required").array(),
+  requirements: text("requirements"),
+  attachments: text("attachments").array(),
+  status: text("status").default("open"), // open, in_progress, completed, cancelled
+  selectedBidId: varchar("selected_bid_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const projectBids = pgTable("project_bids", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => biddingProjects.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  timeline: text("timeline").notNull(),
+  proposal: text("proposal").notNull(),
+  attachments: text("attachments").array(),
+  status: text("status").default("pending"), // pending, accepted, rejected
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   projects: many(projects),
@@ -125,6 +167,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   communityMemberships: many(communityMembers),
   communityPosts: many(communityPosts),
   jobs: many(jobs),
+  biddingProjects: many(biddingProjects),
+  projectBids: many(projectBids),
   connectionsSent: many(connections, { relationName: "requester" }),
   connectionsReceived: many(connections, { relationName: "recipient" }),
 }));
@@ -219,6 +263,25 @@ export const connectionsRelations = relations(connections, ({ one }) => ({
   }),
 }));
 
+export const biddingProjectsRelations = relations(biddingProjects, ({ one, many }) => ({
+  user: one(users, {
+    fields: [biddingProjects.userId],
+    references: [users.id],
+  }),
+  bids: many(projectBids),
+}));
+
+export const projectBidsRelations = relations(projectBids, ({ one }) => ({
+  project: one(biddingProjects, {
+    fields: [projectBids.projectId],
+    references: [biddingProjects.id],
+  }),
+  user: one(users, {
+    fields: [projectBids.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -264,6 +327,21 @@ export const insertJobApplicationSchema = createInsertSchema(jobApplications).om
   createdAt: true,
 });
 
+export const insertBiddingProjectSchema = createInsertSchema(biddingProjects).omit({
+  id: true,
+  status: true,
+  selectedBidId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProjectBidSchema = createInsertSchema(projectBids).omit({
+  id: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -280,3 +358,7 @@ export type InsertJob = z.infer<typeof insertJobSchema>;
 export type JobApplication = typeof jobApplications.$inferSelect;
 export type InsertJobApplication = z.infer<typeof insertJobApplicationSchema>;
 export type Connection = typeof connections.$inferSelect;
+export type BiddingProject = typeof biddingProjects.$inferSelect;
+export type InsertBiddingProject = z.infer<typeof insertBiddingProjectSchema>;
+export type ProjectBid = typeof projectBids.$inferSelect;
+export type InsertProjectBid = z.infer<typeof insertProjectBidSchema>;

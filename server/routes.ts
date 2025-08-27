@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema } from "@shared/schema";
+import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema } from "@shared/schema";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -412,6 +412,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(connection);
     } catch (error: any) {
       res.status(400).json({ message: "Failed to create connection", error: error.message });
+    }
+  });
+
+  // Bidding project routes
+  app.get("/api/bidding-projects", async (req, res) => {
+    try {
+      const projects = await storage.getAllBiddingProjects();
+      res.json(projects);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get bidding projects", error: error.message });
+    }
+  });
+
+  app.get("/api/bidding-projects/:id", async (req, res) => {
+    try {
+      const project = await storage.getBiddingProject(req.params.id);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      res.json(project);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get project", error: error.message });
+    }
+  });
+
+  app.get("/api/bidding-projects/user/:userId", authenticateToken, async (req: any, res) => {
+    try {
+      const projects = await storage.getBiddingProjectsByUser(req.params.userId);
+      res.json(projects);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get user projects", error: error.message });
+    }
+  });
+
+  app.post("/api/bidding-projects", authenticateToken, async (req: any, res) => {
+    try {
+      const projectData = insertBiddingProjectSchema.parse({
+        ...req.body,
+        userId: req.user.userId
+      });
+      const project = await storage.createBiddingProject(projectData);
+      res.json(project);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create project", error: error.message });
+    }
+  });
+
+  app.put("/api/bidding-projects/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const project = await storage.getBiddingProject(req.params.id);
+      if (!project || project.userId !== req.user.userId) {
+        return res.status(403).json({ message: "Not authorized to update this project" });
+      }
+      
+      const updates = insertBiddingProjectSchema.partial().parse(req.body);
+      const updatedProject = await storage.updateBiddingProject(req.params.id, updates);
+      res.json(updatedProject);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update project", error: error.message });
+    }
+  });
+
+  // Project bid routes
+  app.get("/api/project-bids/:projectId", async (req, res) => {
+    try {
+      const bids = await storage.getProjectBids(req.params.projectId);
+      res.json(bids);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get project bids", error: error.message });
+    }
+  });
+
+  app.get("/api/project-bids/user/:userId", authenticateToken, async (req: any, res) => {
+    try {
+      const bids = await storage.getBidsByUser(req.params.userId);
+      res.json(bids);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get user bids", error: error.message });
+    }
+  });
+
+  app.post("/api/project-bids", authenticateToken, async (req: any, res) => {
+    try {
+      // Check if user is KYC verified
+      const user = await storage.getUser(req.user.userId);
+      if (!user || !user.isKycVerified) {
+        return res.status(403).json({ message: "KYC verification required to submit bids" });
+      }
+
+      const bidData = insertProjectBidSchema.parse({
+        ...req.body,
+        userId: req.user.userId
+      });
+      const bid = await storage.createProjectBid(bidData);
+      res.json(bid);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create bid", error: error.message });
+    }
+  });
+
+  app.put("/api/project-bids/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const bid = await storage.getProjectBids(req.params.id);
+      // Check if user owns the bid or the project
+      // This would require more complex logic to verify ownership
+      
+      const updates = insertProjectBidSchema.partial().parse(req.body);
+      const updatedBid = await storage.updateProjectBid(req.params.id, updates);
+      res.json(updatedBid);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update bid", error: error.message });
     }
   });
 

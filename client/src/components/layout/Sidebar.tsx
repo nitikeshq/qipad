@@ -1,4 +1,4 @@
-import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText } from "lucide-react";
+import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText, Gavel } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +17,9 @@ export function Sidebar() {
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/projects", label: "My Projects", icon: FolderOpen },
+    { path: "/bidding", label: "Project Bidding", icon: Gavel },
     { path: "/investments", label: "Investments", icon: TrendingUp },
+    { path: "/jobs", label: "Jobs", icon: Briefcase },
     { path: "/network", label: "Network", icon: Users },
     { path: "/community", label: "Communities", icon: MessageSquare },
     { path: "/documents", label: "Documents", icon: FileText },
@@ -31,7 +33,7 @@ export function Sidebar() {
           <div className="bg-secondary/50 rounded-lg p-4">
             <div className="flex items-center space-x-3">
               <Avatar className="h-12 w-12">
-                <AvatarImage src={user?.profileImage} alt={`${user?.firstName} ${user?.lastName}`} />
+                <AvatarImage src={user?.profileImage || undefined} alt={`${user?.firstName} ${user?.lastName}`} />
                 <AvatarFallback>
                   {user?.firstName?.[0]}{user?.lastName?.[0]}
                 </AvatarFallback>

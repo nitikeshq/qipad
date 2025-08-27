@@ -11,6 +11,7 @@ import Projects from "@/pages/projects";
 import Investors from "@/pages/investors";
 import Community from "@/pages/community";
 import Jobs from "@/pages/jobs";
+import Bidding from "@/pages/bidding";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/investors" component={() => <ProtectedRoute component={Investors} />} />
       <Route path="/community" component={() => <ProtectedRoute component={Community} />} />
       <Route path="/jobs" component={() => <ProtectedRoute component={Jobs} />} />
+      <Route path="/bidding" component={() => <ProtectedRoute component={Bidding} />} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route component={NotFound} />
     </Switch>
