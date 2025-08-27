@@ -577,6 +577,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/user/communities", authenticateToken, async (req: any, res) => {
+    try {
+      const memberships = await storage.getUserCommunityMemberships(req.user.userId);
+      res.json(memberships);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get user communities", error: error.message });
+    }
+  });
+
   app.post("/api/communities", authenticateToken, async (req: any, res) => {
     try {
       const communityData = insertCommunitySchema.parse({ 

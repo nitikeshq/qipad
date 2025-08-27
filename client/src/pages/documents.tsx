@@ -43,25 +43,65 @@ export function DocumentsPage() {
               <p className="text-muted-foreground">Manage your KYC and verification documents</p>
             </div>
 
+            {/* KYC Application Notice */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+              <div className="flex items-center mb-4">
+                <AlertCircle className="h-5 w-5 text-blue-600 mr-2" />
+                <h2 className="text-lg font-semibold text-blue-900">Complete Your KYC Verification</h2>
+              </div>
+              <p className="text-blue-800 mb-4">
+                To unlock all features of Qipad including project creation, investment opportunities, and community participation, 
+                please complete your KYC (Know Your Customer) verification by uploading the required documents below.
+              </p>
+              <div className="bg-blue-100 rounded-md p-3">
+                <p className="text-sm text-blue-800">
+                  <strong>Required documents:</strong> Upload clear images of your PAN card, GST certificate (for business), 
+                  and incorporation certificate to complete verification.
+                </p>
+              </div>
+            </div>
+
             {/* Upload Section */}
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Upload className="h-5 w-5 mr-2" />
-                  Upload Documents
+                  Upload KYC Documents
                 </CardTitle>
+                <CardDescription>
+                  Upload clear, readable images of your verification documents
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {['business_pan', 'gst_certificate', 'incorporation_certificate', 'personal_pan'].map((docType) => (
-                    <div key={docType} className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:bg-secondary/50 transition-colors">
-                      <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-sm font-medium mb-2">{getDocumentTypeLabel(docType)}</p>
-                      <Button size="sm" variant="outline" data-testid={`button-upload-${docType}`}>
-                        Upload
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { type: 'personal_pan', label: 'Personal PAN Card', required: true },
+                    { type: 'business_pan', label: 'Business PAN Card', required: false },
+                    { type: 'gst_certificate', label: 'GST Certificate', required: false },
+                    { type: 'incorporation_certificate', label: 'Incorporation Certificate', required: false }
+                  ].map((doc) => (
+                    <div key={doc.type} className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-secondary/50 transition-colors">
+                      <FileText className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+                      <p className="text-sm font-medium mb-1">{doc.label}</p>
+                      {doc.required && (
+                        <p className="text-xs text-red-600 mb-3">Required</p>
+                      )}
+                      <Button size="sm" variant="outline" data-testid={`button-upload-${doc.type}`}>
+                        <Upload className="h-4 w-4 mr-1" />
+                        Upload Document
                       </Button>
                     </div>
                   ))}
+                </div>
+                
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium mb-2">Document Guidelines:</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Ensure documents are clearly visible and not blurred</li>
+                    <li>• Upload high-quality images (JPG, PNG formats)</li>
+                    <li>• Make sure all text and details are readable</li>
+                    <li>• File size should be less than 5MB per document</li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>

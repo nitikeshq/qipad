@@ -25,13 +25,18 @@ export default function CommunityPage() {
     queryKey: ['/api/communities'],
   });
 
-  const { data: user } = useQuery<User>({
+  const { data: user } = useQuery<any>({
     queryKey: ['/api/user'],
   });
 
-  const filteredCommunities = communities.filter((community: Community) => {
+  const { data: userMemberships = [] } = useQuery({
+    queryKey: ['/api/user/communities'],
+    enabled: !!user?.id,
+  });
+
+  const filteredCommunities = communities.filter((community: any) => {
     const matchesSearch = community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         community.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         (community.description && community.description.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesSearch;
   });
 
@@ -52,11 +57,13 @@ export default function CommunityPage() {
     }
   };
 
-  // Join Community Button Component
-  const JoinCommunityButton = ({ communityId, onSuccess }: { communityId: string; onSuccess: () => void }) => {
+  // Join/Enter Community Button Component
+  const CommunityActionButton = ({ community, onSuccess }: { community: any; onSuccess: () => void }) => {
+    const isUserMember = userMemberships.some((membership: any) => membership.communityId === community.id);
+    
     const joinMutation = useMutation({
       mutationFn: async () => {
-        return await apiRequest("POST", `/api/communities/${communityId}/join`);
+        return await apiRequest("POST", `/api/communities/${community.id}/join`);
       },
       onSuccess,
       onError: () => {
@@ -64,13 +71,26 @@ export default function CommunityPage() {
       }
     });
 
+    if (isUserMember) {
+      return (
+        <Button 
+          size="sm" 
+          className="flex-1"
+          onClick={() => setLocation(`/communities/${community.id}`)}
+          data-testid={`button-enter-community-${community.id}`}
+        >
+          Enter Community
+        </Button>
+      );
+    }
+
     return (
       <Button 
         size="sm" 
         className="flex-1"
         onClick={() => joinMutation.mutate()}
         disabled={joinMutation.isPending}
-        data-testid={`join-community-${communityId}`}
+        data-testid={`button-join-community-${community.id}`}
       >
         {joinMutation.isPending ? 'Joining...' : 'Join Community'}
       </Button>
@@ -154,14 +174,15 @@ export default function CommunityPage() {
                     </div>
                     
                     <div className="flex gap-2">
-                      <JoinCommunityButton 
-                        communityId={community.id}
+                      <CommunityActionButton 
+                        community={community}
                         onSuccess={() => {
                           toast({
                             title: "Success",
                             description: `Joined ${community.name} community!`,
                           });
                           queryClient.invalidateQueries({ queryKey: ['/api/communities'] });
+                          queryClient.invalidateQueries({ queryKey: ['/api/user/communities'] });
                         }}
                       />
                       <Button 
@@ -170,7 +191,7 @@ export default function CommunityPage() {
                         onClick={() => setLocation(`/communities/${community.id}`)}
                         data-testid={`button-view-community-${community.id}`}
                       >
-                        <MessageCircle className="h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>

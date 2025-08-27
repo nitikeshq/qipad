@@ -409,8 +409,21 @@ export class DatabaseStorage implements IStorage {
     return investment;
   }
 
-  async getAllCommunities(): Promise<Community[]> {
-    return await db.select().from(communities).orderBy(desc(communities.createdAt));
+  async getAllCommunities(): Promise<any[]> {
+    const communities = await db.select().from(communities).orderBy(desc(communities.createdAt));
+    
+    // Add member count for each community
+    const communitiesWithCounts = await Promise.all(
+      communities.map(async (community) => {
+        const members = await this.getCommunityMembers(community.id);
+        return {
+          ...community,
+          memberCount: members.length
+        };
+      })
+    );
+    
+    return communitiesWithCounts;
   }
 
   async getCommunity(id: string): Promise<Community | undefined> {
@@ -478,6 +491,21 @@ export class DatabaseStorage implements IStorage {
   async createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost> {
     const [newPost] = await db.insert(communityPosts).values(post).returning();
     return newPost;
+  }
+
+  async getUserCommunityMemberships(userId: string): Promise<any[]> {
+    return await db.select({
+      id: communityMembers.id,
+      communityId: communityMembers.communityId,
+      userId: communityMembers.userId,
+      role: communityMembers.role,
+      joinedAt: communityMembers.joinedAt,
+      communityName: communities.name,
+      communityDescription: communities.description
+    })
+    .from(communityMembers)
+    .leftJoin(communities, eq(communityMembers.communityId, communities.id))
+    .where(eq(communityMembers.userId, userId));
   }
 
   async isUserMember(communityId: string, userId: string): Promise<boolean> {

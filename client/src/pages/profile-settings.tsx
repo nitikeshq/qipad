@@ -262,8 +262,13 @@ export default function ProfileSettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 mb-4">
-                  <Button asChild className="w-full" variant="outline">
-                    <Link href="/documents">My Documents</Link>
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => window.location.href = '/documents'}
+                    data-testid="button-documents"
+                  >
+                    My Documents
                   </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
