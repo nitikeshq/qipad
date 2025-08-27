@@ -224,32 +224,78 @@ export function DocumentsPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {personalDocumentTypes.map((doc) => (
-                    <div key={doc.key} className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-secondary/50 transition-colors">
-                      <FileText className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-                      <p className="text-sm font-medium mb-1">{doc.label}</p>
-                      {doc.required && (
-                        <p className="text-xs text-red-600 mb-3">Required</p>
-                      )}
-                      <input
-                        ref={(el) => (fileInputRefs.current[doc.key] = el)}
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        style={{ display: 'none' }}
-                        onChange={(e) => handleFileChange(e, doc.key)}
-                      />
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        data-testid={`button-upload-${doc.key}`}
-                        onClick={() => handleUploadClick(doc.key)}
-                        disabled={uploadingStates[doc.key]}
-                      >
-                        <Upload className="h-4 w-4 mr-1" />
-                        {uploadingStates[doc.key] ? 'Uploading...' : 'Upload Document'}
-                      </Button>
-                    </div>
-                  ))}
+                  {personalDocumentTypes.map((doc) => {
+                    const uploadedDoc = documents.find((d: any) => d.documentType === doc.key);
+                    const isUploaded = !!uploadedDoc;
+                    
+                    return (
+                      <div key={doc.key} className={`border-2 border-dashed rounded-lg p-6 text-center hover:bg-secondary/50 transition-colors ${
+                        isUploaded ? 'border-green-300 bg-green-50/50' : 'border-border'
+                      }`}>
+                        <div className="relative inline-block">
+                          <FileText className={`mx-auto h-10 w-10 mb-3 ${isUploaded ? 'text-green-600' : 'text-muted-foreground'}`} />
+                          {isUploaded && uploadedDoc.isVerified && (
+                            <CheckCircle className="absolute -top-1 -right-1 h-5 w-5 text-green-500 bg-white rounded-full" />
+                          )}
+                        </div>
+                        <p className="text-sm font-medium mb-1">{doc.label}</p>
+                        {doc.required && (
+                          <p className="text-xs text-red-600 mb-2">Required</p>
+                        )}
+                        {isUploaded ? (
+                          <div className="mb-3">
+                            <p className="text-xs text-green-700 font-medium mb-1">✓ Uploaded</p>
+                            <p className="text-xs text-muted-foreground">{uploadedDoc.fileName}</p>
+                            <Badge variant={uploadedDoc.isVerified ? 'default' : 'secondary'} className="text-xs mt-1">
+                              {getStatusText(uploadedDoc.isVerified)}
+                            </Badge>
+                          </div>
+                        ) : (
+                          <div className="mb-3">
+                            <p className="text-xs text-muted-foreground">Not uploaded</p>
+                          </div>
+                        )}
+                        <input
+                          ref={(el) => (fileInputRefs.current[doc.key] = el)}
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          style={{ display: 'none' }}
+                          onChange={(e) => handleFileChange(e, doc.key)}
+                        />
+                        <div className="space-y-2">
+                          <Button 
+                            size="sm" 
+                            variant={isUploaded ? "secondary" : "outline"}
+                            data-testid={`button-upload-${doc.key}`}
+                            onClick={() => handleUploadClick(doc.key)}
+                            disabled={uploadingStates[doc.key]}
+                            className="w-full"
+                          >
+                            <Upload className="h-4 w-4 mr-1" />
+                            {uploadingStates[doc.key] ? 'Uploading...' : isUploaded ? 'Replace Document' : 'Upload Document'}
+                          </Button>
+                          {isUploaded && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="w-full"
+                              onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = `/api/documents/${uploadedDoc.id}/download`;
+                                link.download = uploadedDoc.fileName;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              View Document
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
                 
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg">
@@ -277,32 +323,78 @@ export function DocumentsPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {companyDocumentTypes.map((doc) => (
-                    <div key={doc.key} className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-secondary/50 transition-colors">
-                      <FileText className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-                      <p className="text-sm font-medium mb-1">{doc.label}</p>
-                      {doc.required && (
-                        <p className="text-xs text-red-600 mb-3">Required for company verification</p>
-                      )}
-                      <input
-                        ref={(el) => (fileInputRefs.current[doc.key] = el)}
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        style={{ display: 'none' }}
-                        onChange={(e) => handleFileChange(e, doc.key)}
-                      />
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        data-testid={`button-upload-${doc.key}`}
-                        onClick={() => handleUploadClick(doc.key)}
-                        disabled={uploadingStates[doc.key]}
-                      >
-                        <Upload className="h-4 w-4 mr-1" />
-                        {uploadingStates[doc.key] ? 'Uploading...' : 'Upload Document'}
-                      </Button>
-                    </div>
-                  ))}
+                  {companyDocumentTypes.map((doc) => {
+                    const uploadedDoc = documents.find((d: any) => d.documentType === doc.key);
+                    const isUploaded = !!uploadedDoc;
+                    
+                    return (
+                      <div key={doc.key} className={`border-2 border-dashed rounded-lg p-6 text-center hover:bg-secondary/50 transition-colors ${
+                        isUploaded ? 'border-green-300 bg-green-50/50' : 'border-border'
+                      }`}>
+                        <div className="relative inline-block">
+                          <FileText className={`mx-auto h-10 w-10 mb-3 ${isUploaded ? 'text-green-600' : 'text-muted-foreground'}`} />
+                          {isUploaded && uploadedDoc.isVerified && (
+                            <CheckCircle className="absolute -top-1 -right-1 h-5 w-5 text-green-500 bg-white rounded-full" />
+                          )}
+                        </div>
+                        <p className="text-sm font-medium mb-1">{doc.label}</p>
+                        {doc.required && (
+                          <p className="text-xs text-red-600 mb-2">Required for company verification</p>
+                        )}
+                        {isUploaded ? (
+                          <div className="mb-3">
+                            <p className="text-xs text-green-700 font-medium mb-1">✓ Uploaded</p>
+                            <p className="text-xs text-muted-foreground">{uploadedDoc.fileName}</p>
+                            <Badge variant={uploadedDoc.isVerified ? 'default' : 'secondary'} className="text-xs mt-1">
+                              {getStatusText(uploadedDoc.isVerified)}
+                            </Badge>
+                          </div>
+                        ) : (
+                          <div className="mb-3">
+                            <p className="text-xs text-muted-foreground">Not uploaded</p>
+                          </div>
+                        )}
+                        <input
+                          ref={(el) => (fileInputRefs.current[doc.key] = el)}
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          style={{ display: 'none' }}
+                          onChange={(e) => handleFileChange(e, doc.key)}
+                        />
+                        <div className="space-y-2">
+                          <Button 
+                            size="sm" 
+                            variant={isUploaded ? "secondary" : "outline"}
+                            data-testid={`button-upload-${doc.key}`}
+                            onClick={() => handleUploadClick(doc.key)}
+                            disabled={uploadingStates[doc.key]}
+                            className="w-full"
+                          >
+                            <Upload className="h-4 w-4 mr-1" />
+                            {uploadingStates[doc.key] ? 'Uploading...' : isUploaded ? 'Replace Document' : 'Upload Document'}
+                          </Button>
+                          {isUploaded && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="w-full"
+                              onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = `/api/documents/${uploadedDoc.id}/download`;
+                                link.download = uploadedDoc.fileName;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              View Document
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
                 
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg">
@@ -335,25 +427,58 @@ export function DocumentsPage() {
                 ) : (
                   <div className="space-y-4">
                     {documents.map((doc: any) => (
-                      <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg" data-testid={`document-${doc.id}`}>
                         <div className="flex items-center space-x-4">
-                          <FileText className="h-8 w-8 text-muted-foreground" />
+                          <div className="relative">
+                            <FileText className="h-8 w-8 text-muted-foreground" />
+                            {doc.isVerified && (
+                              <CheckCircle className="absolute -top-1 -right-1 h-4 w-4 text-green-500 bg-white rounded-full" />
+                            )}
+                          </div>
                           <div>
-                            <h3 className="font-medium">{getDocumentTypeLabel(doc.documentType)}</h3>
-                            <p className="text-sm text-muted-foreground">{doc.fileName}</p>
+                            <h3 className="font-medium" data-testid={`text-document-type-${doc.id}`}>
+                              {getDocumentTypeLabel(doc.documentType)}
+                            </h3>
+                            <p className="text-sm text-muted-foreground" data-testid={`text-file-name-${doc.id}`}>
+                              {doc.fileName}
+                            </p>
                             <p className="text-xs text-muted-foreground">
                               Uploaded: {new Date(doc.createdAt).toLocaleDateString()}
                             </p>
+                            {doc.status && doc.status !== 'pending' && (
+                              <p className="text-xs font-medium">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  doc.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                  doc.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+                                </span>
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center space-x-2">
                             {getStatusIcon(doc.isVerified)}
-                            <Badge variant={doc.isVerified ? 'default' : 'secondary'}>
+                            <Badge variant={doc.isVerified ? 'default' : 'secondary'} data-testid={`badge-status-${doc.id}`}>
                               {getStatusText(doc.isVerified)}
                             </Badge>
                           </div>
-                          <Button size="sm" variant="outline" data-testid={`button-download-${doc.id}`}>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            data-testid={`button-download-${doc.id}`}
+                            onClick={() => {
+                              // Download the document
+                              const link = document.createElement('a');
+                              link.href = `/api/documents/${doc.id}/download`;
+                              link.download = doc.fileName;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }}
+                          >
                             <Download className="h-4 w-4" />
                           </Button>
                         </div>

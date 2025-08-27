@@ -366,12 +366,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's documents (for KYC page)
+  app.get("/api/documents", authenticateToken, async (req: any, res) => {
+    try {
+      const documents = await storage.getDocumentsByUser(req.user.userId);
+      res.json(documents);
+    } catch (error: any) {
+      console.error("Get user documents error:", error);
+      res.status(500).json({ message: "Failed to get documents", error: error.message });
+    }
+  });
+
   app.get("/api/documents/project/:projectId", authenticateToken, async (req: any, res) => {
     try {
       const documents = await storage.getDocumentsByProject(req.params.projectId);
       res.json(documents);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to get documents", error: error.message });
+    }
+  });
+
+  // Document download endpoint
+  app.get("/api/documents/:id/download", authenticateToken, async (req: any, res) => {
+    try {
+      const document = await storage.getDocument(req.params.id);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Check if user owns the document
+      if (document.userId !== req.user.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const path = require('path');
+      const fs = require('fs');
+      
+      // Check if file exists
+      if (!fs.existsSync(document.filePath)) {
+        return res.status(404).json({ message: "File not found on server" });
+      }
+
+      res.download(document.filePath, document.fileName);
+    } catch (error: any) {
+      console.error("Document download error:", error);
+      res.status(500).json({ message: "Failed to download document", error: error.message });
     }
   });
 
