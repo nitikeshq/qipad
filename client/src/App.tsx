@@ -63,6 +63,7 @@ function Router() {
       <Route path="/tenders" component={() => <ProtectedRoute component={Tenders} />} />
       <Route path="/company-formation" component={() => <ProtectedRoute component={CompanyFormation} />} />
       <Route path="/companies" component={() => <ProtectedRoute component={Companies} />} />
+      <Route path="/events" component={() => <ProtectedRoute component={Events} />} />
       <Route path="/profile-settings" component={() => <ProtectedRoute component={ProfileSettings} />} />
       <Route path="/billing-settings" component={() => <ProtectedRoute component={BillingSettings} />} />
       <Route path="/general-settings" component={() => <ProtectedRoute component={GeneralSettings} />} />

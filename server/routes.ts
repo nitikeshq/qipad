@@ -1749,6 +1749,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Events routes
+  app.get("/api/events", async (req, res) => {
+    try {
+      const events = await storage.getAllEvents();
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      res.status(500).json({ message: "Failed to fetch events" });
+    }
+  });
+
+  app.get("/api/events/:id", async (req, res) => {
+    try {
+      const event = await storage.getEvent(req.params.id);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      res.json(event);
+    } catch (error) {
+      console.error("Error fetching event:", error);
+      res.status(500).json({ message: "Failed to fetch event" });
+    }
+  });
+
+  app.post("/api/events", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Check if user is KYC verified
+      if (user.kycStatus !== "verified") {
+        return res.status(403).json({ message: "KYC verification required to create events" });
+      }
+
+      const eventData = {
+        ...req.body,
+        creatorId: user.id,
+        eventDate: new Date(req.body.eventDate + 'T' + req.body.eventTime),
+      };
+
+      const event = await storage.createEvent(eventData);
+      res.status(201).json(event);
+    } catch (error) {
+      console.error("Error creating event:", error);
+      res.status(500).json({ message: "Failed to create event" });
+    }
+  });
+
+  app.post("/api/events/:id/join", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const eventId = req.params.id;
+      const event = await storage.getEvent(eventId);
+      
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Check if user is already a participant
+      const isParticipant = await storage.isUserParticipant(eventId, user.id);
+      if (isParticipant) {
+        return res.status(400).json({ message: "Already joined this event" });
+      }
+
+      // Check if event is full
+      if (event.maxParticipants && event.currentParticipants >= event.maxParticipants) {
+        return res.status(400).json({ message: "Event is full" });
+      }
+
+      await storage.joinEvent(eventId, user.id);
+      res.json({ message: "Successfully joined the event" });
+    } catch (error) {
+      console.error("Error joining event:", error);
+      res.status(500).json({ message: "Failed to join event" });
+    }
+  });
+
+  app.get("/api/events/:id/participants", async (req, res) => {
+    try {
+      const participants = await storage.getEventParticipants(req.params.id);
+      res.json(participants);
+    } catch (error) {
+      console.error("Error fetching participants:", error);
+      res.status(500).json({ message: "Failed to fetch participants" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

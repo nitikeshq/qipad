@@ -121,6 +121,7 @@ export const jobs = pgTable("jobs", {
   description: text("description").notNull(),
   company: text("company").notNull(),
   location: text("location").notNull(),
+  experienceLevel: text("experience_level").notNull(), // entry, mid, senior, executive
   salaryMin: decimal("salary_min", { precision: 15, scale: 2 }).default("0"),
   salaryMax: decimal("salary_max", { precision: 15, scale: 2 }).default("0"),
   jobType: text("job_type").notNull(), // full-time, part-time, contract, remote
@@ -492,6 +493,56 @@ export const userInterests = pgTable("user_interests", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Events System
+export const events = pgTable("events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  creatorId: varchar("creator_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  eventImage: text("event_image"),
+  eventType: text("event_type").notNull(), // online, offline
+  isPaid: boolean("is_paid").default(false),
+  price: decimal("price", { precision: 15, scale: 2 }).default("0"),
+  platformFee: decimal("platform_fee", { precision: 15, scale: 2 }).default("0"), // 2% for paid events
+  
+  // Date and Time
+  eventDate: timestamp("event_date").notNull(),
+  eventTime: text("event_time").notNull(),
+  
+  // Location details
+  venue: text("venue"), // for offline events
+  onlineUrl: text("online_url"), // for online events (zoom, meet, etc.)
+  
+  // Event management
+  maxParticipants: integer("max_participants"),
+  currentParticipants: integer("current_participants").default(0),
+  status: text("status").default("active"), // active, cancelled, completed
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const eventParticipants = pgTable("event_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull().references(() => events.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  paymentStatus: text("payment_status").default("pending"), // pending, completed, failed
+  paymentId: text("payment_id"), // PayUMoney transaction ID
+  ticketId: varchar("ticket_id").unique(), // QR code ticket ID
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+export const eventTickets = pgTable("event_tickets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull().references(() => events.id),
+  participantId: varchar("participant_id").notNull().references(() => eventParticipants.id),
+  ticketCode: text("ticket_code").notNull().unique(), // QR code data
+  isScanned: boolean("is_scanned").default(false),
+  scannedAt: timestamp("scanned_at"),
+  scannedBy: varchar("scanned_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations for new tables
 export const companiesRelations = relations(companies, ({ one }) => ({
   owner: one(users, {
@@ -687,3 +738,28 @@ export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type UserInterest = typeof userInterests.$inferSelect;
 export type InsertUserInterest = z.infer<typeof insertUserInterestSchema>;
+
+// Events types
+export const insertEventSchema = createInsertSchema(events).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  currentParticipants: true,
+});
+
+export const insertEventParticipantSchema = createInsertSchema(eventParticipants).omit({
+  id: true,
+  joinedAt: true,
+});
+
+export const insertEventTicketSchema = createInsertSchema(eventTickets).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Event = typeof events.$inferSelect;
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type EventParticipant = typeof eventParticipants.$inferSelect;
+export type InsertEventParticipant = z.infer<typeof insertEventParticipantSchema>;
+export type EventTicket = typeof eventTickets.$inferSelect;
+export type InsertEventTicket = z.infer<typeof insertEventTicketSchema>;

@@ -2,6 +2,7 @@ import {
   users, projects, documents, investments, communities, communityMembers, 
   communityPosts, jobs, jobApplications, savedJobs, connections, biddingProjects, projectBids,
   companyFormations, tenders, tenderEligibility, companies, subscriptions, payments, userInterests,
+  events, eventParticipants, eventTickets,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
   type Community, type InsertCommunity, type CommunityMember, type InsertCommunityMember,
@@ -11,7 +12,9 @@ import {
   type CompanyFormation, type InsertCompanyFormation, type Tender, type InsertTender,
   type TenderEligibility, type InsertTenderEligibility, type Company, type InsertCompany,
   type Subscription, type InsertSubscription, type Payment, type InsertPayment,
-  type UserInterest, type InsertUserInterest
+  type UserInterest, type InsertUserInterest,
+  type Event, type InsertEvent, type EventParticipant, type InsertEventParticipant,
+  type EventTicket, type InsertEventTicket
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, sql, ne } from "drizzle-orm";
@@ -70,6 +73,18 @@ export interface IStorage {
   createSavedJob(savedJob: any): Promise<any>;
   getUserSavedJob(userId: string, jobId: string): Promise<any>;
   getUserSavedJobs(userId: string): Promise<any[]>;
+
+  // Events methods
+  getAllEvents(): Promise<Event[]>;
+  getEvent(id: string): Promise<Event | undefined>;
+  getEventsByUser(userId: string): Promise<Event[]>;
+  createEvent(event: InsertEvent): Promise<Event>;
+  updateEvent(id: string, updates: Partial<Event>): Promise<Event>;
+  joinEvent(eventId: string, userId: string): Promise<void>;
+  getEventParticipants(eventId: string): Promise<EventParticipant[]>;
+  isUserParticipant(eventId: string, userId: string): Promise<boolean>;
+  createEventTicket(ticket: InsertEventTicket): Promise<EventTicket>;
+  getUserEventTicket(eventId: string, userId: string): Promise<EventTicket | undefined>;
 
   // Connection methods
   getConnections(userId: string): Promise<Connection[]>;
@@ -884,6 +899,79 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUserInterest(id: string): Promise<void> {
     await db.delete(userInterests).where(eq(userInterests.id, id));
+  }
+
+  // Events methods
+  async getAllEvents(): Promise<Event[]> {
+    return await db.select().from(events).orderBy(desc(events.eventDate));
+  }
+
+  async getEvent(id: string): Promise<Event | undefined> {
+    const [event] = await db.select().from(events).where(eq(events.id, id));
+    return event || undefined;
+  }
+
+  async getEventsByUser(userId: string): Promise<Event[]> {
+    return await db.select().from(events).where(eq(events.creatorId, userId)).orderBy(desc(events.createdAt));
+  }
+
+  async createEvent(event: InsertEvent): Promise<Event> {
+    const [newEvent] = await db.insert(events).values(event).returning();
+    return newEvent;
+  }
+
+  async updateEvent(id: string, updates: Partial<Event>): Promise<Event> {
+    const [updatedEvent] = await db.update(events)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(events.id, id))
+      .returning();
+    return updatedEvent;
+  }
+
+  async joinEvent(eventId: string, userId: string): Promise<void> {
+    await db.insert(eventParticipants).values({
+      eventId,
+      userId,
+      paymentStatus: "completed", // For free events
+    });
+
+    // Update participant count
+    await db.update(events)
+      .set({ 
+        currentParticipants: sql`COALESCE(current_participants, 0) + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(events.id, eventId));
+  }
+
+  async getEventParticipants(eventId: string): Promise<EventParticipant[]> {
+    return await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, eventId));
+  }
+
+  async isUserParticipant(eventId: string, userId: string): Promise<boolean> {
+    const [participant] = await db.select()
+      .from(eventParticipants)
+      .where(and(eq(eventParticipants.eventId, eventId), eq(eventParticipants.userId, userId)));
+    return !!participant;
+  }
+
+  async createEventTicket(ticket: InsertEventTicket): Promise<EventTicket> {
+    const [newTicket] = await db.insert(eventTickets).values(ticket).returning();
+    return newTicket;
+  }
+
+  async getUserEventTicket(eventId: string, userId: string): Promise<EventTicket | undefined> {
+    const [participant] = await db.select()
+      .from(eventParticipants)
+      .where(and(eq(eventParticipants.eventId, eventId), eq(eventParticipants.userId, userId)));
+    
+    if (!participant || !participant.ticketId) return undefined;
+
+    const [ticket] = await db.select()
+      .from(eventTickets)
+      .where(eq(eventTickets.id, participant.ticketId));
+    
+    return ticket || undefined;
   }
 }
 
