@@ -255,30 +255,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Quick Actions */}
-              <div className="bg-card rounded-lg border border-border shadow-sm" data-testid="section-quick-actions">
-                <div className="p-4 border-b border-border">
-                  <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
-                </div>
-                <div className="p-4 space-y-3">
-                  <Button 
-                    className="w-full justify-center" 
-                    onClick={() => setIsProjectModalOpen(true)}
-                    data-testid="button-quick-create-project"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create New Project
-                  </Button>
-                  <Button variant="secondary" className="w-full justify-center" data-testid="button-quick-upload-documents">
-                    <Download className="h-4 w-4 mr-2" />
-                    Upload Documents
-                  </Button>
-                  <Button variant="outline" className="w-full justify-center" data-testid="button-quick-find-cofounders">
-                    <Users className="h-4 w-4 mr-2" />
-                    Find Co-founders
-                  </Button>
-                </div>
-              </div>
+
             </div>
           </div>
         </main>
