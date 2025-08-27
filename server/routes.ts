@@ -2390,10 +2390,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const txnId = payumoneyService.generateTxnId();
       
-      // Calculate platform fee (2% for paid events)
+      // Calculate platform fee (2% for paid events) - INCLUSIVE
       const eventPrice = parseFloat(event.price);
       const platformFee = eventPrice * 0.02;
-      const totalAmount = eventPrice;
+      const totalAmount = eventPrice; // Total amount user pays remains same
+      const netAmount = eventPrice - platformFee; // Amount that goes to event creator
 
       // Create payment record
       const payment = await storage.createPayment({
@@ -2402,11 +2403,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentType: 'event',
         status: 'pending',
         description: `Event Registration: ${event.title}`,
-        metadata: JSON.stringify({ txnId, eventId, platformFee }),
+        metadata: JSON.stringify({ txnId, eventId, platformFee, netAmount }),
       });
 
       const paymentData = {
-        amount: totalAmount,
+        amount: Number(totalAmount), // Ensure numeric value
         productInfo: `Event Registration - ${event.title}`,
         firstName: user.firstName || 'User',
         email: user.email || 'user@example.com',
@@ -2415,7 +2416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         failureUrl: `${req.protocol}://${req.get('host')}/api/payments/failure`,
         userId: user.id,
         paymentType: 'event',
-        metadata: { paymentId: payment.id, eventId },
+        metadata: { paymentId: payment.id, eventId, platformFee, netAmount },
       };
 
       const paymentResponse = await payumoneyService.createPayment(paymentData);

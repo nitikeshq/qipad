@@ -55,17 +55,20 @@ export class PayUMoneyService {
     try {
       console.log('PayUMoney createPayment - Input data:', JSON.stringify(data, null, 2));
       
-      // Validate amount - ensure it's a positive number with max 2 decimal places
-      const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+      // Validate and format amount for PayUMoney
+      let amount = typeof data.amount === 'string' ? parseFloat(data.amount) : Number(data.amount);
       console.log('PayUMoney - Parsed amount:', amount, 'Type:', typeof amount);
       
-      if (isNaN(amount) || amount <= 0) {
+      if (isNaN(amount) || amount <= 0 || !isFinite(amount)) {
         console.error('PayUMoney - Invalid amount validation failed:', amount);
         return {
           success: false,
           error: 'Invalid amount: Amount must be a positive number',
         };
       }
+
+      // Round to avoid floating point issues
+      amount = Math.round(amount * 100) / 100;
 
       // PayUMoney minimum amount is ₹10
       if (amount < 10) {
@@ -76,7 +79,7 @@ export class PayUMoneyService {
         };
       }
 
-      // Format amount to 2 decimal places
+      // Format amount to exactly 2 decimal places (PayUMoney requirement)
       const formattedAmount = amount.toFixed(2);
       console.log('PayUMoney - Formatted amount:', formattedAmount);
       
