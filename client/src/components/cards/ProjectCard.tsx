@@ -1,12 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { MoreHorizontal, Edit, Eye } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MoreHorizontal, Edit, Eye, User, Calendar, MapPin } from "lucide-react";
 import { Project } from "@shared/schema";
 import { Link } from "wouter";
 
 interface ProjectCardProps {
-  project: Project;
+  project: Project & {
+    owner?: {
+      id: string;
+      firstName?: string;
+      lastName?: string;
+      profileImage?: string;
+    };
+  };
   showActions?: boolean;
   onInvest?: (project: Project) => void;
   onSupport?: (project: Project) => void;
@@ -42,57 +51,100 @@ export function ProjectCard({ project, showActions = false, onInvest, onSupport 
   };
 
   return (
-    <div className="p-6 border-b border-border last:border-b-0" data-testid={`card-project-${project.id}`}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <h3 className="text-lg font-medium text-foreground mb-2" data-testid={`text-project-title-${project.id}`}>
-            {project.title}
-          </h3>
-          <p className="text-muted-foreground text-sm mb-3" data-testid={`text-project-description-${project.id}`}>
-            {project.description}
-          </p>
-          <div className="flex items-center space-x-4 text-sm mb-3">
-            <span className="text-muted-foreground">
-              Target: {formatCurrency(project.fundingGoal)}
-            </span>
-            <span className="text-green-600 font-medium" data-testid={`text-project-raised-${project.id}`}>
-              Raised: {formatCurrency(project.currentFunding || '0')} ({fundingPercentage.toFixed(0)}%)
-            </span>
-            <Badge className={`text-xs ${getStatusColor(project.status || 'draft')}`} data-testid={`badge-project-status-${project.id}`}>
-              {project.status?.replace('_', ' ').toUpperCase()}
-            </Badge>
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow" data-testid={`card-project-${project.id}`}>
+      {/* Banner Image */}
+      {project.bannerImage && (
+        <div className="h-48 overflow-hidden">
+          <img 
+            src={project.bannerImage} 
+            alt={project.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-lg line-clamp-2 mb-2" data-testid={`text-project-title-${project.id}`}>
+              {project.title}
+            </CardTitle>
+            
+            {/* Project Owner */}
+            {project.owner && (
+              <div className="flex items-center space-x-2 mb-2">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={project.owner.profileImage || undefined} />
+                  <AvatarFallback className="text-xs">
+                    {project.owner.firstName?.[0]}{project.owner.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm text-muted-foreground" data-testid={`text-project-owner-${project.id}`}>
+                  by {project.owner.firstName} {project.owner.lastName}
+                </span>
+              </div>
+            )}
+            
+            <div className="flex items-center space-x-3 text-xs text-muted-foreground mb-2">
+              <div className="flex items-center space-x-1">
+                <Calendar className="h-3 w-3" />
+                <span>{new Date(project.createdAt).toLocaleDateString()}</span>
+              </div>
+              <span>•</span>
+              <span className="capitalize">{project.category}</span>
+            </div>
+          </div>
+          
+          <Badge variant={getStatusColor(project.status || 'draft').includes('green') ? 'default' : 'secondary'} 
+                 data-testid={`badge-project-status-${project.id}`}>
+            {project.status?.replace('_', ' ').toUpperCase() || 'DRAFT'}
+          </Badge>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground line-clamp-3" data-testid={`text-project-description-${project.id}`}>
+          {project.description}
+        </p>
+
+        {/* Funding Progress */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Funding Progress</span>
+            <span className="font-medium">{fundingPercentage.toFixed(1)}%</span>
           </div>
           <Progress value={fundingPercentage} className="h-2" data-testid={`progress-project-funding-${project.id}`} />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Raised: {formatCurrency(project.currentFunding || '0')}</span>
+            <span>Goal: {formatCurrency(project.fundingGoal)}</span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex space-x-2 pt-2">
+          <Link href={`/projects/${project.id}`} className="flex-1">
+            <Button variant="outline" size="sm" className="w-full" data-testid={`button-view-details-${project.id}`}>
+              <Eye className="h-4 w-4 mr-2" />
+              View Details
+            </Button>
+          </Link>
+          
           {(onInvest || onSupport) && project.status === 'approved' && (
-            <div className="mt-4 flex space-x-3">
+            <>
               {onInvest && (
-                <Button onClick={() => onInvest(project)} data-testid={`button-invest-${project.id}`}>
+                <Button size="sm" onClick={() => onInvest(project)} data-testid={`button-invest-${project.id}`}>
                   Invest Now
                 </Button>
               )}
               {onSupport && (
-                <Button variant="outline" onClick={() => onSupport(project)} data-testid={`button-support-${project.id}`}>
+                <Button variant="outline" size="sm" onClick={() => onSupport(project)} data-testid={`button-support-${project.id}`}>
                   Support
                 </Button>
               )}
-            </div>
+            </>
           )}
         </div>
-        {showActions && (
-          <div className="flex space-x-2">
-            <Link href={`/projects/${project.id}`}>
-              <Button variant="ghost" size="icon" data-testid={`button-view-project-${project.id}`}>
-                <Eye className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href={`/projects/${project.id}`}>
-              <Button variant="ghost" size="icon" data-testid={`button-edit-project-${project.id}`}>
-                <Edit className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

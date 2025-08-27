@@ -36,7 +36,7 @@ export function Sidebar() {
 
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
-    { path: "/projects", label: "My Projects", icon: FolderOpen },
+    { path: "/my-projects", label: "My Projects", icon: FolderOpen },
     { path: "/bidding", label: "Project Bidding", icon: Gavel },
     { path: "/investments", label: "Investments", icon: TrendingUp },
     { path: "/company-formation", label: "Company Formation", icon: Building },

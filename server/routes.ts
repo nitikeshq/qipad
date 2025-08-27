@@ -175,7 +175,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects", async (req, res) => {
     try {
       const projects = await storage.getApprovedProjects();
-      res.json(projects);
+      // Add owner information for each project
+      const projectsWithOwners = await Promise.all(
+        projects.map(async (project) => {
+          const owner = await storage.getUser(project.userId);
+          return {
+            ...project,
+            owner: owner ? {
+              id: owner.id,
+              firstName: owner.firstName,
+              lastName: owner.lastName,
+              profileImage: owner.profileImage
+            } : null
+          };
+        })
+      );
+      res.json(projectsWithOwners);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to get projects", error: error.message });
     }
@@ -266,6 +281,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedProject);
     } catch (error: any) {
       res.status(400).json({ message: "Failed to update project", error: error.message });
+    }
+  });
+
+  app.delete("/api/projects/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const project = await storage.getProject(req.params.id);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      if (project.userId !== req.user.userId) {
+        return res.status(403).json({ message: "Not authorized to delete this project" });
+      }
+
+      await storage.deleteProject(req.params.id);
+      res.json({ message: "Project deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete project", error: error.message });
     }
   });
 

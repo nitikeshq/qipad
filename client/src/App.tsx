@@ -26,6 +26,7 @@ import GeneralSettings from "@/pages/general-settings";
 import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
 import Events from "@/pages/events";
+import MyProjects from "@/pages/my-projects";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
@@ -52,6 +53,7 @@ function Router() {
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/projects/:id" component={() => <ProtectedRoute component={ProjectDetailsPage} />} />
       <Route path="/projects" component={() => <ProtectedRoute component={Projects} />} />
+      <Route path="/my-projects" component={() => <ProtectedRoute component={MyProjects} />} />
       <Route path="/investors" component={() => <ProtectedRoute component={Investors} />} />
       <Route path="/network" component={() => <ProtectedRoute component={NetworkPage} />} />
       <Route path="/documents" component={() => <ProtectedRoute component={DocumentsPage} />} />
