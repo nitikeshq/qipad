@@ -299,6 +299,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // INVESTOR CONNECTION ROUTES
+  app.post("/api/investors/connect", async (req, res) => {
+    try {
+      const { investorId } = req.body;
+      if (!investorId) {
+        return res.status(400).json({ message: "Investor ID is required" });
+      }
+      
+      // In a real app, you would store this connection in the database
+      // For now, we'll just return success
+      res.json({ 
+        message: "Connection request sent successfully",
+        connected: true,
+        investorId 
+      });
+    } catch (error: any) {
+      console.error("Connect investor error:", error);
+      res.status(500).json({ message: "Failed to send connection request", error: error.message });
+    }
+  });
+
   // Investment routes
   app.post("/api/investments", authenticateToken, async (req: any, res) => {
     try {
@@ -366,6 +387,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(investmentsWithInvestors);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to get project investments", error: error.message });
+    }
+  });
+
+  // Support payment route (donation-based, no equity)
+  app.post("/api/payment/support", authenticateToken, async (req: any, res) => {
+    try {
+      const { projectId, amount, platformFee, finalAmount, phone, message } = req.body;
+      
+      // Create support record in investments table with type 'support'
+      const supportData = {
+        projectId,
+        investorId: req.user.userId,
+        amount,
+        type: "support", // Support type for donations
+        status: "completed", // Support payments are completed immediately
+        platformFeePaid: true,
+        investorContact: phone,
+        message,
+        expectedStakes: null // No stakes for support
+      };
+      
+      const support = await storage.createInvestment(supportData);
+
+      // Update project funding
+      const project = await storage.getProject(projectId);
+      if (project) {
+        const newFunding = parseFloat(project.currentFunding || '0') + parseFloat(finalAmount);
+        await storage.updateProject(projectId, { 
+          currentFunding: newFunding.toString() 
+        });
+      }
+
+      res.json({ 
+        success: true, 
+        support,
+        paymentUrl: `https://test.payu.in/success?amount=${amount}&fee=${platformFee}`,
+        message: "Support payment processed successfully" 
+      });
+    } catch (error: any) {
+      console.error("Support payment error:", error);
+      res.status(500).json({ message: "Failed to process support payment", error: error.message });
     }
   });
 

@@ -9,11 +9,13 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { ProjectCard } from "@/components/cards/ProjectCard";
 import { ProjectModal } from "@/components/modals/ProjectModal";
 import { InvestmentModal } from "@/components/modals/InvestmentModal";
+import { SupportModal } from "@/components/modals/SupportModal";
 import { Project } from "@shared/schema";
 
 export default function Projects() {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [industryFilter, setIndustryFilter] = useState('all');
@@ -32,6 +34,11 @@ export default function Projects() {
   const handleInvest = (project: Project) => {
     setSelectedProject(project);
     setIsInvestmentModalOpen(true);
+  };
+
+  const handleSupport = (project: Project) => {
+    setSelectedProject(project);
+    setIsSupportModalOpen(true);
   };
 
   const industries = ['technology', 'healthcare', 'finance', 'education', 'ecommerce', 'clean-energy'];
@@ -103,6 +110,7 @@ export default function Projects() {
                     key={project.id} 
                     project={project} 
                     onInvest={handleInvest}
+                    onSupport={handleSupport}
                   />
                 ))}
               </div>
@@ -138,6 +146,12 @@ export default function Projects() {
       <InvestmentModal 
         open={isInvestmentModalOpen} 
         onOpenChange={setIsInvestmentModalOpen}
+        project={selectedProject}
+      />
+      
+      <SupportModal 
+        open={isSupportModalOpen} 
+        onOpenChange={setIsSupportModalOpen}
         project={selectedProject}
       />
     </div>

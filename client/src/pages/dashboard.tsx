@@ -8,6 +8,7 @@ import { ProjectCard } from "@/components/cards/ProjectCard";
 import { StatsCard } from "@/components/cards/StatsCard";
 import { ProjectModal } from "@/components/modals/ProjectModal";
 import { InvestmentModal } from "@/components/modals/InvestmentModal";
+import { SupportModal } from "@/components/modals/SupportModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { Project } from "@shared/schema";
 import { Link } from "wouter";
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const { data: userStats } = useQuery({
@@ -35,6 +37,11 @@ export default function Dashboard() {
   const handleInvest = (project: Project) => {
     setSelectedProject(project);
     setIsInvestmentModalOpen(true);
+  };
+
+  const handleSupport = (project: Project) => {
+    setSelectedProject(project);
+    setIsSupportModalOpen(true);
   };
 
   const stats = [
@@ -189,10 +196,7 @@ export default function Dashboard() {
                             size="sm" 
                             variant="ghost"
                             className="flex-1 text-xs"
-                            onClick={() => {
-                              setSelectedProject(project);
-                              setIsInvestmentModalOpen(true);
-                            }}
+                            onClick={() => handleSupport(project)}
                             data-testid={`button-support-opportunity-${project.id}`}
                           >
                             🤝 Support
@@ -272,6 +276,12 @@ export default function Dashboard() {
       <InvestmentModal 
         open={isInvestmentModalOpen} 
         onOpenChange={setIsInvestmentModalOpen}
+        project={selectedProject}
+      />
+      
+      <SupportModal 
+        open={isSupportModalOpen} 
+        onOpenChange={setIsSupportModalOpen}
         project={selectedProject}
       />
     </div>

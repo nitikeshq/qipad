@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Heart, CreditCard, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Project } from "@shared/schema";
 
@@ -16,177 +20,175 @@ interface SupportModalProps {
 }
 
 export function SupportModal({ open, onOpenChange, project }: SupportModalProps) {
-  const [amount, setAmount] = useState('');
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const supportMutation = useMutation({
-    mutationFn: async (data: {
-      projectId: string;
-      amount: string;
-      type: string;
-    }) => {
-      const response = await apiRequest('POST', '/api/investments', data);
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/payment/support", data);
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Support Payment Initiated!",
-        description: "You will be redirected to PayUMoney for payment processing.",
-      });
+      toast({ title: "Support payment initiated successfully!" });
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/investments'] });
       onOpenChange(false);
-      
-      // Reset form
-      setAmount('');
-      setAgreedToTerms(false);
-      
-      // Redirect to PayUMoney integration (placeholder)
-      // This would integrate with actual PayUMoney API
-      window.alert('Redirecting to PayUMoney for payment...');
+      resetForm();
     },
-    onError: (error: any) => {
-      toast({
-        title: "Support Failed",
-        description: error.message || "Failed to process support payment",
-        variant: "destructive",
-      });
+    onError: () => {
+      toast({ title: "Failed to process support payment", variant: "destructive" });
+      setIsProcessing(false);
     }
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!project || !amount || !agreedToTerms) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields and agree to terms",
-        variant: "destructive",
-      });
-      return;
-    }
+  const resetForm = () => {
+    setAmount("");
+    setPhone("");
+    setMessage("");
+    setIsProcessing(false);
+  };
+
+  const handleSupport = async () => {
+    if (!project || !amount || !phone) return;
 
     const supportAmount = parseFloat(amount);
-    if (isNaN(supportAmount) || supportAmount <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid support amount",
-        variant: "destructive",
-      });
-      return;
-    }
+    const platformFee = supportAmount * 0.02; // 2% platform fee
+    const finalAmount = supportAmount - platformFee;
 
-    await supportMutation.mutateAsync({
-      projectId: project.id,
-      amount: amount,
-      type: "support"
-    });
+    setIsProcessing(true);
+
+    // Simulate PayUMoney integration
+    setTimeout(() => {
+      supportMutation.mutate({
+        projectId: project.id,
+        amount: supportAmount.toString(),
+        platformFee: platformFee.toString(),
+        finalAmount: finalAmount.toString(),
+        phone,
+        message,
+        type: "support"
+      });
+    }, 2000);
   };
 
   if (!project) return null;
 
   const supportAmount = parseFloat(amount) || 0;
-  const platformFee = supportAmount * 0.02; // 2% platform fee
-  const projectReceives = supportAmount - platformFee;
+  const platformFee = supportAmount * 0.02;
+  const finalAmount = supportAmount - platformFee;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-support">
+      <DialogContent className="sm:max-w-md" data-testid="dialog-support-project">
         <DialogHeader>
-          <DialogTitle>Support Project</DialogTitle>
-          <DialogDescription>
-            Support this project with a donation. Payment will be processed through PayUMoney.
-          </DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <Heart className="h-5 w-5 text-red-500" />
+            Support Project
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="mb-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <img 
-              src="https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=80" 
-              alt="Project" 
-              className="w-16 h-16 rounded-lg object-cover"
-            />
+        <div className="space-y-6">
+          {/* Project Info */}
+          <div className="space-y-2">
+            <h3 className="font-medium text-lg">{project.title}</h3>
+            <p className="text-sm text-muted-foreground">{project.description}</p>
+            <Badge variant="secondary">Donation Support</Badge>
+          </div>
+
+          <Separator />
+
+          {/* Support Details */}
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Support this project with a donation. No equity or stakes involved - just helping entrepreneurs succeed!
+            </AlertDescription>
+          </Alert>
+
+          {/* Support Form */}
+          <div className="space-y-4">
             <div>
-              <h3 className="font-semibold text-foreground" data-testid="text-support-project-title">
-                {project.title}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Target: ₹{parseFloat(project.fundingGoal).toLocaleString()} | Raised: ₹{parseFloat(project.currentFunding || '0').toLocaleString()}
-              </p>
+              <Label htmlFor="support-amount">Support Amount (₹)</Label>
+              <Input
+                id="support-amount"
+                type="number"
+                placeholder="Enter amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                min="100"
+                data-testid="input-support-amount"
+              />
             </div>
-          </div>
-        </div>
 
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-          <h4 className="font-medium text-green-900 mb-2">How Support Works</h4>
-          <div className="text-sm text-green-800 space-y-1">
-            <p>• Enter the amount you want to support this project</p>
-            <p>• Payment will be processed through PayUMoney gateway</p>
-            <p>• 2% platform fee will be deducted, rest goes to the project</p>
-            <p>• Funds will be released after the investment round is over</p>
-            <p>• No equity stakes - this is pure support</p>
-          </div>
-        </div>
+            <div>
+              <Label htmlFor="support-phone">Phone Number</Label>
+              <Input
+                id="support-phone"
+                type="tel"
+                placeholder="Your phone number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                data-testid="input-support-phone"
+              />
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="amount">Support Amount (₹) *</Label>
-            <Input
-              id="amount"
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="Enter support amount"
-              min="1"
-              required
-              data-testid="input-support-amount"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Minimum: ₹1
-            </p>
-          </div>
-
-          <div className="bg-secondary/30 rounded-lg p-4">
-            <h4 className="font-medium text-foreground mb-2">Payment Summary</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Support Amount:</span>
-                <span className="font-medium" data-testid="text-support-amount">₹{supportAmount.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Platform Fee (2%):</span>
-                <span className="font-medium text-orange-600" data-testid="text-platform-fee">₹{platformFee.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between border-t pt-2">
-                <span className="text-muted-foreground">Project Receives:</span>
-                <span className="font-medium text-green-600" data-testid="text-project-receives">₹{projectReceives.toLocaleString()}</span>
-              </div>
+            <div>
+              <Label htmlFor="support-message">Message (Optional)</Label>
+              <Textarea
+                id="support-message"
+                placeholder="Encourage the entrepreneur..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={3}
+                data-testid="textarea-support-message"
+              />
             </div>
           </div>
 
-          <div className="flex items-start space-x-2">
-            <Checkbox 
-              id="terms" 
-              checked={agreedToTerms}
-              onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-              data-testid="checkbox-support-terms"
-            />
-            <Label htmlFor="terms" className="text-sm text-muted-foreground">
-              I understand this is a support payment and agree to PayUMoney's terms and conditions. 2% platform fee will be deducted.
-            </Label>
-          </div>
+          {/* Payment Breakdown */}
+          {supportAmount > 0 && (
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Support Amount:</span>
+                <span>₹{supportAmount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Platform Fee (2%):</span>
+                <span>-₹{platformFee.toFixed(2)}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-medium">
+                <span>Amount to Project:</span>
+                <span>₹{finalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
 
-          <Button 
-            type="submit" 
-            className="w-full bg-green-600 hover:bg-green-700" 
-            disabled={supportMutation.isPending || !agreedToTerms}
-            data-testid="button-submit-support"
-          >
-            {supportMutation.isPending ? 'Processing...' : 'Proceed to PayUMoney'}
-          </Button>
-        </form>
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="flex-1"
+              data-testid="button-cancel-support"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSupport}
+              disabled={!amount || !phone || supportAmount < 100 || isProcessing}
+              className="flex-1 bg-red-500 hover:bg-red-600"
+              data-testid="button-confirm-support"
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              {isProcessing ? 'Processing...' : `Support ₹${supportAmount.toLocaleString()}`}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

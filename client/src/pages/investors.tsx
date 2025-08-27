@@ -1,17 +1,28 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Search, Filter, Mail, Phone, MapPin, DollarSign } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { User } from "@shared/schema";
 
 export default function Investors() {
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('all');
   const [investmentRangeFilter, setInvestmentRangeFilter] = useState('all');
+  const [selectedInvestor, setSelectedInvestor] = useState<User | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [connectedInvestors, setConnectedInvestors] = useState<Set<string>>(new Set());
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Query to get all investors (users with userType = 'investor')
   const { data: allUsers = [], isLoading } = useQuery<User[]>({
@@ -34,6 +45,20 @@ export default function Investors() {
     return matchesSearch && matchesLocation;
   });
 
+  const connectMutation = useMutation({
+    mutationFn: async (investorId: string) => {
+      const response = await apiRequest("POST", "/api/investors/connect", { investorId });
+      return response.json();
+    },
+    onSuccess: (data, investorId) => {
+      toast({ title: "Connection request sent successfully!" });
+      setConnectedInvestors(prev => new Set(prev).add(investorId));
+    },
+    onError: () => {
+      toast({ title: "Failed to send connection request", variant: "destructive" });
+    }
+  });
+
   const getInvestmentRangeText = (range: string) => {
     switch (range) {
       case 'small':
@@ -45,6 +70,15 @@ export default function Investors() {
       default:
         return 'Any Range';
     }
+  };
+
+  const handleConnect = (investor: User) => {
+    connectMutation.mutate(investor.id);
+  };
+
+  const handleViewProfile = (investor: User) => {
+    setSelectedInvestor(investor);
+    setIsProfileModalOpen(true);
   };
 
   return (
@@ -161,10 +195,20 @@ export default function Investors() {
                   </div>
 
                   <div className="space-y-2">
-                    <Button className="w-full" data-testid={`button-connect-investor-${investor.id}`}>
-                      Connect
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleConnect(investor)}
+                      disabled={connectedInvestors.has(investor.id) || connectMutation.isPending}
+                      data-testid={`button-connect-investor-${investor.id}`}
+                    >
+                      {connectedInvestors.has(investor.id) ? 'Connected' : 'Connect'}
                     </Button>
-                    <Button variant="outline" className="w-full" data-testid={`button-view-profile-${investor.id}`}>
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      onClick={() => handleViewProfile(investor)}
+                      data-testid={`button-view-profile-${investor.id}`}
+                    >
                       View Profile
                     </Button>
                   </div>
@@ -186,6 +230,85 @@ export default function Investors() {
           </div>
         </main>
       </div>
+
+      {/* Investor Profile Modal */}
+      <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
+        <DialogContent className="sm:max-w-2xl" data-testid="dialog-investor-profile">
+          <DialogHeader>
+            <DialogTitle>Investor Profile</DialogTitle>
+          </DialogHeader>
+          {selectedInvestor && (
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+                  {selectedInvestor.profileImage ? (
+                    <img 
+                      src={selectedInvestor.profileImage} 
+                      alt={`${selectedInvestor.firstName} ${selectedInvestor.lastName}`}
+                      className="w-20 h-20 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-primary text-2xl font-semibold">
+                      {selectedInvestor.firstName.charAt(0)}{selectedInvestor.lastName.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold">{selectedInvestor.firstName} {selectedInvestor.lastName}</h3>
+                  <Badge variant="default" className="mt-1">Verified Investor</Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Email</Label>
+                  <p className="font-medium">{selectedInvestor.email}</p>
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <p className="font-medium">{selectedInvestor.phone || 'Not provided'}</p>
+                </div>
+                <div>
+                  <Label>User Type</Label>
+                  <Badge variant="secondary">{selectedInvestor.userType}</Badge>
+                </div>
+                <div>
+                  <Label>KYC Status</Label>
+                  <Badge variant={selectedInvestor.isKycComplete ? 'default' : 'secondary'}>
+                    {selectedInvestor.isKycComplete ? 'Verified' : 'Pending'}
+                  </Badge>
+                </div>
+                <div>
+                  <Label>Member Since</Label>
+                  <p className="font-medium">{new Date(selectedInvestor.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <Label>Investment Range</Label>
+                  <p className="font-medium">₹1L - ₹1Cr+</p>
+                </div>
+              </div>
+
+              {connectedInvestors.has(selectedInvestor.id) && (
+                <div className="border-t pt-4">
+                  <Label>Contact Information (Available after connection)</Label>
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{selectedInvestor.email}</span>
+                    </div>
+                    {selectedInvestor.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{selectedInvestor.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -23,8 +23,8 @@ export default function Tenders() {
 
   const filteredTenders = tenders.filter((tender: any) =>
     tender.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (selectedCategory === "" || tender.category === selectedCategory) &&
-    (selectedLocation === "" || tender.location.includes(selectedLocation))
+    (selectedCategory === "all" || selectedCategory === "" || tender.category === selectedCategory) &&
+    (selectedLocation === "all" || selectedLocation === "" || tender.location.includes(selectedLocation))
   );
 
   const categories = ["Infrastructure", "Healthcare", "Education", "Technology", "Agriculture", "Manufacturing"];
@@ -71,7 +71,7 @@ export default function Tenders() {
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category} value={category}>{category}</SelectItem>
                     ))}
@@ -84,7 +84,7 @@ export default function Tenders() {
                     <SelectValue placeholder="Location" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Locations</SelectItem>
+                    <SelectItem value="all">All Locations</SelectItem>
                     {locations.map((location) => (
                       <SelectItem key={location} value={location}>{location}</SelectItem>
                     ))}

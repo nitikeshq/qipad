@@ -9,9 +9,10 @@ interface ProjectCardProps {
   project: Project;
   showActions?: boolean;
   onInvest?: (project: Project) => void;
+  onSupport?: (project: Project) => void;
 }
 
-export function ProjectCard({ project, showActions = false, onInvest }: ProjectCardProps) {
+export function ProjectCard({ project, showActions = false, onInvest, onSupport }: ProjectCardProps) {
   const fundingPercentage = project.currentFunding && project.fundingGoal 
     ? (parseFloat(project.currentFunding) / parseFloat(project.fundingGoal)) * 100 
     : 0;
@@ -62,11 +63,18 @@ export function ProjectCard({ project, showActions = false, onInvest }: ProjectC
             </Badge>
           </div>
           <Progress value={fundingPercentage} className="h-2" data-testid={`progress-project-funding-${project.id}`} />
-          {onInvest && project.status === 'approved' && (
-            <div className="mt-4">
-              <Button onClick={() => onInvest(project)} data-testid={`button-invest-${project.id}`}>
-                Invest Now
-              </Button>
+          {(onInvest || onSupport) && project.status === 'approved' && (
+            <div className="mt-4 flex space-x-3">
+              {onInvest && (
+                <Button onClick={() => onInvest(project)} data-testid={`button-invest-${project.id}`}>
+                  Invest Now
+                </Button>
+              )}
+              {onSupport && (
+                <Button variant="outline" onClick={() => onSupport(project)} data-testid={`button-support-${project.id}`}>
+                  Support
+                </Button>
+              )}
             </div>
           )}
         </div>
