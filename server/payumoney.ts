@@ -41,12 +41,23 @@ export class PayUMoneyService {
   }
 
   generateHash(data: PayUMoneyPaymentData): string {
-    const hashString = `${this.merchantKey}|${data.txnId}|${data.amount}|${data.productInfo}|${data.firstName}|${data.email}|||||||||||${this.salt}`;
+    // PayUMoney hash format: key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT
+    const udf1 = data.userId || '';
+    const udf2 = data.paymentType || '';
+    const udf3 = data.metadata ? JSON.stringify(data.metadata) : '';
+    const udf4 = '';
+    const udf5 = '';
+    
+    const hashString = `${this.merchantKey}|${data.txnId}|${data.amount}|${data.productInfo}|${data.firstName}|${data.email}|${udf1}|${udf2}|${udf3}|${udf4}|${udf5}||||||${this.salt}`;
+    console.log('PayUMoney - Hash string:', hashString.replace(this.salt, 'SALT_HIDDEN').replace(this.merchantKey, 'KEY_HIDDEN'));
     return crypto.createHash('sha512').update(hashString).digest('hex');
   }
 
-  verifyHash(txnId: string, amount: number, productInfo: string, firstName: string, email: string, status: string, hash: string): boolean {
-    const hashString = `${this.salt}|${status}|||||||||||${email}|${firstName}|${productInfo}|${amount}|${txnId}|${this.merchantKey}`;
+  verifyHash(callbackData: any): boolean {
+    // PayUMoney response hash format: SALT|status||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key
+    const { txnid, amount, firstname, email, productinfo, status, hash, udf1, udf2, udf3, udf4, udf5 } = callbackData;
+    
+    const hashString = `${this.salt}|${status}||||||${udf5 || ''}|${udf4 || ''}|${udf3 || ''}|${udf2 || ''}|${udf1 || ''}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${this.merchantKey}`;
     const expectedHash = crypto.createHash('sha512').update(hashString).digest('hex');
     return hash.toLowerCase() === expectedHash.toLowerCase();
   }
@@ -87,6 +98,13 @@ export class PayUMoneyService {
       const hash = this.generateHash(paymentDataForHash);
       console.log('PayUMoney - Generated hash:', hash.substring(0, 20) + '...');
       
+      // Generate UDF fields for hash calculation
+      const udf1 = data.userId || '';
+      const udf2 = data.paymentType || '';
+      const udf3 = data.metadata ? JSON.stringify(data.metadata) : '';
+      const udf4 = '';
+      const udf5 = '';
+      
       const paymentData = {
         key: this.merchantKey,
         txnid: data.txnId,
@@ -99,11 +117,11 @@ export class PayUMoneyService {
         furl: data.failureUrl,
         hash: hash,
         service_provider: 'payu_paisa',
-        udf1: data.userId || '',
-        udf2: data.paymentType || '',
-        udf3: JSON.stringify(data.metadata || {}),
-        udf4: '',
-        udf5: '',
+        udf1: udf1,
+        udf2: udf2,
+        udf3: udf3,
+        udf4: udf4,
+        udf5: udf5,
         pg: 'CC', // Credit Card as default payment gateway
       };
 
@@ -137,12 +155,13 @@ export class PayUMoneyService {
 
   async processCallback(callbackData: any): Promise<{ success: boolean; txnId: string; status: string; amount: number; error?: string }> {
     try {
-      const { txnid, amount, firstname, email, productinfo, status, hash } = callbackData;
+      const { txnid, amount, status } = callbackData;
       
-      // Verify hash
-      const isValidHash = this.verifyHash(txnid, amount, productinfo, firstname, email, status, hash);
+      // Verify hash using the corrected method
+      const isValidHash = this.verifyHash(callbackData);
       
       if (!isValidHash) {
+        console.error('PayUMoney - Hash verification failed for transaction:', txnid);
         return {
           success: false,
           txnId: txnid,
@@ -152,6 +171,7 @@ export class PayUMoneyService {
         };
       }
 
+      console.log('PayUMoney - Hash verification successful for transaction:', txnid);
       return {
         success: status === 'success',
         txnId: txnid,
