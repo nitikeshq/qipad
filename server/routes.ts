@@ -159,6 +159,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User routes
+  app.get("/api/user", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ ...user, passwordHash: undefined });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get user", error: error.message });
+    }
+  });
+
   app.get("/api/users/me", authenticateToken, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.userId);
