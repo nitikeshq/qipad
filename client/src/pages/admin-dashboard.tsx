@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>({ name: "", description: "", type: "" });
-  const [modalType, setModalType] = useState<"category" | "department" | "tender" | null>(null);
+  const [modalType, setModalType] = useState<"category" | "department" | "tender" | "company-formation" | null>(null);
 
   // Data queries
   const { data: users = [] } = useQuery<any[]>({
@@ -49,6 +49,10 @@ export default function AdminDashboard() {
 
   const { data: tenders = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/tenders'],
+  });
+
+  const { data: companyFormations = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/company-formations'],
   });
 
   const { data: categories = [] } = useQuery<any[]>({
@@ -124,7 +128,7 @@ export default function AdminDashboard() {
     { title: "Pending Reviews", value: projects.filter((p: any) => p.status === 'pending_review').length, icon: Settings, color: "text-orange-600", bgColor: "bg-orange-50" }
   ];
 
-  const openCreateModal = (type: "category" | "department" | "tender") => {
+  const openCreateModal = (type: "category" | "department" | "tender" | "company-formation") => {
     setModalType(type);
     setEditingItem({ name: "", description: "", type: "" });
     setIsCreateModalOpen(true);
@@ -191,7 +195,7 @@ export default function AdminDashboard() {
         {/* Advanced Management Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-            <TabsList className="grid w-full grid-cols-8">
+            <TabsList className="grid w-full grid-cols-10">
               <TabsTrigger value="overview" data-testid="tab-overview">
                 <Home className="h-4 w-4 mr-1" />
                 Overview
@@ -199,6 +203,8 @@ export default function AdminDashboard() {
               <TabsTrigger value="projects" data-testid="tab-projects">Projects</TabsTrigger>
               <TabsTrigger value="users" data-testid="tab-users">Users</TabsTrigger>
               <TabsTrigger value="investments" data-testid="tab-investments">Investments</TabsTrigger>
+              <TabsTrigger value="tenders" data-testid="tab-tenders">Tenders</TabsTrigger>
+              <TabsTrigger value="company-formations" data-testid="tab-company-formations">Formations</TabsTrigger>
               <TabsTrigger value="categories" data-testid="tab-categories">Categories</TabsTrigger>
               <TabsTrigger value="departments" data-testid="tab-departments">Departments</TabsTrigger>
               <TabsTrigger value="communities" data-testid="tab-communities">Communities</TabsTrigger>
@@ -628,6 +634,136 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Tenders Management Tab */}
+          <TabsContent value="tenders">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Tender Management</h2>
+                <p className="text-gray-600 dark:text-gray-400">Manage government tenders and eligibility requirements</p>
+              </div>
+              <Button onClick={() => openCreateModal("tender")} data-testid="button-create-tender">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Tender
+              </Button>
+            </div>
+
+            <Card>
+              <CardContent className="p-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Deadline</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tenders.map((tender: any) => (
+                      <TableRow key={tender.id} data-testid={`row-tender-${tender.id}`}>
+                        <TableCell className="font-medium">{tender.title}</TableCell>
+                        <TableCell>{tender.department}</TableCell>
+                        <TableCell>₹{Number(tender.amount || 0).toLocaleString()}</TableCell>
+                        <TableCell>{tender.applicationDeadline ? new Date(tender.applicationDeadline).toLocaleDateString() : 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge variant={tender.status === 'open' ? 'default' : 'secondary'}>
+                            {tender.status || 'pending'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm" data-testid={`button-edit-tender-${tender.id}`}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => deleteItemMutation.mutate({ type: 'tenders', id: tender.id })}
+                              data-testid={`button-delete-tender-${tender.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Company Formations Management Tab */}
+          <TabsContent value="company-formations">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Company Formation Management</h2>
+                <p className="text-gray-600 dark:text-gray-400">Track and manage company formation processes with 9-step workflow</p>
+              </div>
+              <Button onClick={() => openCreateModal("company-formation")} data-testid="button-create-company-formation">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Formation Process
+              </Button>
+            </div>
+
+            <Card>
+              <CardContent className="p-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Company Name</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Current Step</TableHead>
+                      <TableHead>Progress</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {companyFormations.map((formation: any) => (
+                      <TableRow key={formation.id} data-testid={`row-formation-${formation.id}`}>
+                        <TableCell className="font-medium">{formation.companyName}</TableCell>
+                        <TableCell>{formation.user?.firstName || 'N/A'} {formation.user?.lastName || ''}</TableCell>
+                        <TableCell>Step {formation.currentStep || 1} of 9</TableCell>
+                        <TableCell>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full" 
+                              style={{ width: `${((formation.currentStep || 1) / 9) * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-600">{Math.round(((formation.currentStep || 1) / 9) * 100)}%</span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={formation.status === 'completed' ? 'default' : formation.status === 'in_progress' ? 'secondary' : 'outline'}>
+                            {formation.status || 'pending'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm" data-testid={`button-edit-formation-${formation.id}`}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => deleteItemMutation.mutate({ type: 'company-formations', id: formation.id })}
+                              data-testid={`button-delete-formation-${formation.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

@@ -976,6 +976,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin - Company Formations Management
+  app.get("/api/admin/company-formations", async (req, res) => {
+    try {
+      const formations = await storage.getAllCompanyFormations();
+      res.json(formations);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get company formations", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/company-formations", async (req, res) => {
+    try {
+      const formation = await storage.createCompanyFormation(req.body);
+      res.status(201).json(formation);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create company formation", error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/company-formations/:id", async (req, res) => {
+    try {
+      const formation = await storage.updateCompanyFormation(req.params.id, req.body);
+      res.json(formation);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update company formation", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/company-formations/:id", async (req, res) => {
+    try {
+      await storage.deleteCompanyFormation(req.params.id);
+      res.json({ message: "Company formation deleted successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to delete company formation", error: error.message });
+    }
+  });
+
 
 
   // Connection routes
