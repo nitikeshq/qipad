@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Edit, DollarSign, Calendar, Users, TrendingUp, Award, ArrowLeft, Save, X } from "lucide-react";
+import { Edit, DollarSign, Calendar, Users, TrendingUp, Award, ArrowLeft, Save, X, Settings, Info, Calculator, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -199,15 +199,26 @@ export function ProjectDetailsPage() {
                   )}
                 </div>
                 <div className="flex space-x-2">
-                  {user?.id === project.userId && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditProjectModalOpen(true)}
-                      data-testid="button-edit-project"
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Project
-                    </Button>
+                  {user?.id === project.userId && !isEditMode && (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditMode(true)}
+                        className="mr-2"
+                        data-testid="button-edit-project-info"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Project Info
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditProjectModalOpen(true)}
+                        data-testid="button-edit-project-details"
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Edit Project Details
+                      </Button>
+                    </>
                   )}
                   {isEditMode ? (
                     <>
@@ -323,31 +334,89 @@ export function ProjectDetailsPage() {
                   <TabsContent value="marketing">
                     <Card>
                       <CardContent className="pt-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <h3 className="font-semibold mb-2">Market Analysis</h3>
-                            <p className="text-muted-foreground">
-                              {project.marketAnalysis || "Market analysis not provided yet."}
-                            </p>
+                        <div className="space-y-6">
+                          {/* Marketing Content Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <h3 className="font-semibold mb-2">Market Analysis</h3>
+                              <p className="text-muted-foreground">
+                                {project.marketAnalysis || "Market analysis not provided yet."}
+                              </p>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold mb-2">Competitive Advantage</h3>
+                              <p className="text-muted-foreground">
+                                {project.competitiveAdvantage || "Competitive advantage not provided yet."}
+                              </p>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold mb-2">Target Market</h3>
+                              <p className="text-muted-foreground">
+                                {project.targetMarket || "Target market information not provided yet."}
+                              </p>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold mb-2">Marketing Strategy</h3>
+                              <p className="text-muted-foreground">
+                                {project.marketingStrategy || "Marketing strategy not provided yet."}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold mb-2">Competitive Advantage</h3>
-                            <p className="text-muted-foreground">
-                              {project.competitiveAdvantage || "Competitive advantage not provided yet."}
-                            </p>
-                          </div>
-                          <div>
-                            <h3 className="font-semibold mb-2">Target Market</h3>
-                            <p className="text-muted-foreground">
-                              {project.targetMarket || "Target market information not provided yet."}
-                            </p>
-                          </div>
-                          <div>
-                            <h3 className="font-semibold mb-2">Marketing Strategy</h3>
-                            <p className="text-muted-foreground">
-                              {project.marketingStrategy || "Marketing strategy not provided yet."}
-                            </p>
-                          </div>
+
+                          {/* Marketing Media Section */}
+                          {(project.images?.length > 0 || project.videos?.length > 0) && (
+                            <div className="space-y-4">
+                              <h3 className="font-semibold">Marketing Media</h3>
+                              
+                              {/* Images */}
+                              {project.images?.length > 0 && (
+                                <div className="space-y-2">
+                                  <h4 className="text-sm font-medium text-muted-foreground">Project Images</h4>
+                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    {project.images.map((image: string, index: number) => (
+                                      <div key={index} className="aspect-square rounded-lg overflow-hidden border">
+                                        <img 
+                                          src={image} 
+                                          alt={`Project image ${index + 1}`}
+                                          className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                                          onClick={() => window.open(image, '_blank')}
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Videos */}
+                              {project.videos?.length > 0 && (
+                                <div className="space-y-2">
+                                  <h4 className="text-sm font-medium text-muted-foreground">Project Videos</h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {project.videos.map((video: string, index: number) => (
+                                      <div key={index} className="aspect-video rounded-lg overflow-hidden border">
+                                        <video 
+                                          controls 
+                                          className="w-full h-full object-cover"
+                                          poster="/api/placeholder/video-thumbnail"
+                                        >
+                                          <source src={video} type="video/mp4" />
+                                          Your browser does not support the video tag.
+                                        </video>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* No Media Message */}
+                          {(!project.images?.length && !project.videos?.length) && (
+                            <div className="text-center py-8 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+                              <p className="text-muted-foreground">No marketing media uploaded yet</p>
+                              <p className="text-sm text-muted-foreground mt-1">Project owner can add images and videos to showcase their project</p>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
