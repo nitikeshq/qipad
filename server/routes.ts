@@ -390,7 +390,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/investments/my", authenticateToken, async (req: any, res) => {
     try {
       const investments = await storage.getInvestmentsByUser(req.user.userId);
-      res.json(investments);
+      
+      // Include project details for each investment
+      const investmentsWithProjects = await Promise.all(
+        investments.map(async (investment) => {
+          const project = await storage.getProject(investment.projectId);
+          return {
+            ...investment,
+            project: project ? {
+              id: project.id,
+              title: project.title,
+              description: project.description,
+              category: project.category,
+              status: project.status,
+              fundingGoal: project.fundingGoal,
+              currentFunding: project.currentFunding
+            } : null
+          };
+        })
+      );
+      
+      res.json(investmentsWithProjects);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to get investments", error: error.message });
     }
