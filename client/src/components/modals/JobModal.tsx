@@ -43,8 +43,10 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
       onOpenChange(false);
       resetForm();
     },
-    onError: () => {
-      toast({ title: "Failed to post job", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Job creation error:', error);
+      const errorMessage = error.message || "Failed to post job";
+      toast({ title: errorMessage, variant: "destructive" });
     }
   });
 
@@ -65,12 +67,18 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const salary = formData.salaryMin && formData.salaryMax 
+      ? `₹${formData.salaryMin} - ₹${formData.salaryMax}` 
+      : formData.salaryMin 
+        ? `₹${formData.salaryMin}+` 
+        : '';
+    
     createJobMutation.mutate({
-      ...formData,
-      salaryMin: formData.salaryMin ? parseInt(formData.salaryMin) : undefined,
-      salaryMax: formData.salaryMax ? parseInt(formData.salaryMax) : undefined,
-      experienceRequired: formData.experienceRequired ? parseInt(formData.experienceRequired) : undefined,
-      requiredSkills: skills
+      title: formData.title,
+      description: formData.description,
+      requirements: skills.join(', '),
+      location: formData.location,
+      salary: salary
     });
   };
 

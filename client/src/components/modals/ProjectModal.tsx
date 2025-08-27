@@ -52,8 +52,10 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
         campaignDuration: '30'
       });
     },
-    onError: () => {
-      toast({ title: "Failed to create project", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Project creation error:', error);
+      const errorMessage = error.message || "Failed to create project";
+      toast({ title: errorMessage, variant: "destructive" });
     }
   });
 
@@ -61,8 +63,8 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
     e.preventDefault();
     createProjectMutation.mutate({
       ...formData,
-      fundingGoal: parseFloat(formData.fundingGoal),
-      minimumInvestment: parseFloat(formData.minimumInvestment),
+      fundingGoal: formData.fundingGoal.toString(),
+      minimumInvestment: formData.minimumInvestment.toString(),
       campaignDuration: parseInt(formData.campaignDuration)
     });
   };

@@ -41,8 +41,10 @@ export function BiddingProjectModal({ open, onOpenChange }: BiddingProjectModalP
       onOpenChange(false);
       resetForm();
     },
-    onError: () => {
-      toast({ title: "Failed to post project", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Bidding project creation error:', error);
+      const errorMessage = error.message || "Failed to post project";
+      toast({ title: errorMessage, variant: "destructive" });
     }
   });
 
@@ -63,7 +65,7 @@ export function BiddingProjectModal({ open, onOpenChange }: BiddingProjectModalP
     e.preventDefault();
     createBiddingProjectMutation.mutate({
       ...formData,
-      budget: parseFloat(formData.budget),
+      budget: formData.budget.toString(),
       skillsRequired: skills
     });
   };
