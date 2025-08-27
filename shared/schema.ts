@@ -439,9 +439,15 @@ export const companies = pgTable("companies", {
   cinNumber: text("cin_number"),
   panNumber: text("pan_number"),
   status: companyStatusEnum("status").default("pending"),
-  employeeCount: integer("employee_count"),
+  employeeCount: text("employee_count"), // Employee range like "1-10", "11-50" etc
   foundedYear: integer("founded_year"),
+  establishedYear: integer("established_year"), // When company was established
   revenue: decimal("revenue", { precision: 15, scale: 2 }),
+  profilePdf: text("profile_pdf"), // Company profile document
+  tags: text("tags").array(), // Company tags for categorization
+  phone: text("phone"), // Company contact phone
+  email: text("email"), // Company contact email
+  country: text("country"), // Company country
   isVerified: boolean("is_verified").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

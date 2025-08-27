@@ -96,30 +96,30 @@ export default function MyProjects() {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">My Projects</h1>
-                <p className="text-muted-foreground">Manage your projects and track their progress</p>
+                <h1 className="text-3xl font-bold text-foreground mb-2">My Innovations</h1>
+                <p className="text-muted-foreground">Manage your innovations and track their progress</p>
               </div>
               <Button onClick={() => setIsProjectModalOpen(true)} data-testid="button-create-project">
                 <Plus className="h-4 w-4 mr-2" />
-                Create Project
+                Create Innovation
               </Button>
             </div>
 
             {/* Projects Grid */}
             {isLoading ? (
               <div className="text-center py-12">
-                <div className="text-muted-foreground">Loading your projects...</div>
+                <div className="text-muted-foreground">Loading your innovations...</div>
               </div>
             ) : projects.length === 0 ? (
               <div className="text-center py-12">
                 <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
                   <TrendingUp className="h-12 w-12 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No Projects Yet</h3>
-                <p className="text-muted-foreground mb-4">Create your first project to start raising funds</p>
+                <h3 className="text-xl font-semibold mb-2">No Innovations Yet</h3>
+                <p className="text-muted-foreground mb-4">Create your first innovation to start raising funds</p>
                 <Button onClick={() => setIsProjectModalOpen(true)} data-testid="button-create-first-project">
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Project
+                  Create Your First Innovation
                 </Button>
               </div>
             ) : (

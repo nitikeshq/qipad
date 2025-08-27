@@ -943,6 +943,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {
+    const [updatedCompany] = await db
+      .update(companies)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(companies.id, id))
+      .returning();
+    return updatedCompany;
+  }
+
+  async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {
     const [company] = await db
       .update(companies)
       .set({ ...updates, updatedAt: new Date() })

@@ -19,6 +19,7 @@ import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { AddServiceModal } from "@/components/modals/AddServiceModal";
 import { AddProductModal } from "@/components/modals/AddProductModal";
+import { EditCompanyModal } from "@/components/modals/EditCompanyModal";
 import { useAuth } from "@/contexts/AuthContext";
 
 const inquirySchema = z.object({
@@ -84,6 +85,7 @@ export default function CompanyDetail() {
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [showEditCompanyModal, setShowEditCompanyModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -222,15 +224,29 @@ export default function CompanyDetail() {
                   </div>
                 )}
                 <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                      {company.name}
-                    </h1>
-                    {company.isVerified && (
-                      <Badge variant="secondary" className="flex items-center">
-                        <Check className="w-3 h-3 mr-1" />
-                        Verified
-                      </Badge>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        {company.name}
+                      </h1>
+                      {company.isVerified && (
+                        <Badge variant="secondary" className="flex items-center">
+                          <Check className="w-3 h-3 mr-1" />
+                          Verified
+                        </Badge>
+                      )}
+                    </div>
+                    {/* Edit Company Button - only show for company owner */}
+                    {user && company.ownerId === user.id && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setShowEditCompanyModal(true)}
+                        data-testid="button-edit-company"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit Profile
+                      </Button>
                     )}
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 mb-4">
@@ -643,6 +659,15 @@ export default function CompanyDetail() {
           isOpen={showAddProductModal}
           onClose={() => setShowAddProductModal(false)}
           companyId={companyId}
+        />
+      )}
+      
+      {/* Edit Company Modal */}
+      {company && (
+        <EditCompanyModal
+          company={company}
+          open={showEditCompanyModal}
+          onOpenChange={setShowEditCompanyModal}
         />
       )}
     </div>

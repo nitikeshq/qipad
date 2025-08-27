@@ -1861,6 +1861,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/companies/:id', authenticateToken, upload.fields([
+    { name: 'logo', maxCount: 1 },
+    { name: 'profilePdf', maxCount: 1 }
+  ]), async (req: any, res) => {
+    try {
+      const company = await storage.getCompanyById(req.params.id);
+      if (!company) {
+        return res.status(404).json({ message: 'Company not found' });
+      }
+      
+      if (company.ownerId !== req.user.userId) {
+        return res.status(403).json({ message: 'Unauthorized to update this company' });
+      }
+
+      const updates: any = { ...req.body };
+      
+      // Handle logo upload
+      if (req.files?.logo?.[0]) {
+        updates.logo = `/uploads/${req.files.logo[0].filename}`;
+      }
+      
+      // Handle profile PDF upload
+      if (req.files?.profilePdf?.[0]) {
+        updates.profilePdf = `/uploads/${req.files.profilePdf[0].filename}`;
+      }
+      
+      // Handle tags - convert from JSON string if needed
+      if (updates.tags && typeof updates.tags === 'string') {
+        try {
+          updates.tags = JSON.parse(updates.tags);
+        } catch (e) {
+          // If parsing fails, assume it's a comma-separated string
+          updates.tags = updates.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
+        }
+      }
+      
+      // Convert establishedYear to number if provided
+      if (updates.establishedYear) {
+        updates.establishedYear = parseInt(updates.establishedYear);
+      }
+
+      const updatedCompany = await storage.updateCompany(req.params.id, updates);
+      res.json(updatedCompany);
+    } catch (error) {
+      console.error('Error updating company:', error);
+      res.status(500).json({ message: 'Failed to update company' });
+    }
+  });
+
   // Company Services Routes
   app.get('/api/companies/:id/services', async (req, res) => {
     try {
