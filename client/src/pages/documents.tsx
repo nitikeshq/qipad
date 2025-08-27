@@ -1,16 +1,81 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, CheckCircle, Clock, AlertCircle, Download } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export function DocumentsPage() {
   const { data: documents = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/documents']
   });
+  
+  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  const uploadMutation = useMutation({
+    mutationFn: async ({ file, documentType }: { file: File; documentType: string }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('documentType', documentType);
+      
+      return await apiRequest('POST', '/api/documents', formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/documents'] });
+      toast({
+        title: "Document Uploaded",
+        description: "Your document has been uploaded successfully and is under review.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload document. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const handleUploadClick = (documentType: string) => {
+    const fileInput = fileInputRefs.current[documentType];
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, documentType: string) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload PDF, JPEG, or PNG files only.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Please upload files smaller than 10MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      uploadMutation.mutate({ file, documentType });
+    }
+  };
 
   const getStatusIcon = (isVerified: boolean) => {
     if (isVerified) return <CheckCircle className="h-4 w-4 text-green-500" />;
@@ -39,7 +104,7 @@ export function DocumentsPage() {
         <main className="flex-1 p-6">
           <div className="max-w-6xl mx-auto">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-foreground mb-2">Documents</h1>
+              <h1 className="text-3xl font-bold text-foreground mb-2">My KYC</h1>
               <p className="text-muted-foreground">Manage your KYC and verification documents</p>
             </div>
 
@@ -86,9 +151,22 @@ export function DocumentsPage() {
                       {doc.required && (
                         <p className="text-xs text-red-600 mb-3">Required</p>
                       )}
-                      <Button size="sm" variant="outline" data-testid={`button-upload-${doc.type}`}>
+                      <input
+                        ref={(el) => (fileInputRefs.current[doc.type] = el)}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        style={{ display: 'none' }}
+                        onChange={(e) => handleFileChange(e, doc.type)}
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        data-testid={`button-upload-${doc.type}`}
+                        onClick={() => handleUploadClick(doc.type)}
+                        disabled={uploadMutation.isPending}
+                      >
                         <Upload className="h-4 w-4 mr-1" />
-                        Upload Document
+                        {uploadMutation.isPending ? 'Uploading...' : 'Upload Document'}
                       </Button>
                     </div>
                   ))}

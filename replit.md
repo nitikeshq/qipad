@@ -3,16 +3,16 @@
 Qipad (Life force + platform → "Energized startup space") is a comprehensive business networking and investment platform that connects entrepreneurs with investors, facilitating project funding, community building, and job opportunities. The platform serves two main user types: business owners seeking funding and investors looking for investment opportunities. It features project creation and management, percentage-based equity investment system, community forums, job postings, comprehensive KYC verification processes, and advanced admin management system.
 
 ## Recent Updates
+- **Fixed Document Upload System** - Documents now save to uploads/{userId}/ directory structure with proper user-specific folders (January 2025)
+- **Events PayUMoney Integration** - Complete payment flow for paid event registration with 2% platform fee and free event support
+- **Investment Modal Component** - Created InvestModal with equity-based investment and PayUMoney payment gateway integration
+- **KYC Document Management** - Renamed Documents page to "My KYC" with functional upload buttons for PDF/PNG/JPG files
+- **Admin KYC Approval System** - Added KYC approval buttons and API endpoints for admins to verify user applications
+- **Database Schema Sync** - Updated and synchronized all tables including events table for proper functionality
 - **Enhanced User Registration** - Added "Individual" as third user type alongside Business Owner and Investor (December 2024)
 - **Admin Login System** - Implemented secure admin authentication with credentials (admin/qipad2024!) and JWT tokens
 - **Comprehensive Community System** - Complete community functionality with detail pages, join/leave, member management, posting, and admin moderation
-- **Settings Infrastructure** - Added profile, billing, and general settings pages with proper routing and functionality
-- **Investment System Redesign** - Removed payment gateway for "invest" type, implemented percentage-based equity system with approval workflow
 - **Advanced Admin Panel** - Comprehensive admin dashboard for managing all platform modules, categories, departments, and information
-- **Trust-based Platform Fee** - 2% platform fee system on successful investments (trust-based, no gateway)
-- **Separate Investment/Support Modals** - Created distinct modals for invest (equity-based) vs support (PayUMoney payment) with proper workflows
-- **Project Editing System** - Comprehensive project editing with marketing tab for images/videos, business plan updates, team management
-- **KYC Project Creation** - Only KYC-verified users can create projects, improved access control
 
 ## Key Features
 - **Dual Investment Types**: "Invest" (equity-based with percentage) vs "Support" (donation-based with payment gateway)
