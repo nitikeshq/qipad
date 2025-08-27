@@ -37,9 +37,15 @@ export default function AdminDashboard() {
     queryKey: ['/api/admin/projects'],
   });
 
-  const { data: investments = [] } = useQuery<any[]>({
-    queryKey: ['/api/admin/investments'],
+  const [currentInvestmentPage, setCurrentInvestmentPage] = useState(1);
+  const { data: investmentsResponse = {} } = useQuery<any>({
+    queryKey: ['/api/admin/investments', { page: currentInvestmentPage, limit: 10 }],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/admin/investments?page=${currentInvestmentPage}&limit=10`);
+      return response.json();
+    }
   });
+  const investments = investmentsResponse.investments || [];
 
   const { data: communities = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/communities'],
@@ -640,8 +646,8 @@ export default function AdminDashboard() {
                       <TableRow key={investment.id} data-testid={`row-investment-${investment.id}`}>
                         <TableCell>{investment.investor?.firstName} {investment.investor?.lastName}</TableCell>
                         <TableCell>{investment.project?.title}</TableCell>
-                        <TableCell>₹{investment.amount?.toLocaleString()}</TableCell>
-                        <TableCell>{investment.stakePercentage}%</TableCell>
+                        <TableCell>{investment.formattedAmount || `₹${parseFloat(investment.amount || '0').toLocaleString()}`}</TableCell>
+                        <TableCell>{investment.stakes || (investment.expectedStakes ? `${investment.expectedStakes}%` : 'N/A')}</TableCell>
                         <TableCell>
                           <Badge variant={investment.status === 'completed' ? 'default' : 'secondary'}>
                             {investment.status}
@@ -656,6 +662,36 @@ export default function AdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+                
+                {/* Pagination Controls */}
+                {investmentsResponse.pagination && investmentsResponse.pagination.totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-sm text-gray-600">
+                      Page {investmentsResponse.pagination.page} of {investmentsResponse.pagination.totalPages} 
+                      ({investmentsResponse.pagination.total} total investments)
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setCurrentInvestmentPage(p => Math.max(1, p - 1))}
+                        disabled={investmentsResponse.pagination.page <= 1}
+                        data-testid="button-investments-prev"
+                      >
+                        Previous
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setCurrentInvestmentPage(p => p + 1)}
+                        disabled={investmentsResponse.pagination.page >= investmentsResponse.pagination.totalPages}
+                        data-testid="button-investments-next"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

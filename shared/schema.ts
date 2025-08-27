@@ -91,6 +91,7 @@ export const communities = pgTable("communities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   description: text("description"),
+  category: text("category").default('general'),
   creatorId: varchar("creator_id").notNull().references(() => users.id),
   isPrivate: boolean("is_private").default(false),
   createdAt: timestamp("created_at").defaultNow(),

@@ -494,7 +494,10 @@ export class DatabaseStorage implements IStorage {
   async createCommunity(community: InsertCommunity): Promise<Community> {
     const [newCommunity] = await db
       .insert(communities)
-      .values(community)
+      .values({
+        ...community,
+        category: community.category || 'general'
+      })
       .returning();
     return newCommunity;
   }
@@ -762,7 +765,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       activeProjects,
-      totalFunding: totalFunding.toFixed(2),
+      totalFunding: `₹${totalFunding.toLocaleString('en-IN')}`,
       investorCount: uniqueInvestors.size,
       connectionCount: userConnections.length,
     };
@@ -786,13 +789,13 @@ export class DatabaseStorage implements IStorage {
     }, {} as any);
 
     return {
-      totalInvested: totalInvested.toLocaleString(),
+      totalInvested: `₹${totalInvested.toLocaleString('en-IN')}`,
       activeInvestments,
       uniqueProjects,
       totalStakes: totalStakes.toFixed(1), // Total equity percentage owned
       totalTransactions: userInvestments.length,
       investmentTypes,
-      averageInvestment: userInvestments.length > 0 ? (totalInvested / userInvestments.length).toFixed(0) : '0',
+      averageInvestment: userInvestments.length > 0 ? `₹${(totalInvested / userInvestments.length).toLocaleString('en-IN')}` : '₹0',
       lastInvestment: userInvestments[0]?.createdAt || null
     };
   }
@@ -821,9 +824,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCompanyFormation(id: string, updates: Partial<InsertCompanyFormation>): Promise<CompanyFormation> {
+    // Convert date strings to Date objects for timestamp fields
+    const processedUpdates = { ...updates };
+    
+    // Handle timestamp fields that might come as strings
+    const timestampFields = ['incorporationDate', 'gstRegistrationDate', 'bankAccountOpenDate'];
+    timestampFields.forEach(field => {
+      if (processedUpdates[field] && typeof processedUpdates[field] === 'string') {
+        processedUpdates[field] = new Date(processedUpdates[field]);
+      }
+    });
+
     const [formation] = await db
       .update(companyFormations)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...processedUpdates, updatedAt: new Date() })
       .where(eq(companyFormations.id, id))
       .returning();
     return formation;

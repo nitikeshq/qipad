@@ -1145,8 +1145,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Investments CRUD
   app.get("/api/admin/investments", async (req, res) => {
     try {
-      const investments = await storage.getAllInvestmentsWithDetails();
-      res.json(investments);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = (page - 1) * limit;
+
+      const allInvestments = await storage.getAllInvestmentsWithDetails();
+      const total = allInvestments.length;
+      const paginatedInvestments = allInvestments
+        .slice(offset, offset + limit)
+        .map(inv => ({
+          ...inv,
+          stakes: inv.expectedStakes ? `${inv.expectedStakes}%` : 'N/A',
+          formattedAmount: `₹${parseFloat(inv.amount).toLocaleString('en-IN')}`
+        }));
+
+      res.json({
+        investments: paginatedInvestments,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to get investments", error: error.message });
     }

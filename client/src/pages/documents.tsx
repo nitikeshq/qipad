@@ -10,6 +10,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export function DocumentsPage() {
+  const { data: user } = useQuery<any>({
+    queryKey: ['/api/user']
+  });
+  
   const { data: documents = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/documents']
   });
@@ -127,8 +131,32 @@ export function DocumentsPage() {
         <main className="flex-1 p-6">
           <div className="max-w-6xl mx-auto">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-foreground mb-2">My KYC</h1>
-              <p className="text-muted-foreground">Manage your KYC and verification documents</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="text-documents-title">My KYC</h1>
+                  <p className="text-muted-foreground">Manage your KYC and verification documents</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {user?.kycStatus === 'verified' && (
+                    <Badge className="bg-green-100 text-green-800 border-green-200" data-testid="badge-kyc-verified">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      KYC Verified
+                    </Badge>
+                  )}
+                  {user?.kycStatus === 'pending' && (
+                    <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200" data-testid="badge-kyc-pending">
+                      <Clock className="h-3 w-3 mr-1" />
+                      Under Review
+                    </Badge>
+                  )}
+                  {(!user?.kycStatus || user?.kycStatus === 'not_verified') && (
+                    <Badge className="bg-red-100 text-red-800 border-red-200" data-testid="badge-kyc-not-verified">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      Not Verified
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* KYC Application Notice */}

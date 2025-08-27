@@ -163,8 +163,8 @@ export default function CommunityPage() {
                       <h3 className="text-lg font-semibold text-foreground" data-testid={`text-community-name-${community.id}`}>
                         {community.name}
                       </h3>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor('general')}`} data-testid={`badge-community-category-${community.id}`}>
-                        GENERAL
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(community.category || 'general')}`} data-testid={`badge-community-category-${community.id}`}>
+                        {(community.category || 'general').toUpperCase()}
                       </span>
                     </div>
                     
