@@ -1865,7 +1865,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const paymentData = {
-        amount,
+        amount: parseFloat(amount).toFixed(2),
         productInfo: 'Project Support Donation',
         firstName: req.user.firstName || 'User',
         email: req.user.email || 'user@example.com',

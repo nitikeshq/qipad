@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import axios from 'axios';
 
 export interface PayUMoneyPaymentData {
-  amount: number;
+  amount: number | string;
   productInfo: string;
   firstName: string;
   email: string;
@@ -52,12 +52,33 @@ export class PayUMoneyService {
 
   async createPayment(data: PayUMoneyPaymentData): Promise<PayUMoneyResponse> {
     try {
-      const hash = this.generateHash(data);
+      // Validate amount - ensure it's a positive number with max 2 decimal places
+      const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+      if (isNaN(amount) || amount <= 0) {
+        return {
+          success: false,
+          error: 'Invalid amount: Amount must be a positive number',
+        };
+      }
+
+      // PayUMoney minimum amount is ₹10
+      if (amount < 10) {
+        return {
+          success: false,
+          error: 'Minimum amount is ₹10 for PayUMoney payments',
+        };
+      }
+
+      // Format amount to 2 decimal places
+      const formattedAmount = amount.toFixed(2);
+      
+      const paymentDataForHash = { ...data, amount: formattedAmount };
+      const hash = this.generateHash(paymentDataForHash);
       
       const paymentData = {
         key: this.merchantKey,
         txnid: data.txnId,
-        amount: data.amount,
+        amount: formattedAmount,
         productinfo: data.productInfo,
         firstname: data.firstName,
         email: data.email,

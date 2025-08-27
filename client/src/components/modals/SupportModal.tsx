@@ -61,6 +61,17 @@ export function SupportModal({ open, onOpenChange, project }: SupportModalProps)
     if (!project || !amount || !phone) return;
 
     const supportAmount = parseFloat(amount);
+    
+    // Validate minimum amount
+    if (supportAmount < 10) {
+      toast({ 
+        title: "Invalid Amount", 
+        description: "Minimum support amount is ₹10", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     const platformFee = supportAmount * 0.02; // 2% platform fee
     const finalAmount = supportAmount - platformFee;
 
@@ -119,10 +130,10 @@ export function SupportModal({ open, onOpenChange, project }: SupportModalProps)
               <Input
                 id="support-amount"
                 type="number"
-                placeholder="Enter amount"
+                placeholder="Enter amount (minimum ₹10)"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                min="100"
+                min="10"
                 data-testid="input-support-amount"
               />
             </div>
@@ -183,7 +194,7 @@ export function SupportModal({ open, onOpenChange, project }: SupportModalProps)
             </Button>
             <Button
               onClick={handleSupport}
-              disabled={!amount || !phone || supportAmount < 100 || isProcessing}
+              disabled={!amount || !phone || supportAmount < 10 || isProcessing}
               className="flex-1 bg-red-500 hover:bg-red-600"
               data-testid="button-confirm-support"
             >
