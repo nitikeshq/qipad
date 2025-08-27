@@ -54,10 +54,10 @@ export default function Projects() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-foreground" data-testid="text-projects-title">
-                  Investment Projects
+                  All Projects
                 </h1>
                 <p className="text-muted-foreground mt-1">
-                  Discover and invest in innovative business projects
+                  Discover and invest in innovative business projects from all entrepreneurs
                 </p>
               </div>
               <Button onClick={() => setIsProjectModalOpen(true)} data-testid="button-create-project">
@@ -95,33 +95,41 @@ export default function Projects() {
             </div>
           </div>
 
+          {/* View Toggle */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {filteredProjects.length} of {projects.length} projects
+            </div>
+          </div>
+
           {/* Projects Grid */}
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {isLoading ? (
-              <div className="text-center py-12">
+              <div className="col-span-full text-center py-12">
                 <div className="text-muted-foreground" data-testid="text-loading-projects">
                   Loading projects...
                 </div>
               </div>
             ) : filteredProjects.length > 0 ? (
-              <div className="bg-card rounded-lg border border-border shadow-sm divide-y divide-border">
-                {filteredProjects.map((project: Project) => (
-                  <ProjectCard 
-                    key={project.id} 
-                    project={project} 
-                    onInvest={handleInvest}
-                    onSupport={handleSupport}
-                  />
-                ))}
-              </div>
+              filteredProjects.map((project: Project) => (
+                <ProjectCard 
+                  key={project.id} 
+                  project={project} 
+                  onInvest={handleInvest}
+                  onSupport={handleSupport}
+                />
+              ))
             ) : (
-              <div className="text-center py-12 bg-card rounded-lg border border-border">
+              <div className="col-span-full text-center py-12 bg-card rounded-lg border border-border">
                 <div className="text-muted-foreground" data-testid="text-no-projects-found">
                   {searchTerm || industryFilter !== 'all' 
                     ? 'No projects found matching your criteria.' 
                     : 'No projects available yet.'
                   }
                 </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Try adjusting your search filters or check back later for new projects.
+                </p>
                 {(!searchTerm && industryFilter === 'all') && (
                   <Button 
                     className="mt-4" 

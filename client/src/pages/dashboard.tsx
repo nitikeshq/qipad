@@ -137,15 +137,15 @@ export default function Dashboard() {
               <div className="bg-card rounded-lg border border-border shadow-sm" data-testid="section-recent-projects">
                 <div className="p-6 border-b border-border">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-foreground">Recent Projects</h2>
+                    <h2 className="text-xl font-semibold text-foreground">My Recent Projects</h2>
                     <Link href="/projects" className="text-primary hover:text-primary/80 text-sm font-medium">
                       View All
                     </Link>
                   </div>
                 </div>
                 <div className="divide-y divide-border">
-                  {userProjects.length > 0 ? (
-                    userProjects.slice(0, 3).map((project: Project) => (
+                  {myProjects && myProjects.length > 0 ? (
+                    myProjects.slice(0, 3).map((project: Project) => (
                       <div key={project.id} className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
