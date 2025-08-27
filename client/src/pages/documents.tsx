@@ -25,8 +25,22 @@ export function DocumentsPage() {
       formData.append('file', file);
       formData.append('documentType', documentType);
       
-      // Use apiRequest which handles authentication properly
-      return await apiRequest('POST', '/api/documents', formData);
+      // Use native fetch for file upload as apiRequest may not handle FormData properly
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/documents', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Upload failed');
+      }
+      
+      return response.json();
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/documents'] });

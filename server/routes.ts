@@ -323,7 +323,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Document upload routes
   app.post("/api/documents", authenticateToken, upload.single('file'), async (req: any, res) => {
     try {
+      console.log('Upload request received:', {
+        hasFile: !!req.file,
+        bodyKeys: Object.keys(req.body),
+        documentType: req.body.documentType,
+        userId: req.user?.userId
+      });
+      
       if (!req.file) {
+        console.log('No file in request:', req.file);
         return res.status(400).json({ message: "No file uploaded" });
       }
 
@@ -338,6 +346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const document = await storage.createDocument(documentData);
       res.json(document);
     } catch (error: any) {
+      console.error('Document upload error:', error);
       res.status(400).json({ message: "Failed to upload document", error: error.message });
     }
   });
