@@ -281,18 +281,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const investmentData = insertInvestmentSchema.parse({ 
         ...req.body, 
         investorId: req.user.userId,
-        investorContact: investor?.phone || '',
-        investorEmail: investor?.email || ''
+        investorContact: req.body.investorPhone || investor?.phone || '',
+        investorPhone: req.body.investorPhone || investor?.phone || '',
+        investorEmail: investor?.email || '',
+        type: "invest", // Always invest for equity-based investments
+        status: "pending" // Project owner needs to approve
       });
       
       const investment = await storage.createInvestment(investmentData);
-      
-      // Update project funding
-      const project = await storage.getProject(investment.projectId);
-      if (project) {
-        const newFunding = parseFloat(project.currentFunding || '0') + parseFloat(investment.amount);
-        await storage.updateProject(project.id, { currentFunding: newFunding.toString() });
-      }
 
       res.json(investment);
     } catch (error: any) {
@@ -365,12 +361,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (isValid) {
         await storage.updateInvestment(investmentId, { 
-          status: 'completed',
-          paymentGatewayId: paymentId 
+          status: 'completed'
         });
         res.json({ success: true, message: "Payment verified successfully" });
       } else {
-        await storage.updateInvestment(investmentId, { status: 'failed' });
+        await storage.updateInvestment(investmentId, { status: 'rejected' });
         res.status(400).json({ success: false, message: "Payment verification failed" });
       }
     } catch (error: any) {

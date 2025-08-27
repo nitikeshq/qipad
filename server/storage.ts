@@ -119,7 +119,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllProjectsWithOwners(): Promise<any[]> {
-    const projects = await db.select().from(projectsTable);
+    const projects = await db.select().from(projects);
     const projectsWithOwners = await Promise.all(
       projects.map(async (project) => {
         const owner = await this.getUser(project.userId);
@@ -133,7 +133,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllInvestmentsWithDetails(): Promise<any[]> {
-    const investments = await db.select().from(investmentsTable);
+    const investments = await db.select().from(investments);
     const investmentsWithDetails = await Promise.all(
       investments.map(async (investment) => {
         const investor = await this.getUser(investment.investorId);
@@ -171,7 +171,7 @@ export class DatabaseStorage implements IStorage {
     return connection;
   }
 
-  async updateConnectionStatus(connectionId: string, status: string): Promise<any> {
+  async updateConnectionStatus(connectionId: string, status: "pending" | "accepted" | "declined"): Promise<any> {
     const [connection] = await db
       .update(connections)
       .set({ 
@@ -364,30 +364,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(jobApplications).where(eq(jobApplications.jobId, jobId));
   }
 
-  async getConnections(userId: string): Promise<Connection[]> {
-    return await db.select().from(connections)
-      .where(and(
-        eq(connections.isAccepted, true),
-        sql`(${connections.requesterId} = ${userId} OR ${connections.recipientId} = ${userId})`
-      ));
-  }
 
-  async createConnection(requesterId: string, recipientId: string): Promise<Connection> {
-    const [connection] = await db
-      .insert(connections)
-      .values({ requesterId, recipientId })
-      .returning();
-    return connection;
-  }
-
-  async acceptConnection(connectionId: string): Promise<Connection> {
-    const [connection] = await db
-      .update(connections)
-      .set({ isAccepted: true })
-      .where(eq(connections.id, connectionId))
-      .returning();
-    return connection;
-  }
 
   async getAllBiddingProjects(): Promise<BiddingProject[]> {
     return await db.select().from(biddingProjects).orderBy(desc(biddingProjects.createdAt));

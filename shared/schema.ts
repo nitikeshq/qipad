@@ -7,7 +7,7 @@ import { z } from "zod";
 export const userTypeEnum = pgEnum('user_type', ['business_owner', 'investor']);
 export const projectStatusEnum = pgEnum('project_status', ['draft', 'pending_review', 'approved', 'rejected', 'active', 'completed']);
 export const documentTypeEnum = pgEnum('document_type', ['business_pan', 'gst_certificate', 'incorporation_certificate', 'personal_pan']);
-export const investmentStatusEnum = pgEnum('investment_status', ['pending', 'completed', 'failed']);
+export const investmentStatusEnum = pgEnum('investment_status', ['pending', 'approved', 'rejected', 'completed']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -69,12 +69,15 @@ export const investments = pgTable("investments", {
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   type: text("type").notNull().default("invest"), // "invest" or "support"
   expectedStakes: decimal("expected_stakes", { precision: 5, scale: 2 }), // percentage for investments
-  status: investmentStatusEnum("status").default("pending"),
-  paymentGatewayId: text("payment_gateway_id"),
+  status: investmentStatusEnum("status").default("pending"), // pending, approved, rejected, completed
+  platformFeePaid: boolean("platform_fee_paid").default(false), // Track 2% platform fee payment
   investorContact: text("investor_contact"), // shared with project owner
   investorEmail: text("investor_email"), // shared with project owner
+  investorPhone: text("investor_phone"), // investor contact for owner
   message: text("message"), // investor's message to project owner
+  ownerNotes: text("owner_notes"), // Notes from project owner
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const communities = pgTable("communities", {
@@ -411,8 +414,9 @@ export const insertDocumentSchema = createInsertSchema(documents).omit({
 export const insertInvestmentSchema = createInsertSchema(investments).omit({
   id: true,
   status: true,
-  paymentGatewayId: true,
+  platformFeePaid: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const insertCommunitySchema = createInsertSchema(communities).omit({
