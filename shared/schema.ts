@@ -4,7 +4,7 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const userTypeEnum = pgEnum('user_type', ['business_owner', 'investor']);
+export const userTypeEnum = pgEnum('user_type', ['business_owner', 'investor', 'individual']);
 export const projectStatusEnum = pgEnum('project_status', ['draft', 'pending_review', 'approved', 'rejected', 'active', 'completed']);
 export const documentTypeEnum = pgEnum('document_type', ['business_pan', 'gst_certificate', 'incorporation_certificate', 'personal_pan']);
 export const investmentStatusEnum = pgEnum('investment_status', ['pending', 'approved', 'rejected', 'completed']);

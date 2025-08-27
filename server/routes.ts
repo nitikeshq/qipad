@@ -752,6 +752,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin login route
+  app.post('/api/admin/login', async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      // Simple admin credentials check (in production, use proper authentication)
+      if (username === 'admin' && password === 'qipad2024!') {
+        const token = jwt.sign(
+          { userId: 'admin', isAdmin: true },
+          process.env.JWT_SECRET!,
+          { expiresIn: '24h' }
+        );
+        
+        res.json({ 
+          message: "Admin login successful",
+          token,
+          user: { id: 'admin', username: 'admin', isAdmin: true }
+        });
+      } else {
+        res.status(401).json({ message: "Invalid admin credentials" });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: "Admin login failed", error: error.message });
+    }
+  });
+
   // Connection routes
   app.post("/api/connections", authenticateToken, async (req: any, res) => {
     try {

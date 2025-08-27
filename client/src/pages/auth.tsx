@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Building, TrendingUp } from "lucide-react";
+import { Building, TrendingUp, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { authAPI } from "@/lib/auth";
@@ -30,7 +30,7 @@ export default function Auth() {
     phone: '',
     password: '',
     confirmPassword: '',
-    userType: 'business_owner' as 'business_owner' | 'investor',
+    userType: 'individual' as 'business_owner' | 'investor' | 'individual',
     agreedToTerms: false
   });
 
@@ -185,8 +185,8 @@ export default function Auth() {
                     <Label>Account Type</Label>
                     <RadioGroup 
                       value={registerForm.userType} 
-                      onValueChange={(value) => setRegisterForm(prev => ({ ...prev, userType: value as 'business_owner' | 'investor' }))}
-                      className="grid grid-cols-2 gap-3 mt-2"
+                      onValueChange={(value) => setRegisterForm(prev => ({ ...prev, userType: value as 'business_owner' | 'investor' | 'individual' }))}
+                      className="grid grid-cols-3 gap-3 mt-2"
                     >
                       <Label className="flex items-center justify-center p-3 border border-border rounded-lg cursor-pointer hover:bg-accent [&:has(:checked)]:bg-primary/10 [&:has(:checked)]:border-primary">
                         <RadioGroupItem value="business_owner" className="sr-only" />
@@ -200,6 +200,13 @@ export default function Auth() {
                         <div className="text-center">
                           <TrendingUp className="text-primary text-2xl mb-1 mx-auto" />
                           <p className="text-sm font-medium">Investor</p>
+                        </div>
+                      </Label>
+                      <Label className="flex items-center justify-center p-3 border border-border rounded-lg cursor-pointer hover:bg-accent [&:has(:checked)]:bg-primary/10 [&:has(:checked)]:border-primary">
+                        <RadioGroupItem value="individual" className="sr-only" />
+                        <div className="text-center">
+                          <User className="text-primary text-2xl mb-1 mx-auto" />
+                          <p className="text-sm font-medium">Individual</p>
                         </div>
                       </Label>
                     </RadioGroup>

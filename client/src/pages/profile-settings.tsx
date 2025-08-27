@@ -22,7 +22,7 @@ const profileSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
-  userType: z.enum(['business_owner', 'investor']),
+  userType: z.enum(['business_owner', 'investor', 'individual']),
 });
 
 type ProfileForm = z.infer<typeof profileSchema>;
@@ -204,7 +204,7 @@ export default function ProfileSettingsPage() {
                       <Label htmlFor="userType">User Type</Label>
                       <Select
                         value={watch("userType")}
-                        onValueChange={(value) => setValue("userType", value as "business_owner" | "investor")}
+                        onValueChange={(value) => setValue("userType", value as "business_owner" | "investor" | "individual")}
                       >
                         <SelectTrigger data-testid="select-user-type">
                           <SelectValue />
@@ -212,6 +212,7 @@ export default function ProfileSettingsPage() {
                         <SelectContent>
                           <SelectItem value="business_owner">Business Owner</SelectItem>
                           <SelectItem value="investor">Investor</SelectItem>
+                          <SelectItem value="individual">Individual</SelectItem>
                         </SelectContent>
                       </Select>
                       {errors.userType && (
