@@ -197,6 +197,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects", authenticateToken, async (req: any, res) => {
     try {
+      // Check if user is KYC verified
+      const user = await storage.getUser(req.user.userId);
+      if (!user || !user.isVerified) {
+        return res.status(403).json({ message: "KYC verification required to create projects" });
+      }
+
       const projectData = insertProjectSchema.parse({ ...req.body, userId: req.user.userId });
       const project = await storage.createProject(projectData);
       res.json(project);

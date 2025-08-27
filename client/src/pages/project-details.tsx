@@ -16,18 +16,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Link } from "wouter";
 import { ProjectModal } from "@/components/modals/ProjectModal";
+import { InvestmentModal } from "@/components/modals/InvestmentModal";
+import { SupportModal } from "@/components/modals/SupportModal";
+import { EditProjectModal } from "@/components/modals/EditProjectModal";
 import { ConnectionRequestButton } from "@/components/ConnectionRequestButton";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function ProjectDetailsPage() {
   const [match, params] = useRoute("/projects/:id");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEditProjectModalOpen, setIsEditProjectModalOpen] = useState(false);
+  const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editData, setEditData] = useState<any>({});
-  const [showCustomAmount, setShowCustomAmount] = useState(false);
-  const [customAmount, setCustomAmount] = useState("");
+
   const projectId = params?.id;
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: project, isLoading } = useQuery<any>({
     queryKey: ['/api/projects', projectId],
@@ -41,15 +48,13 @@ export function ProjectDetailsPage() {
 
   const investMutation = useMutation({
     mutationFn: async ({ amount, type }: { amount: number; type: string }) => {
-      return await apiRequest("/api/investments", {
-        method: "POST",
-        body: JSON.stringify({
-          projectId,
-          amount: amount.toString(),
-          type,
-          expectedStakes: type === "invest" ? "5" : "0" // Default 5% for investments
-        })
+      const response = await apiRequest("POST", "/api/investments", {
+        projectId,
+        amount: amount.toString(),
+        type,
+        expectedStakes: type === "invest" ? "5" : "0" // Default 5% for investments
       });
+      return response.json();
     },
     onSuccess: () => {
       toast({ title: "Investment successful!" });
@@ -147,37 +152,7 @@ export function ProjectDetailsPage() {
   const fundingProgress = (parseFloat(project.currentFunding) / parseFloat(project.fundingGoal)) * 100;
   const daysRemaining = Math.max(0, project.campaignDuration - Math.floor((Date.now() - new Date(project.createdAt).getTime()) / (1000 * 60 * 60 * 24)));
 
-  const handleInvest = async (amount: number, type: "invest" | "support" = "invest") => {
-    try {
-      await investMutation.mutateAsync({
-        projectId: projectId!,
-        amount: amount.toString(),
-        type,
-        message: type === "invest" ? "Interested in getting stakes in your company" : "Supporting your project"
-      });
-      toast({
-        title: type === "invest" ? "Investment Request Sent" : "Support Sent",
-        description: type === "invest" 
-          ? `Your investment request of ₹${amount} for stakes in ${project?.title} has been sent to the project owner`
-          : `Your support of ₹${amount} for ${project?.title} has been sent`,
-      });
-    } catch (error) {
-      toast({
-        title: "Request Failed",
-        description: "There was an error processing your request",
-        variant: "destructive",
-      });
-    }
-  };
 
-  const handleCustomInvest = () => {
-    const amount = parseFloat(customAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({ title: "Please enter a valid amount", variant: "destructive" });
-      return;
-    }
-    handleInvest(amount, "invest");
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -224,6 +199,16 @@ export function ProjectDetailsPage() {
                   )}
                 </div>
                 <div className="flex space-x-2">
+                  {user?.id === project.userId && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditProjectModalOpen(true)}
+                      data-testid="button-edit-project"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Project
+                    </Button>
+                  )}
                   {isEditMode ? (
                     <>
                       <Button 
@@ -442,63 +427,29 @@ export function ProjectDetailsPage() {
                         </div>
                         <Button 
                           className="w-full bg-green-600 hover:bg-green-700" 
-                          onClick={() => handleInvest(parseFloat(project.minimumInvestment), "invest")}
-                          disabled={investMutation.isPending}
+                          onClick={() => setIsInvestmentModalOpen(true)}
                           data-testid="button-invest"
                         >
-                          💼 Invest ₹{parseFloat(project.minimumInvestment).toLocaleString()}
-                          <span className="text-xs block">Want stakes in company</span>
+                          💼 Invest
+                          <span className="text-xs block">Get equity stakes</span>
                         </Button>
                         <Button 
                           variant="outline" 
                           className="w-full border-blue-200 hover:bg-blue-50" 
-                          onClick={() => handleInvest(parseFloat(project.minimumInvestment), "support")}
-                          disabled={investMutation.isPending}
+                          onClick={() => setIsSupportModalOpen(true)}
                           data-testid="button-support"
                         >
-                          🤝 Support ₹{parseFloat(project.minimumInvestment).toLocaleString()}
+                          🤝 Support
                           <span className="text-xs block">No stakes, just support</span>
                         </Button>
                         <Button 
-                          variant="ghost" 
+                          variant="secondary" 
                           className="w-full text-sm" 
-                          onClick={() => setShowCustomAmount(!showCustomAmount)}
-                          data-testid="button-custom-investment"
+                          onClick={() => setIsSupportModalOpen(true)}
+                          data-testid="button-custom-support"
                         >
-                          Custom Amount
+                          Custom Support Amount
                         </Button>
-                        {showCustomAmount && (
-                          <div className="space-y-3 p-3 border rounded-lg bg-muted/20">
-                            <Input
-                              type="number"
-                              placeholder="Enter amount (₹)"
-                              value={customAmount}
-                              onChange={(e) => setCustomAmount(e.target.value)}
-                            />
-                            <div className="flex gap-2">
-                              <Button 
-                                className="flex-1 bg-green-600 hover:bg-green-700" 
-                                onClick={() => handleCustomInvest()}
-                                disabled={investMutation.isPending}
-                              >
-                                💼 Invest
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                className="flex-1" 
-                                onClick={() => {
-                                  const amount = parseFloat(customAmount);
-                                  if (!isNaN(amount) && amount > 0) {
-                                    handleInvest(amount, "support");
-                                  }
-                                }}
-                                disabled={investMutation.isPending}
-                              >
-                                🤝 Support
-                              </Button>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     )}
                   </CardContent>
@@ -590,6 +541,24 @@ export function ProjectDetailsPage() {
       <ProjectModal 
         open={isEditModalOpen} 
         onOpenChange={setIsEditModalOpen}
+      />
+      
+      <InvestmentModal 
+        open={isInvestmentModalOpen} 
+        onOpenChange={setIsInvestmentModalOpen}
+        project={project}
+      />
+      
+      <SupportModal 
+        open={isSupportModalOpen} 
+        onOpenChange={setIsSupportModalOpen}
+        project={project}
+      />
+      
+      <EditProjectModal 
+        open={isEditProjectModalOpen} 
+        onOpenChange={setIsEditProjectModalOpen}
+        project={project}
       />
     </div>
   );

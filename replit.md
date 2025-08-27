@@ -7,6 +7,10 @@ Qipad (Life force + platform → "Energized startup space") is a comprehensive b
 - **Investment System Redesign** - Removed payment gateway for "invest" type, implemented percentage-based equity system with approval workflow
 - **Advanced Admin Panel** - Comprehensive admin dashboard for managing all platform modules, categories, departments, and information
 - **Trust-based Platform Fee** - 2% platform fee system on successful investments (trust-based, no gateway)
+- **Separate Investment/Support Modals** - Created distinct modals for invest (equity-based) vs support (PayUMoney payment) with proper workflows
+- **Project Editing System** - Comprehensive project editing with marketing tab for images/videos, business plan updates, team management
+- **KYC Project Creation** - Only KYC-verified users can create projects, improved access control
+- **Company Formation Enhancement** - Added 9-step process with comprehensive certification section (Startup, MSME, Udyam, ISO, Nasscom)
 
 ## Key Features
 - **Dual Investment Types**: "Invest" (equity-based with percentage) vs "Support" (donation-based with payment gateway)
