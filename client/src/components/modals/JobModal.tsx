@@ -24,7 +24,7 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
     jobType: 'full-time',
     salaryMin: '',
     salaryMax: '',
-    experienceRequired: ''
+    experienceLevel: 'entry'
   });
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
@@ -59,7 +59,7 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
       jobType: 'full-time',
       salaryMin: '',
       salaryMax: '',
-      experienceRequired: ''
+      experienceLevel: 'entry'
     });
     setSkills([]);
     setNewSkill('');
@@ -67,18 +67,20 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const salary = formData.salaryMin && formData.salaryMax 
-      ? `₹${formData.salaryMin} - ₹${formData.salaryMax}` 
-      : formData.salaryMin 
-        ? `₹${formData.salaryMin}+` 
-        : '';
     
     createJobMutation.mutate({
       title: formData.title,
       description: formData.description,
-      requirements: skills.join(', '),
+      company: formData.company,
       location: formData.location,
-      salary: salary
+      experienceLevel: formData.experienceLevel || 'entry',
+      salaryMin: formData.salaryMin ? parseFloat(formData.salaryMin) : 0,
+      salaryMax: formData.salaryMax ? parseFloat(formData.salaryMax) : 0,
+      jobType: formData.jobType,
+      requiredSkills: skills,
+      requirements: skills.join(', '),
+      benefits: '',
+      applicationDeadline: null
     });
   };
 
@@ -194,15 +196,18 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
               />
             </div>
             <div>
-              <Label htmlFor="experienceRequired">Experience (Years)</Label>
-              <Input
-                id="experienceRequired"
-                type="number"
-                value={formData.experienceRequired}
-                onChange={(e) => setFormData(prev => ({ ...prev, experienceRequired: e.target.value }))}
-                placeholder="3"
-                data-testid="input-experience-required"
-              />
+              <Label htmlFor="experienceLevel">Experience Level</Label>
+              <Select value={formData.experienceLevel} onValueChange={(value) => setFormData(prev => ({ ...prev, experienceLevel: value }))}>
+                <SelectTrigger data-testid="select-experience-level">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="entry">Entry Level</SelectItem>
+                  <SelectItem value="mid">Mid Level</SelectItem>
+                  <SelectItem value="senior">Senior Level</SelectItem>
+                  <SelectItem value="executive">Executive</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
