@@ -3,6 +3,7 @@ import {
   communityPosts, jobs, jobApplications, savedJobs, connections, biddingProjects, projectBids,
   companyFormations, tenders, tenderEligibility, companies, subscriptions, payments, userInterests,
   events, eventParticipants, eventTickets, companyServices, companyProducts, serviceInquiries, servicePurchases,
+  notifications,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
   type Community, type InsertCommunity, type CommunityMember, type InsertCommunityMember,
@@ -16,7 +17,7 @@ import {
   type Event, type InsertEvent, type EventParticipant, type InsertEventParticipant,
   type EventTicket, type InsertEventTicket, type CompanyService, type InsertCompanyService,
   type CompanyProduct, type InsertCompanyProduct, type ServiceInquiry, type InsertServiceInquiry,
-  type ServicePurchase, type InsertServicePurchase
+  type ServicePurchase, type InsertServicePurchase, type Notification, type InsertNotification
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, sql, ne } from "drizzle-orm";
