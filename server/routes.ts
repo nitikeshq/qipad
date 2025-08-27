@@ -13,7 +13,25 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 // File upload configuration
 const upload = multer({
-  dest: 'uploads/',
+  storage: multer.diskStorage({
+    destination: (req: any, file: any, cb: any) => {
+      const userId = req.user?.userId || 'anonymous';
+      const uploadPath = `uploads/${userId}`;
+      // Create directory if it doesn't exist
+      import('fs').then(fs => {
+        if (!fs.existsSync(uploadPath)) {
+          fs.mkdirSync(uploadPath, { recursive: true });
+        }
+      });
+      cb(null, uploadPath);
+    },
+    filename: (req: any, file: any, cb: any) => {
+      // Create unique filename with timestamp
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const extension = file.originalname.split('.').pop();
+      cb(null, `${file.fieldname}-${uniqueSuffix}.${extension}`);
+    }
+  }),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req: any, file: any, cb: any) => {
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
@@ -1858,6 +1876,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
           
           await storage.createInvestment(investmentData);
+        } else if (req.body.udf2 === 'event') {
+          // Handle event registration payment
+          const { eventId } = metadata;
+          
+          if (eventId) {
+            // Register user for the event
+            await storage.registerForEvent({
+              eventId,
+              userId: req.body.udf1,
+              registeredAt: new Date()
+            });
+            
+            // Update event participant count
+            const event = await storage.getEvent(eventId);
+            if (event) {
+              await storage.updateEvent(eventId, {
+                currentParticipants: (event.currentParticipants || 0) + 1
+              });
+            }
+          }
         }
         
         res.redirect('/dashboard?payment=success');
@@ -1952,6 +1990,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PayUMoney integration for paid event registration
+  app.post("/api/events/:id/register", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const eventId = req.params.id;
+      const event = await storage.getEvent(eventId);
+      
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Check if event is paid
+      if (!event.isPaid || parseFloat(event.price) === 0) {
+        // Free event - direct registration
+        await storage.joinEvent(eventId, user.id);
+        return res.json({ message: "Successfully registered for free event" });
+      }
+
+      const txnId = payumoneyService.generateTxnId();
+      
+      // Calculate platform fee (2% for paid events)
+      const eventPrice = parseFloat(event.price);
+      const platformFee = eventPrice * 0.02;
+      const totalAmount = eventPrice;
+
+      // Create payment record
+      const payment = await storage.createPayment({
+        userId: user.id,
+        amount: totalAmount,
+        paymentType: 'event',
+        status: 'pending',
+        description: `Event Registration: ${event.title}`,
+        metadata: JSON.stringify({ txnId, eventId, platformFee }),
+      });
+
+      const paymentData = {
+        amount: totalAmount,
+        productInfo: `Event Registration - ${event.title}`,
+        firstName: user.firstName || 'User',
+        email: user.email || 'user@example.com',
+        txnId,
+        successUrl: `${req.protocol}://${req.get('host')}/api/payments/success`,
+        failureUrl: `${req.protocol}://${req.get('host')}/api/payments/failure`,
+        userId: user.id,
+        paymentType: 'event',
+        metadata: { paymentId: payment.id, eventId },
+      };
+
+      const paymentResponse = await payumoneyService.createPayment(paymentData);
+      
+      if (paymentResponse.success) {
+        res.json({
+          success: true,
+          paymentUrl: paymentResponse.paymentUrl,
+          txnId: paymentResponse.txnId,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: paymentResponse.error,
+        });
+      }
+    } catch (error) {
+      console.error('Error registering for event:', error);
+      res.status(500).json({ message: 'Failed to register for event' });
+    }
+  });
+
   app.post("/api/events/:id/join", authenticateToken, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.userId);
@@ -1964,6 +2074,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
+      }
+
+      // For paid events, redirect to register endpoint
+      if (event.isPaid && parseFloat(event.price) > 0) {
+        return res.status(400).json({ 
+          message: "This is a paid event. Use the register endpoint.",
+          requiresPayment: true
+        });
       }
 
       // Check if user is already a participant

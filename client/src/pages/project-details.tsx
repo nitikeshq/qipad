@@ -427,7 +427,7 @@ export function ProjectDetailsPage() {
                         </div>
                         <Button 
                           className="w-full bg-green-600 hover:bg-green-700" 
-                          onClick={() => setIsInvestmentModalOpen(true)}
+                          onClick={() => setIsInvestModalOpen(true)}
                           data-testid="button-invest"
                         >
                           💼 Invest
@@ -543,9 +543,9 @@ export function ProjectDetailsPage() {
         onOpenChange={setIsEditModalOpen}
       />
       
-      <InvestmentModal 
-        open={isInvestmentModalOpen} 
-        onOpenChange={setIsInvestmentModalOpen}
+      <InvestModal 
+        open={isInvestModalOpen} 
+        onOpenChange={setIsInvestModalOpen}
         project={project}
       />
       
