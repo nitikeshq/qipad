@@ -140,7 +140,7 @@ export default function Dashboard() {
                     {[
                       { name: "Start a new company", icon: "🏢", path: "/company-formation", category: "company-formation" },
                       { name: "Get Selected in Tenders", icon: "📄", path: "/tenders", category: "tenders" },
-                      { name: "Find Projects", icon: "🔍", path: "/projects", category: "projects" },
+                      { name: "Find Innovations", icon: "🔍", path: "/innovations", category: "innovations" },
                       { name: "Get a Job", icon: "💼", path: "/jobs", category: "jobs" },
                       { name: "Networking", icon: "🤝", path: "/network", category: "networking" },
                       { name: "Events", icon: "📅", path: "/events", category: "events" },
@@ -209,7 +209,7 @@ export default function Dashboard() {
                   ))}
                 </div>
                 <div className="p-4 border-t border-border">
-                  <Link href="/projects">
+                  <Link href="/innovations">
                     <Button variant="ghost" className="w-full text-center text-primary hover:text-primary/80 text-sm font-medium">
                       View All Opportunities
                     </Button>
