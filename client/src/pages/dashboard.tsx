@@ -78,12 +78,7 @@ export default function Dashboard() {
     },
   ];
 
-  const recentActivity = [
-    { message: "New investor joined EcoTech project", time: "2 hours ago", type: "investment" },
-    { message: "Document verification completed", time: "5 hours ago", type: "verification" },
-    { message: "New connection request from Sarah M.", time: "1 day ago", type: "connection" },
-    { message: "Job application received", time: "2 days ago", type: "job" },
-  ];
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -222,29 +217,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Recent Activity */}
-              <div className="bg-card rounded-lg border border-border shadow-sm" data-testid="section-recent-activity">
-                <div className="p-4 border-b border-border">
-                  <h3 className="text-lg font-semibold text-foreground">Recent Activity</h3>
-                </div>
-                <div className="p-4 space-y-4">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-start space-x-3">
-                      <div className={`w-2 h-2 rounded-full mt-2 ${
-                        activity.type === 'investment' ? 'bg-green-500' :
-                        activity.type === 'verification' ? 'bg-blue-500' :
-                        activity.type === 'connection' ? 'bg-purple-500' : 'bg-orange-500'
-                      }`}></div>
-                      <div className="flex-1">
-                        <p className="text-sm text-foreground" data-testid={`text-activity-${index}`}>
-                          {activity.message}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+
 
 
             </div>
