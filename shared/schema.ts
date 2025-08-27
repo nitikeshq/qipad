@@ -21,6 +21,7 @@ export const users = pgTable("users", {
   profileImage: text("profile_image"),
   googleId: text("google_id"),
   passwordHash: text("password_hash"),
+  status: text("status").default("active"), // active, suspended
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -59,6 +60,8 @@ export const documents = pgTable("documents", {
   fileName: text("file_name").notNull(),
   filePath: text("file_path").notNull(),
   isVerified: boolean("is_verified").default(false),
+  status: text("status").default("pending"), // pending, approved, rejected
+  feedback: text("feedback"), // Admin feedback on verification
   createdAt: timestamp("created_at").defaultNow(),
 });
 

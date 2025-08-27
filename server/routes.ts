@@ -576,7 +576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Connection routes
   app.get("/api/connections", authenticateToken, async (req: any, res) => {
     try {
-      const connections = await storage.getConnections(req.user.userId);
+      const connections = await storage.getUserConnections(req.user.userId);
       res.json(connections);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to get connections", error: error.message });
@@ -593,34 +593,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Company Formation routes
-  // Admin routes
-  app.post("/api/admin/login", async (req, res) => {
-    try {
-      const { username, password } = req.body;
-      
-      // Admin credentials for Qipad
-      if ((username === "admin" || username === "admin@qipad.com") && password === "admin123") {
-        const adminToken = jwt.sign(
-          { userId: "admin", isAdmin: true }, 
-          JWT_SECRET, 
-          { expiresIn: "24h" }
-        );
-        res.json({ token: adminToken });
-      } else {
-        res.status(401).json({ message: "Invalid admin credentials" });
-      }
-    } catch (error: any) {
-      res.status(500).json({ message: "Admin login failed", error: error.message });
-    }
-  });
+  // Company Formation routes - TODO: Implement company formation process
+  
+  // ADMIN ROUTES
 
+  // Admin route for getting all users with documents
   app.get("/api/admin/users", async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      res.json(users.map(user => ({ ...user, passwordHash: undefined })));
+      const documents = await storage.getAllDocuments();
+      
+      const usersWithKyc = users.map(user => {
+        const userDocs = documents.filter(doc => doc.userId === user.id);
+        const kycStatus = userDocs.length > 0 ? 
+          (userDocs.every(doc => doc.status === 'approved') ? 'verified' : 
+           userDocs.some(doc => doc.status === 'rejected') ? 'rejected' : 'pending') : 'not_submitted';
+        
+        return { 
+          ...user, 
+          passwordHash: undefined,
+          kycStatus,
+          documents: userDocs
+        };
+      });
+      
+      res.json(usersWithKyc);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to get users", error: error.message });
+    }
+  });
+
+  // Admin route for suspending/activating users
+  app.patch("/api/admin/users/:id/status", async (req, res) => {
+    try {
+      const { status } = req.body; // 'active' or 'suspended'
+      const user = await storage.updateUser(req.params.id, { status });
+      res.json({ message: "User status updated successfully", user: { ...user, passwordHash: undefined } });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update user status", error: error.message });
+    }
+  });
+
+  // Admin route for KYC verification
+  app.patch("/api/admin/documents/:id/verify", async (req, res) => {
+    try {
+      const { status, feedback } = req.body; // 'approved' or 'rejected'
+      const document = await storage.updateDocument(req.params.id, { status, feedback });
+      res.json({ message: "Document verification updated", document });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update document status", error: error.message });
     }
   });
 
@@ -794,7 +815,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Connection request already exists" });
       }
       
-      const connection = await storage.createConnection(connectionData);
+      const connection = await storage.createConnection(connectionData.requesterId, connectionData.recipientId);
       res.json(connection);
     } catch (error: any) {
       res.status(400).json({ message: "Failed to create connection", error: error.message });
