@@ -95,13 +95,13 @@ export function InvestmentsPage() {
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Returns</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Stakes</CardTitle>
                   <PieChart className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{stats.totalReturns || '0'}</div>
+                  <div className="text-2xl font-bold">{stats.totalStakes || '0'}%</div>
                   <p className="text-xs text-muted-foreground">
-                    +12.5% total return
+                    Total equity stakes
                   </p>
                 </CardContent>
               </Card>
@@ -111,9 +111,9 @@ export function InvestmentsPage() {
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{stats.portfolioValue || '0'}</div>
+                  <div className="text-2xl font-bold">₹{stats.totalInvested || '0'}</div>
                   <p className="text-xs text-muted-foreground">
-                    Current market value
+                    Total amount invested
                   </p>
                 </CardContent>
               </Card>
@@ -161,15 +161,21 @@ export function InvestmentsPage() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                               <div>
                                 <p className="text-sm text-muted-foreground">Investment Amount</p>
-                                <p className="font-semibold">₹{investment.amount}</p>
+                                <p className="font-semibold">₹{parseFloat(investment.amount || '0').toLocaleString()}</p>
                               </div>
                               <div>
-                                <p className="text-sm text-muted-foreground">Current Value</p>
-                                <p className="font-semibold">₹{(parseFloat(investment.amount) * 1.125).toFixed(2)}</p>
+                                <p className="text-sm text-muted-foreground">Investment Type</p>
+                                <Badge variant={investment.type === 'invest' ? 'default' : 'secondary'}>
+                                  {investment.type === 'invest' ? 'Equity Investment' : 'Support/Donation'}
+                                </Badge>
                               </div>
                               <div>
-                                <p className="text-sm text-muted-foreground">Return</p>
-                                <p className="font-semibold text-green-600">+12.5%</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {investment.type === 'invest' ? 'Equity Stakes' : 'Support Given'}
+                                </p>
+                                <p className="font-semibold text-blue-600">
+                                  {investment.type === 'invest' ? `${investment.expectedStakes || '0'}%` : 'Thank You!'}
+                                </p>
                               </div>
                             </div>
                             <div className="flex space-x-2">

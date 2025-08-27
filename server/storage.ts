@@ -732,6 +732,12 @@ export class DatabaseStorage implements IStorage {
     const totalInvested = userInvestments.reduce((sum, inv) => sum + parseFloat(inv.amount), 0);
     const activeInvestments = userInvestments.filter(inv => inv.status === 'pending' || inv.status === 'approved').length;
     const uniqueProjects = new Set(userInvestments.map(inv => inv.projectId)).size;
+    
+    // Calculate total equity stakes for "invest" type investments
+    const totalStakes = userInvestments
+      .filter(inv => inv.type === 'invest' && inv.expectedStakes)
+      .reduce((sum, inv) => sum + parseFloat(inv.expectedStakes || '0'), 0);
+    
     const investmentTypes = userInvestments.reduce((acc, inv) => {
       acc[inv.type] = (acc[inv.type] || 0) + 1;
       return acc;
@@ -741,6 +747,7 @@ export class DatabaseStorage implements IStorage {
       totalInvested: totalInvested.toLocaleString(),
       activeInvestments,
       uniqueProjects,
+      totalStakes: totalStakes.toFixed(1), // Total equity percentage owned
       totalTransactions: userInvestments.length,
       investmentTypes,
       averageInvestment: userInvestments.length > 0 ? (totalInvested / userInvestments.length).toFixed(0) : '0',

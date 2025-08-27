@@ -322,14 +322,31 @@ export default function CompanyFormation() {
                       : myFormation ? "Update Formation" : "Start Formation"
                     }
                   </Button>
-                  <Button
-                    type="button"
-                    onClick={() => setCurrentStep(Math.min(companyFormationSteps.length, currentStep + 1))}
-                    disabled={currentStep >= companyFormationSteps.length}
-                    data-testid="button-next-step"
-                  >
-                    Next Step
-                  </Button>
+                  {currentStep < companyFormationSteps.length ? (
+                    <Button
+                      type="button"
+                      onClick={() => setCurrentStep(Math.min(companyFormationSteps.length, currentStep + 1))}
+                      data-testid="button-next-step"
+                    >
+                      Next Step
+                    </Button>
+                  ) : (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center ml-2">
+                      <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-2" />
+                      <h3 className="font-semibold text-green-800 text-sm mb-2">Formation Complete!</h3>
+                      <p className="text-xs text-green-700 mb-3">
+                        Ready to launch your business operations.
+                      </p>
+                      <Button 
+                        size="sm"
+                        onClick={() => window.location.href = '/dashboard'}
+                        data-testid="button-view-dashboard"
+                      >
+                        <Rocket className="h-4 w-4 mr-1" />
+                        View Dashboard
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </form>
