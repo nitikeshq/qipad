@@ -1,7 +1,7 @@
 import { 
   users, projects, documents, investments, communities, communityMembers, 
   communityPosts, jobs, jobApplications, savedJobs, connections, biddingProjects, projectBids,
-  companyFormations, tenders, tenderEligibility, companies, subscriptions, payments,
+  companyFormations, tenders, tenderEligibility, companies, subscriptions, payments, userInterests,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
   type Community, type InsertCommunity, type CommunityMember, type InsertCommunityMember,
@@ -10,7 +10,8 @@ import {
   type BiddingProject, type InsertBiddingProject, type ProjectBid, type InsertProjectBid,
   type CompanyFormation, type InsertCompanyFormation, type Tender, type InsertTender,
   type TenderEligibility, type InsertTenderEligibility, type Company, type InsertCompany,
-  type Subscription, type InsertSubscription, type Payment, type InsertPayment
+  type Subscription, type InsertSubscription, type Payment, type InsertPayment,
+  type UserInterest, type InsertUserInterest
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, sql, ne } from "drizzle-orm";
@@ -860,6 +861,29 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date() 
       })
       .where(eq(projects.id, projectId));
+  }
+
+  // USER INTERESTS METHODS
+  async createUserInterest(data: InsertUserInterest): Promise<UserInterest> {
+    const [interest] = await db.insert(userInterests).values(data).returning();
+    return interest;
+  }
+
+  async getUserInterests(userId: string): Promise<UserInterest[]> {
+    return await db.select().from(userInterests).where(eq(userInterests.userId, userId));
+  }
+
+  async updateUserInterest(id: string, data: Partial<InsertUserInterest>): Promise<UserInterest | undefined> {
+    const [interest] = await db
+      .update(userInterests)
+      .set(data)
+      .where(eq(userInterests.id, id))
+      .returning();
+    return interest;
+  }
+
+  async deleteUserInterest(id: string): Promise<void> {
+    await db.delete(userInterests).where(eq(userInterests.id, id));
   }
 }
 

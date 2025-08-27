@@ -261,6 +261,11 @@ export default function ProfileSettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="space-y-4 mb-4">
+                  <Button asChild className="w-full" variant="outline">
+                    <Link href="/documents">My Documents</Link>
+                  </Button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
@@ -272,7 +277,7 @@ export default function ProfileSettingsPage() {
                     <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                       user?.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {user?.isVerified ? 'Verified' : 'Pending'}
+                      {user?.isVerified ? 'Verified ✓' : 'Pending'}
                     </div>
                   </div>
 
@@ -286,7 +291,7 @@ export default function ProfileSettingsPage() {
                     <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                       user?.isKycComplete ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {user?.isKycComplete ? 'Verified' : 'Pending'}
+                      {user?.isKycComplete ? 'Verified ✓' : 'Pending'}
                     </div>
                   </div>
                 </div>

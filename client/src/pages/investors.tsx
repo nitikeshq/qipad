@@ -85,10 +85,7 @@ export default function Investors() {
 
   const connectMutation = useMutation({
     mutationFn: async (investorId: string) => {
-      const response = await apiRequest("/api/investors/connect", {
-        method: "POST",
-        body: JSON.stringify({ investorId }),
-      });
+      const response = await apiRequest("POST", "/api/investors/connect", { investorId });
       return response;
     },
     onSuccess: (data, investorId) => {

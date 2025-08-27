@@ -132,45 +132,36 @@ export default function Dashboard() {
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Recent Projects */}
+            {/* Interest Categories */}
             <div className="lg:col-span-2">
-              <div className="bg-card rounded-lg border border-border shadow-sm" data-testid="section-recent-projects">
+              <div className="bg-card rounded-lg border border-border shadow-sm" data-testid="section-interest-categories">
                 <div className="p-6 border-b border-border">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-foreground">My Recent Projects</h2>
-                    <Link href="/projects" className="text-primary hover:text-primary/80 text-sm font-medium">
-                      View All
-                    </Link>
+                    <h2 className="text-xl font-semibold text-foreground">What are you interested in?</h2>
                   </div>
                 </div>
-                <div className="divide-y divide-border">
-                  {userProjects && userProjects.length > 0 ? (
-                    userProjects.slice(0, 3).map((project: Project) => (
-                      <div key={project.id} className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold text-foreground">{project.title}</h3>
-                            <p className="text-sm text-muted-foreground">{project.industry}</p>
-                            <p className="text-sm text-green-600 font-medium">
-                              ₹{parseFloat(project.currentFunding).toLocaleString()} / ₹{parseFloat(project.fundingGoal).toLocaleString()}
-                            </p>
+                <div className="p-6">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                      { name: "Start a new company", icon: "🏢", path: "/company-formation", category: "company-formation" },
+                      { name: "Get Selected in Tenders", icon: "📄", path: "/tenders", category: "tenders" },
+                      { name: "Find Projects", icon: "🔍", path: "/projects", category: "projects" },
+                      { name: "Get a Job", icon: "💼", path: "/jobs", category: "jobs" },
+                      { name: "Networking", icon: "🤝", path: "/network", category: "networking" },
+                      { name: "Events", icon: "📅", path: "/", category: "events" },
+                      { name: "Community building", icon: "👥", path: "/community", category: "community" },
+                      { name: "Find Investors", icon: "💰", path: "/investors", category: "investors" }
+                    ].map((interest) => (
+                      <Link key={interest.category} href={interest.path}>
+                        <a>
+                          <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer text-center h-full" data-testid={`card-interest-${interest.category}`}>
+                            <div className="text-3xl mb-2">{interest.icon}</div>
+                            <p className="text-sm font-medium text-foreground">{interest.name}</p>
                           </div>
-                          <div className="text-right">
-                            <p className="text-sm text-muted-foreground">{project.status}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {Math.round((parseFloat(project.currentFunding) / parseFloat(project.fundingGoal)) * 100)}% funded
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-6 text-center">
-                      <p className="text-muted-foreground" data-testid="text-no-projects">
-                        No projects yet. Create your first project to get started!
-                      </p>
-                    </div>
-                  )}
+                        </a>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

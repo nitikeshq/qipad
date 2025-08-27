@@ -483,6 +483,15 @@ export const payments = pgTable("payments", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// User Interest Categories
+export const userInterests = pgTable("user_interests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  category: text("category").notNull(), // company-formation, tenders, projects, jobs, networking, events, community
+  priority: integer("priority").default(1), // 1-5 priority level
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations for new tables
 export const companiesRelations = relations(companies, ({ one }) => ({
   owner: one(users, {
@@ -635,6 +644,11 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   updatedAt: true,
 });
 
+export const insertUserInterestSchema = createInsertSchema(userInterests).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -671,3 +685,5 @@ export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type UserInterest = typeof userInterests.$inferSelect;
+export type InsertUserInterest = z.infer<typeof insertUserInterestSchema>;
