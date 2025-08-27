@@ -1,235 +1,590 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { 
-  Building2, 
-  MapPin, 
-  Globe, 
-  Users, 
-  TrendingUp, 
-  Calendar,
-  Search,
-  Filter,
-  Plus,
-  Eye,
-  ExternalLink
-} from "lucide-react";
-import { Company } from "@shared/schema";
-import { CompanyModal } from "@/components/modals/CompanyModal";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { Search, MapPin, Globe, Phone, Mail, Building2, Package, Briefcase, MessageCircle, ExternalLink } from "lucide-react";
+import { z } from "zod";
 
-export default function CompaniesPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [industryFilter, setIndustryFilter] = useState("");
-  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+const inquirySchema = z.object({
+  message: z.string().min(10, "Message must be at least 10 characters"),
+  contactEmail: z.string().email("Please enter a valid email"),
+  contactPhone: z.string().optional(),
+  budget: z.string().optional(),
+  timeline: z.string().optional(),
+});
+
+type InquiryForm = z.infer<typeof inquirySchema>;
+
+interface Company {
+  id: string;
+  name: string;
+  description?: string;
+  logo?: string;
+  website?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  isVerified: boolean;
+  establishedYear?: number;
+  employeeCount?: string;
+  tags?: string[];
+  services?: CompanyService[];
+  products?: CompanyProduct[];
+}
+
+interface CompanyService {
+  id: string;
+  name: string;
+  description?: string;
+  price?: string;
+  duration?: string;
+  category?: string;
+  tags?: string[];
+  images?: string[];
+  isActive: boolean;
+}
+
+interface CompanyProduct {
+  id: string;
+  name: string;
+  description?: string;
+  price?: string;
+  category?: string;
+  tags?: string[];
+  images?: string[];
+  specifications?: string;
+  isActive: boolean;
+}
+
+export default function Companies() {
+  const [, setLocation] = useLocation();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+  const [selectedItem, setSelectedItem] = useState<{type: 'service' | 'product', item: CompanyService | CompanyProduct, company: Company} | null>(null);
+  const [showInquiryModal, setShowInquiryModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch companies with services and products
   const { data: companies = [], isLoading } = useQuery({
-    queryKey: ['/api/companies'],
+    queryKey: ["/api/companies"],
   });
 
+  const { data: services = [] } = useQuery({
+    queryKey: ["/api/services"],
+  });
+
+  const { data: products = [] } = useQuery({
+    queryKey: ["/api/products"],
+  });
+
+  // Create inquiry mutation
+  const inquiryForm = useForm<InquiryForm>({
+    resolver: zodResolver(inquirySchema),
+    defaultValues: {
+      message: "",
+      contactEmail: "",
+      contactPhone: "",
+      budget: "",
+      timeline: "",
+    },
+  });
+
+  const createInquiryMutation = useMutation({
+    mutationFn: async (data: InquiryForm) => {
+      const endpoint = selectedItem?.type === 'service' 
+        ? `/api/services/${selectedItem.item.id}/inquire`
+        : `/api/products/${selectedItem?.item.id}/inquire`;
+      
+      return apiRequest("POST", endpoint, {
+        ...data,
+        companyId: selectedItem?.company.id,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Inquiry Sent",
+        description: "Your inquiry has been sent to the company successfully.",
+      });
+      setShowInquiryModal(false);
+      inquiryForm.reset();
+      setSelectedItem(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send inquiry",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleInquirySubmit = (data: InquiryForm) => {
+    createInquiryMutation.mutate(data);
+  };
+
+  const openInquiryModal = (type: 'service' | 'product', item: CompanyService | CompanyProduct, company: Company) => {
+    setSelectedItem({ type, item, company });
+    setShowInquiryModal(true);
+  };
+
+  // Filter companies based on search and category
   const filteredCompanies = companies.filter((company: Company) => {
-    const matchesSearch = company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         company.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesIndustry = !industryFilter || company.industry === industryFilter;
-    return matchesSearch && matchesIndustry;
+    const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.city?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesSearch;
   });
 
-  const industries = [...new Set(companies.map((c: Company) => c.industry))];
+  // Filter services and products
+  const filteredServices = services.filter((service: CompanyService) =>
+    service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.category?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredProducts = products.filter((product: CompanyProduct) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.category?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground" data-testid="text-companies-title">
-                  Companies
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  Discover verified companies and business opportunities
-                </p>
-              </div>
-              <Button onClick={() => setIsCompanyModalOpen(true)} data-testid="button-list-company">
-                <Plus className="h-4 w-4 mr-2" />
-                List Your Company
-              </Button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Companies Directory
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Discover companies, their services, and products in the Qipad ecosystem
+          </p>
+        </div>
 
-          {/* Search and Filters */}
-          <div className="mb-6 flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search companies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-                data-testid="input-search-companies"
-              />
-            </div>
-            <div className="flex gap-2">
-              <select
-                value={industryFilter}
-                onChange={(e) => setIndustryFilter(e.target.value)}
-                className="px-3 py-2 border rounded-md bg-background text-foreground"
-                data-testid="select-industry-filter"
-              >
-                <option value="">All Industries</option>
-                {industries.map((industry) => (
-                  <option key={industry} value={industry}>
-                    {industry}
-                  </option>
-                ))}
-              </select>
-              <Button variant="outline" size="sm" data-testid="button-filter">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-            </div>
+        {/* Search and Filters */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              data-testid="search-companies"
+              placeholder="Search companies, services, or products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
+        </div>
 
-          {/* Companies Grid */}
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardHeader>
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-muted rounded-lg"></div>
-                      <div className="space-y-2">
-                        <div className="h-4 bg-muted rounded w-32"></div>
-                        <div className="h-3 bg-muted rounded w-24"></div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="h-3 bg-muted rounded"></div>
-                      <div className="h-3 bg-muted rounded w-2/3"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all" data-testid="tab-companies">
+              <Building2 className="w-4 h-4 mr-2" />
+              Companies ({filteredCompanies.length})
+            </TabsTrigger>
+            <TabsTrigger value="services" data-testid="tab-services">
+              <Briefcase className="w-4 h-4 mr-2" />
+              Services ({filteredServices.length})
+            </TabsTrigger>
+            <TabsTrigger value="products" data-testid="tab-products">
+              <Package className="w-4 h-4 mr-2" />
+              Products ({filteredProducts.length})
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Companies Tab */}
+          <TabsContent value="all">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCompanies.map((company: Company) => (
-                <Card key={company.id} className="hover:shadow-lg transition-shadow" data-testid={`card-company-${company.id}`}>
+                <Card key={company.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={company.logo} alt={company.name} />
-                          <AvatarFallback>
-                            <Building2 className="h-6 w-6" />
-                          </AvatarFallback>
-                        </Avatar>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        {company.logo ? (
+                          <img 
+                            src={company.logo} 
+                            alt={company.name}
+                            className="w-12 h-12 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <Building2 className="w-6 h-6 text-primary" />
+                          </div>
+                        )}
                         <div>
                           <CardTitle className="text-lg">{company.name}</CardTitle>
-                          <CardDescription className="flex items-center">
+                          {company.isVerified && (
                             <Badge variant="secondary" className="text-xs">
-                              {company.industry}
+                              Verified
                             </Badge>
-                          </CardDescription>
+                          )}
                         </div>
                       </div>
-                      {company.isVerified && (
-                        <Badge variant="default" className="text-xs bg-green-100 text-green-800">
-                          Verified
-                        </Badge>
-                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-                      {company.description}
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
+                      {company.description || "No description available"}
                     </p>
                     
-                    <div className="space-y-2 mb-4">
+                    <div className="space-y-2 text-xs text-gray-500">
                       {company.city && (
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          {company.city}, {company.state}
+                        <div className="flex items-center">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          {company.city}{company.state && `, ${company.state}`}
                         </div>
                       )}
-                      {company.website && (
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Globe className="h-3 w-3 mr-1" />
-                          <a href={company.website} target="_blank" rel="noopener noreferrer" 
-                             className="hover:text-primary">
-                            {company.website}
-                          </a>
-                        </div>
+                      {company.establishedYear && (
+                        <div>Established: {company.establishedYear}</div>
                       )}
                       {company.employeeCount && (
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Users className="h-3 w-3 mr-1" />
-                          {company.employeeCount} employees
-                        </div>
-                      )}
-                      {company.foundedYear && (
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          Founded {company.foundedYear}
-                        </div>
+                        <div>Employees: {company.employeeCount}</div>
                       )}
                     </div>
 
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1" data-testid={`button-view-${company.id}`}>
-                        <Eye className="h-3 w-3 mr-1" />
+                    {company.tags && company.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-3">
+                        {company.tags.slice(0, 3).map((tag, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {company.tags.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{company.tags.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex space-x-2">
+                        {company.website && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={company.website} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          </Button>
+                        )}
+                        {company.email && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={`mailto:${company.email}`}>
+                              <Mail className="w-4 h-4" />
+                            </a>
+                          </Button>
+                        )}
+                        {company.phone && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={`tel:${company.phone}`}>
+                              <Phone className="w-4 h-4" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setLocation(`/companies/${company.id}`)}
+                        data-testid={`view-company-${company.id}`}
+                      >
                         View Details
                       </Button>
-                      {company.website && (
-                        <Button variant="ghost" size="sm" asChild data-testid={`button-visit-${company.id}`}>
-                          <a href={company.website} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </Button>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
-          )}
+          </TabsContent>
 
-          {filteredCompanies.length === 0 && !isLoading && (
-            <div className="text-center py-12">
-              <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">No companies found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchQuery || industryFilter 
-                  ? "Try adjusting your search criteria" 
-                  : "Be the first to list your company!"}
-              </p>
-              <Button onClick={() => setIsCompanyModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                List Your Company
-              </Button>
+          {/* Services Tab */}
+          <TabsContent value="services">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredServices.map((service: CompanyService) => {
+                const company = companies.find((c: Company) => 
+                  c.services?.some(s => s.id === service.id)
+                );
+                
+                return (
+                  <Card key={service.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="text-lg">{service.name}</CardTitle>
+                      {service.category && (
+                        <Badge variant="secondary" className="text-xs w-fit">
+                          {service.category}
+                        </Badge>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
+                        {service.description || "No description available"}
+                      </p>
+                      
+                      <div className="space-y-2 text-xs text-gray-500">
+                        {service.price && (
+                          <div>Price: {service.price}</div>
+                        )}
+                        {service.duration && (
+                          <div>Duration: {service.duration}</div>
+                        )}
+                        {company && (
+                          <div>Company: {company.name}</div>
+                        )}
+                      </div>
+
+                      {service.tags && service.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-3">
+                          {service.tags.slice(0, 3).map((tag, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => company && openInquiryModal('service', service, company)}
+                          data-testid={`inquire-service-${service.id}`}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          Inquire
+                        </Button>
+                        {company && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setLocation(`/companies/${company.id}`)}
+                          >
+                            View Company
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-          )}
-        </main>
-      </div>
+          </TabsContent>
 
-      <CompanyModal 
-        open={isCompanyModalOpen} 
-        onOpenChange={setIsCompanyModalOpen} 
-      />
+          {/* Products Tab */}
+          <TabsContent value="products">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((product: CompanyProduct) => {
+                const company = companies.find((c: Company) => 
+                  c.products?.some(p => p.id === product.id)
+                );
+                
+                return (
+                  <Card key={product.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="text-lg">{product.name}</CardTitle>
+                      {product.category && (
+                        <Badge variant="secondary" className="text-xs w-fit">
+                          {product.category}
+                        </Badge>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
+                        {product.description || "No description available"}
+                      </p>
+                      
+                      <div className="space-y-2 text-xs text-gray-500">
+                        {product.price && (
+                          <div>Price: {product.price}</div>
+                        )}
+                        {company && (
+                          <div>Company: {company.name}</div>
+                        )}
+                      </div>
+
+                      {product.tags && product.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-3">
+                          {product.tags.slice(0, 3).map((tag, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => company && openInquiryModal('product', product, company)}
+                          data-testid={`inquire-product-${product.id}`}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          Inquire
+                        </Button>
+                        {company && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setLocation(`/companies/${company.id}`)}
+                          >
+                            View Company
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Inquiry Modal */}
+        <Dialog open={showInquiryModal} onOpenChange={setShowInquiryModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                Send Inquiry for {selectedItem?.item.name}
+              </DialogTitle>
+            </DialogHeader>
+            <Form {...inquiryForm}>
+              <form onSubmit={inquiryForm.handleSubmit(handleInquirySubmit)} className="space-y-4">
+                <FormField
+                  control={inquiryForm.control}
+                  name="message"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Message *</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          placeholder="Describe your requirements..."
+                          rows={4}
+                          data-testid="inquiry-message"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={inquiryForm.control}
+                  name="contactEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Email *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="email"
+                          placeholder="your@email.com"
+                          data-testid="inquiry-email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={inquiryForm.control}
+                  name="contactPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Phone</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="tel"
+                          placeholder="+91 9876543210"
+                          data-testid="inquiry-phone"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={inquiryForm.control}
+                    name="budget"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Budget Range</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="₹10,000 - ₹50,000"
+                            data-testid="inquiry-budget"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={inquiryForm.control}
+                    name="timeline"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Timeline</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="2-3 weeks"
+                            data-testid="inquiry-timeline"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowInquiryModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createInquiryMutation.isPending}
+                    data-testid="submit-inquiry"
+                  >
+                    {createInquiryMutation.isPending ? "Sending..." : "Send Inquiry"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

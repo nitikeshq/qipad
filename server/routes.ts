@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema, insertCompanySchema, insertPaymentSchema, insertSubscriptionSchema } from "@shared/schema";
+import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema, insertCompanySchema, insertPaymentSchema, insertSubscriptionSchema, insertCompanyServiceSchema, insertCompanyProductSchema, insertServiceInquirySchema } from "@shared/schema";
 import { payumoneyService } from "./payumoney";
 import { z } from "zod";
 import bcrypt from "bcrypt";
@@ -2305,6 +2305,283 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "All notifications marked as read" });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to mark all notifications as read", error: error.message });
+    }
+  });
+
+  // Company Services Routes
+  app.get("/api/companies/:companyId/services", async (req, res) => {
+    try {
+      const services = await storage.getCompanyServices(req.params.companyId);
+      res.json(services);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get company services", error: error.message });
+    }
+  });
+
+  app.get("/api/services", async (req, res) => {
+    try {
+      const services = await storage.getAllCompanyServices();
+      res.json(services);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get services", error: error.message });
+    }
+  });
+
+  app.post("/api/companies/:companyId/services", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.userId);
+      if (!user?.isKycComplete) {
+        return res.status(403).json({ message: "KYC verification required to create services" });
+      }
+
+      const company = await storage.getCompanyById(req.params.companyId);
+      if (!company || company.ownerId !== req.user.userId) {
+        return res.status(403).json({ message: "Not authorized to add services to this company" });
+      }
+
+      const serviceData = insertCompanyServiceSchema.parse({
+        ...req.body,
+        companyId: req.params.companyId
+      });
+      
+      const service = await storage.createCompanyService(serviceData);
+      res.json(service);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create service", error: error.message });
+    }
+  });
+
+  app.put("/api/services/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const service = await storage.getCompanyServices(req.params.id);
+      // This would need additional logic to verify ownership
+      const updates = insertCompanyServiceSchema.partial().parse(req.body);
+      const updatedService = await storage.updateCompanyService(req.params.id, updates);
+      res.json(updatedService);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update service", error: error.message });
+    }
+  });
+
+  app.delete("/api/services/:id", authenticateToken, async (req: any, res) => {
+    try {
+      await storage.deleteCompanyService(req.params.id);
+      res.json({ message: "Service deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete service", error: error.message });
+    }
+  });
+
+  // Company Products Routes
+  app.get("/api/companies/:companyId/products", async (req, res) => {
+    try {
+      const products = await storage.getCompanyProducts(req.params.companyId);
+      res.json(products);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get company products", error: error.message });
+    }
+  });
+
+  app.get("/api/products", async (req, res) => {
+    try {
+      const products = await storage.getAllCompanyProducts();
+      res.json(products);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get products", error: error.message });
+    }
+  });
+
+  app.post("/api/companies/:companyId/products", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.userId);
+      if (!user?.isKycComplete) {
+        return res.status(403).json({ message: "KYC verification required to create products" });
+      }
+
+      const company = await storage.getCompanyById(req.params.companyId);
+      if (!company || company.ownerId !== req.user.userId) {
+        return res.status(403).json({ message: "Not authorized to add products to this company" });
+      }
+
+      const productData = insertCompanyProductSchema.parse({
+        ...req.body,
+        companyId: req.params.companyId
+      });
+      
+      const product = await storage.createCompanyProduct(productData);
+      res.json(product);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create product", error: error.message });
+    }
+  });
+
+  app.put("/api/products/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const updates = insertCompanyProductSchema.partial().parse(req.body);
+      const updatedProduct = await storage.updateCompanyProduct(req.params.id, updates);
+      res.json(updatedProduct);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update product", error: error.message });
+    }
+  });
+
+  app.delete("/api/products/:id", authenticateToken, async (req: any, res) => {
+    try {
+      await storage.deleteCompanyProduct(req.params.id);
+      res.json({ message: "Product deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete product", error: error.message });
+    }
+  });
+
+  // Service Inquiry Routes
+  app.post("/api/services/:serviceId/inquire", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const inquiryData = insertServiceInquirySchema.parse({
+        ...req.body,
+        serviceId: req.params.serviceId,
+        inquirerUserId: req.user.userId
+      });
+      
+      const inquiry = await storage.createServiceInquiry(inquiryData);
+      res.json(inquiry);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create inquiry", error: error.message });
+    }
+  });
+
+  app.post("/api/products/:productId/inquire", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const inquiryData = insertServiceInquirySchema.parse({
+        ...req.body,
+        productId: req.params.productId,
+        inquirerUserId: req.user.userId
+      });
+      
+      const inquiry = await storage.createServiceInquiry(inquiryData);
+      res.json(inquiry);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create inquiry", error: error.message });
+    }
+  });
+
+  app.get("/api/companies/:companyId/inquiries", authenticateToken, async (req: any, res) => {
+    try {
+      const company = await storage.getCompanyById(req.params.companyId);
+      if (!company || company.ownerId !== req.user.userId) {
+        return res.status(403).json({ message: "Not authorized to view inquiries for this company" });
+      }
+
+      const inquiries = await storage.getServiceInquiries(req.params.companyId);
+      res.json(inquiries);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get inquiries", error: error.message });
+    }
+  });
+
+  app.get("/api/inquiries/my", authenticateToken, async (req: any, res) => {
+    try {
+      const inquiries = await storage.getUserServiceInquiries(req.user.userId);
+      res.json(inquiries);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get user inquiries", error: error.message });
+    }
+  });
+
+  app.put("/api/inquiries/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const updates = req.body;
+      const updatedInquiry = await storage.updateServiceInquiry(req.params.id, updates);
+      res.json(updatedInquiry);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update inquiry", error: error.message });
+    }
+  });
+
+  // Service Purchase Routes (for 2% platform fee payments)
+  app.post("/api/services/:serviceId/purchase", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const { amount, description } = req.body;
+      
+      if (!amount || amount < 10) {
+        return res.status(400).json({ message: "Minimum purchase amount is ₹10" });
+      }
+
+      const txnId = payumoneyService.generateTxnId();
+      
+      // Calculate platform fee (2% of service amount)
+      const platformFee = amount * 0.02;
+      const netAmount = amount - platformFee;
+
+      // Create service purchase record
+      const purchase = await storage.createServicePurchase({
+        serviceId: req.params.serviceId,
+        companyId: req.body.companyId,
+        customerId: user.id,
+        amount,
+        platformFee,
+        netAmount,
+        paymentStatus: 'pending',
+        description: description || 'Service Purchase'
+      });
+
+      // Create payment record
+      const payment = await storage.createPayment({
+        userId: user.id,
+        amount,
+        paymentType: 'service_purchase',
+        status: 'pending',
+        description: `Service Purchase - ${description || 'Service'}`,
+        metadata: JSON.stringify({ txnId, serviceId: req.params.serviceId, purchaseId: purchase.id }),
+      });
+
+      const paymentData = {
+        amount,
+        productInfo: `Service Purchase - ${description || 'Service'}`,
+        firstName: user.firstName || 'User',
+        email: user.email || 'user@example.com',
+        txnId,
+        successUrl: `${req.protocol}://${req.get('host')}/api/payments/success`,
+        failureUrl: `${req.protocol}://${req.get('host')}/api/payments/failure`,
+        userId: user.id,
+        paymentType: 'service_purchase',
+        metadata: { paymentId: payment.id, serviceId: req.params.serviceId, purchaseId: purchase.id },
+      };
+
+      const paymentResponse = await payumoneyService.createPayment(paymentData);
+      
+      if (paymentResponse.success) {
+        res.json({
+          success: true,
+          paymentUrl: paymentResponse.paymentUrl,
+          txnId: paymentResponse.txnId,
+          platformFee,
+          netAmount
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: paymentResponse.error,
+        });
+      }
+    } catch (error) {
+      console.error('Error creating service purchase:', error);
+      res.status(500).json({ message: 'Failed to create service purchase' });
     }
   });
 

@@ -2,7 +2,7 @@ import {
   users, projects, documents, investments, communities, communityMembers, 
   communityPosts, jobs, jobApplications, savedJobs, connections, biddingProjects, projectBids,
   companyFormations, tenders, tenderEligibility, companies, subscriptions, payments, userInterests,
-  events, eventParticipants, eventTickets,
+  events, eventParticipants, eventTickets, companyServices, companyProducts, serviceInquiries, servicePurchases,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
   type Community, type InsertCommunity, type CommunityMember, type InsertCommunityMember,
@@ -14,7 +14,9 @@ import {
   type Subscription, type InsertSubscription, type Payment, type InsertPayment,
   type UserInterest, type InsertUserInterest,
   type Event, type InsertEvent, type EventParticipant, type InsertEventParticipant,
-  type EventTicket, type InsertEventTicket
+  type EventTicket, type InsertEventTicket, type CompanyService, type InsertCompanyService,
+  type CompanyProduct, type InsertCompanyProduct, type ServiceInquiry, type InsertServiceInquiry,
+  type ServicePurchase, type InsertServicePurchase
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, sql, ne } from "drizzle-orm";
@@ -154,6 +156,30 @@ export interface IStorage {
   getUserPayments(userId: string): Promise<Payment[]>;
   updatePaymentStatus(txnId: string, status: string, payumoneyId?: string): Promise<Payment>;
   updateProjectFunding(projectId: string, amount: number): Promise<void>;
+
+  // Company Services and Products methods
+  getCompanyServices(companyId: string): Promise<CompanyService[]>;
+  getAllCompanyServices(): Promise<CompanyService[]>;
+  createCompanyService(service: InsertCompanyService): Promise<CompanyService>;
+  updateCompanyService(id: string, updates: Partial<CompanyService>): Promise<CompanyService>;
+  deleteCompanyService(id: string): Promise<void>;
+
+  getCompanyProducts(companyId: string): Promise<CompanyProduct[]>;
+  getAllCompanyProducts(): Promise<CompanyProduct[]>;
+  createCompanyProduct(product: InsertCompanyProduct): Promise<CompanyProduct>;
+  updateCompanyProduct(id: string, updates: Partial<CompanyProduct>): Promise<CompanyProduct>;
+  deleteCompanyProduct(id: string): Promise<void>;
+
+  // Service Inquiry methods
+  createServiceInquiry(inquiry: InsertServiceInquiry): Promise<ServiceInquiry>;
+  getServiceInquiries(companyId: string): Promise<ServiceInquiry[]>;
+  getUserServiceInquiries(userId: string): Promise<ServiceInquiry[]>;
+  updateServiceInquiry(id: string, updates: Partial<ServiceInquiry>): Promise<ServiceInquiry>;
+
+  // Service Purchase methods
+  createServicePurchase(purchase: InsertServicePurchase): Promise<ServicePurchase>;
+  getServicePurchases(companyId: string): Promise<ServicePurchase[]>;
+  getUserServicePurchases(userId: string): Promise<ServicePurchase[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1124,6 +1150,113 @@ export class DatabaseStorage implements IStorage {
       .where(eq(communityPosts.id, data.postId));
     
     return comment;
+  }
+
+  // Company Services methods
+  async getCompanyServices(companyId: string): Promise<CompanyService[]> {
+    return await db.select().from(companyServices)
+      .where(eq(companyServices.companyId, companyId))
+      .orderBy(desc(companyServices.createdAt));
+  }
+
+  async getAllCompanyServices(): Promise<CompanyService[]> {
+    return await db.select().from(companyServices)
+      .where(eq(companyServices.isActive, true))
+      .orderBy(desc(companyServices.createdAt));
+  }
+
+  async createCompanyService(service: InsertCompanyService): Promise<CompanyService> {
+    const [newService] = await db.insert(companyServices).values(service).returning();
+    return newService;
+  }
+
+  async updateCompanyService(id: string, updates: Partial<CompanyService>): Promise<CompanyService> {
+    const [updatedService] = await db
+      .update(companyServices)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(companyServices.id, id))
+      .returning();
+    return updatedService;
+  }
+
+  async deleteCompanyService(id: string): Promise<void> {
+    await db.delete(companyServices).where(eq(companyServices.id, id));
+  }
+
+  // Company Products methods
+  async getCompanyProducts(companyId: string): Promise<CompanyProduct[]> {
+    return await db.select().from(companyProducts)
+      .where(eq(companyProducts.companyId, companyId))
+      .orderBy(desc(companyProducts.createdAt));
+  }
+
+  async getAllCompanyProducts(): Promise<CompanyProduct[]> {
+    return await db.select().from(companyProducts)
+      .where(eq(companyProducts.isActive, true))
+      .orderBy(desc(companyProducts.createdAt));
+  }
+
+  async createCompanyProduct(product: InsertCompanyProduct): Promise<CompanyProduct> {
+    const [newProduct] = await db.insert(companyProducts).values(product).returning();
+    return newProduct;
+  }
+
+  async updateCompanyProduct(id: string, updates: Partial<CompanyProduct>): Promise<CompanyProduct> {
+    const [updatedProduct] = await db
+      .update(companyProducts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(companyProducts.id, id))
+      .returning();
+    return updatedProduct;
+  }
+
+  async deleteCompanyProduct(id: string): Promise<void> {
+    await db.delete(companyProducts).where(eq(companyProducts.id, id));
+  }
+
+  // Service Inquiry methods
+  async createServiceInquiry(inquiry: InsertServiceInquiry): Promise<ServiceInquiry> {
+    const [newInquiry] = await db.insert(serviceInquiries).values(inquiry).returning();
+    return newInquiry;
+  }
+
+  async getServiceInquiries(companyId: string): Promise<ServiceInquiry[]> {
+    return await db.select().from(serviceInquiries)
+      .where(eq(serviceInquiries.companyId, companyId))
+      .orderBy(desc(serviceInquiries.createdAt));
+  }
+
+  async getUserServiceInquiries(userId: string): Promise<ServiceInquiry[]> {
+    return await db.select().from(serviceInquiries)
+      .where(eq(serviceInquiries.inquirerUserId, userId))
+      .orderBy(desc(serviceInquiries.createdAt));
+  }
+
+  async updateServiceInquiry(id: string, updates: Partial<ServiceInquiry>): Promise<ServiceInquiry> {
+    const [updatedInquiry] = await db
+      .update(serviceInquiries)
+      .set(updates)
+      .where(eq(serviceInquiries.id, id))
+      .returning();
+    return updatedInquiry;
+  }
+
+  // Service Purchase methods
+  async createServicePurchase(purchase: InsertServicePurchase): Promise<ServicePurchase> {
+    const [newPurchase] = await db.insert(servicePurchases).values(purchase).returning();
+    return newPurchase;
+  }
+
+  async getServicePurchases(companyId: string): Promise<ServicePurchase[]> {
+    return await db.select().from(servicePurchases)
+      .where(eq(servicePurchases.companyId, companyId))
+      .orderBy(desc(servicePurchases.createdAt));
+  }
+
+  async getUserServicePurchases(userId: string): Promise<ServicePurchase[]> {
+    return await db.select().from(servicePurchases)
+      .where(eq(servicePurchases.customerId, userId))
+      .orderBy(desc(servicePurchases.createdAt));
   }
 }
 

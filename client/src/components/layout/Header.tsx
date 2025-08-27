@@ -21,6 +21,7 @@ export function Header() {
     { path: "/dashboard", label: "Dashboard" },
     { path: "/projects", label: "Projects" },
     { path: "/investors", label: "Investors" },
+    { path: "/companies", label: "Companies" },
     { path: "/tenders", label: "Tenders" },
     { path: "/community", label: "Community" },
     { path: "/jobs", label: "Jobs" },

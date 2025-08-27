@@ -807,3 +807,95 @@ export const insertPostCommentSchema = createInsertSchema(postComments);
 export type InsertPostComment = z.infer<typeof insertPostCommentSchema>;
 export type PostLike = typeof postLikes.$inferSelect;
 export type PostComment = typeof postComments.$inferSelect;
+
+// Company Management Tables - Services and Products
+
+export const companyServices = pgTable("company_services", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  price: varchar("price"), // Can be "Starting from ₹X", "Contact for pricing", etc.
+  duration: varchar("duration"), // "1 hour", "1 week", "Project-based", etc.
+  category: varchar("category"),
+  tags: text("tags").array(),
+  images: text("images").array(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const companyProducts = pgTable("company_products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  price: varchar("price"), // Display price for reference
+  category: varchar("category"),
+  tags: text("tags").array(),
+  images: text("images").array(),
+  specifications: text("specifications"), // JSON string for product specs
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const serviceInquiries = pgTable("service_inquiries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  serviceId: varchar("service_id").references(() => companyServices.id, { onDelete: "cascade" }),
+  productId: varchar("product_id").references(() => companyProducts.id, { onDelete: "cascade" }),
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  inquirerUserId: varchar("inquirer_user_id").notNull().references(() => users.id),
+  message: text("message").notNull(),
+  contactEmail: varchar("contact_email"),
+  contactPhone: varchar("contact_phone"),
+  budget: varchar("budget"),
+  timeline: varchar("timeline"),
+  status: varchar("status").default("pending"), // pending, responded, closed
+  response: text("response"),
+  respondedAt: timestamp("responded_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const servicePurchases = pgTable("service_purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  serviceId: varchar("service_id").notNull().references(() => companyServices.id),
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  customerId: varchar("customer_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  platformFee: decimal("platform_fee", { precision: 15, scale: 2 }).notNull(), // 2% platform fee
+  netAmount: decimal("net_amount", { precision: 15, scale: 2 }).notNull(),
+  paymentStatus: varchar("payment_status").default("pending"), // pending, completed, failed
+  paymentId: varchar("payment_id"),
+  txnId: varchar("txn_id"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+// Company Services and Products schema exports
+export const insertCompanyServiceSchema = createInsertSchema(companyServices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCompanyProductSchema = createInsertSchema(companyProducts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertServiceInquirySchema = createInsertSchema(serviceInquiries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type CompanyService = typeof companyServices.$inferSelect;
+export type InsertCompanyService = z.infer<typeof insertCompanyServiceSchema>;
+export type CompanyProduct = typeof companyProducts.$inferSelect;
+export type InsertCompanyProduct = z.infer<typeof insertCompanyProductSchema>;
+export type ServiceInquiry = typeof serviceInquiries.$inferSelect;
+export type InsertServiceInquiry = z.infer<typeof insertServiceInquirySchema>;
+export type ServicePurchase = typeof servicePurchases.$inferSelect;
+export type InsertServicePurchase = typeof servicePurchases.$inferInsert;
