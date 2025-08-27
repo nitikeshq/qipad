@@ -208,6 +208,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/projects/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const project = await storage.getProject(req.params.id);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      if (project.userId !== req.user.userId) {
+        return res.status(403).json({ message: "Not authorized to update this project" });
+      }
+
+      const updatedProject = await storage.updateProject(req.params.id, req.body);
+      res.json(updatedProject);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update project", error: error.message });
+    }
+  });
+
   // Document upload routes
   app.post("/api/documents", authenticateToken, upload.single('file'), async (req: any, res) => {
     try {
@@ -497,7 +515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Check if user is KYC verified
       const user = await storage.getUser(req.user.userId);
-      if (!user || !user.isKycVerified) {
+      if (!user || !user.isVerified) {
         return res.status(403).json({ message: "KYC verification required to submit bids" });
       }
 

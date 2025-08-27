@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Edit, Eye } from "lucide-react";
 import { Project } from "@shared/schema";
+import { Link } from "wouter";
 
 interface ProjectCardProps {
   project: Project;
@@ -70,9 +71,18 @@ export function ProjectCard({ project, showActions = false, onInvest }: ProjectC
           )}
         </div>
         {showActions && (
-          <Button variant="ghost" size="icon" data-testid={`button-project-actions-${project.id}`}>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
+          <div className="flex space-x-2">
+            <Link href={`/projects/${project.id}`}>
+              <Button variant="ghost" size="icon" data-testid={`button-view-project-${project.id}`}>
+                <Eye className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href={`/projects/${project.id}`}>
+              <Button variant="ghost" size="icon" data-testid={`button-edit-project-${project.id}`}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         )}
       </div>
     </div>

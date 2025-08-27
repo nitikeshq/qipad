@@ -12,6 +12,10 @@ import Investors from "@/pages/investors";
 import Community from "@/pages/community";
 import Jobs from "@/pages/jobs";
 import Bidding from "@/pages/bidding";
+import { NetworkPage } from "@/pages/network";
+import { DocumentsPage } from "@/pages/documents";
+import { InvestmentsPage } from "@/pages/investments";
+import { ProjectDetailsPage } from "@/pages/project-details";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
@@ -36,8 +40,12 @@ function Router() {
     <Switch>
       <Route path="/auth" component={Auth} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route path="/projects/:id" component={() => <ProtectedRoute component={ProjectDetailsPage} />} />
       <Route path="/projects" component={() => <ProtectedRoute component={Projects} />} />
       <Route path="/investors" component={() => <ProtectedRoute component={Investors} />} />
+      <Route path="/network" component={() => <ProtectedRoute component={NetworkPage} />} />
+      <Route path="/documents" component={() => <ProtectedRoute component={DocumentsPage} />} />
+      <Route path="/investments" component={() => <ProtectedRoute component={InvestmentsPage} />} />
       <Route path="/community" component={() => <ProtectedRoute component={Community} />} />
       <Route path="/jobs" component={() => <ProtectedRoute component={Jobs} />} />
       <Route path="/bidding" component={() => <ProtectedRoute component={Bidding} />} />
