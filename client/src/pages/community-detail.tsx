@@ -6,17 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Send, Users, Calendar, MessageCircle, Heart, Share2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Send, Users, Calendar, MessageCircle, Heart, Share2, Image, Plus, X } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-// Remove unused import
 
 export default function CommunityDetailPage() {
   const [, params] = useRoute("/communities/:id");
   const [, setLocation] = useLocation();
   const [newPost, setNewPost] = useState("");
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -67,10 +70,31 @@ export default function CommunityDetailPage() {
   };
 
   const createPostMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async (postData: any) => {
+      // If images are selected, upload them first
+      let imageUrls: string[] = [];
+      if (selectedImages.length > 0) {
+        for (const image of selectedImages) {
+          const formData = new FormData();
+          formData.append('image', image);
+          const uploadResponse = await fetch('/api/upload/image', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          const uploadResult = await uploadResponse.json();
+          if (uploadResult.imageUrl) {
+            imageUrls.push(uploadResult.imageUrl);
+          }
+        }
+      }
+
       return await apiRequest("POST", `/api/communities/${params?.id}/posts`, {
-        content,
-        images: [],
+        content: postData.content,
+        images: imageUrls,
+        eventId: postData.eventId || null,
         videos: []
       });
     },
@@ -80,6 +104,8 @@ export default function CommunityDetailPage() {
         description: "Post created successfully!",
       });
       setNewPost("");
+      setSelectedImages([]);
+      setSelectedEvent("");
       queryClient.invalidateQueries({ queryKey: ['/api/communities', params?.id, 'posts'] });
     },
     onError: () => {
@@ -92,9 +118,39 @@ export default function CommunityDetailPage() {
   });
 
   const handleCreatePost = () => {
-    if (!newPost.trim()) return;
-    createPostMutation.mutate(newPost);
+    if (!newPost.trim() && selectedImages.length === 0) return;
+    createPostMutation.mutate({
+      content: newPost.trim(),
+      eventId: selectedEvent
+    });
   };
+
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newImages = Array.from(files).slice(0, 4 - selectedImages.length); // Max 4 images
+      setSelectedImages(prev => [...prev, ...newImages]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const likePostMutation = useMutation({
+    mutationFn: (postId: string) => apiRequest("POST", `/api/community-posts/${postId}/like`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/communities', params?.id, 'posts'] });
+    }
+  });
+
+  const commentOnPostMutation = useMutation({
+    mutationFn: ({ postId, content }: { postId: string; content: string }) => 
+      apiRequest("POST", `/api/community-posts/${postId}/comments`, { content }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/communities', params?.id, 'posts'] });
+    }
+  });
 
   if (communityLoading) {
     return (
@@ -141,6 +197,10 @@ export default function CommunityDetailPage() {
   // Check membership from both members list and user communities
   const { data: userCommunities = [] } = useQuery({
     queryKey: ["/api/user/communities"],
+  });
+
+  const { data: events = [] } = useQuery({
+    queryKey: ["/api/events"],
   });
   
   const isUserMember = (Array.isArray(members) && members.some((member: any) => member.userId === user?.id)) ||
@@ -216,10 +276,86 @@ export default function CommunityDetailPage() {
                       className="min-h-[120px] resize-none"
                       data-testid="textarea-new-post"
                     />
+                    
+                    {/* Event Selection */}
+                    <div>
+                      <Select value={selectedEvent} onValueChange={setSelectedEvent}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Share an event (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.isArray(events) && events.map((event: any) => (
+                            <SelectItem key={event.id} value={event.id}>
+                              {event.title} - {new Date(event.date).toLocaleDateString()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Image Upload Section */}
+                    <div className="space-y-2">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageSelect}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => document.getElementById('image-upload')?.click()}
+                          disabled={selectedImages.length >= 4}
+                        >
+                          <Image className="h-4 w-4 mr-2" />
+                          Add Images ({selectedImages.length}/4)
+                        </Button>
+                        {selectedEvent && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedEvent("")}
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Remove Event
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Image Preview */}
+                      {selectedImages.length > 0 && (
+                        <div className="grid grid-cols-2 gap-2">
+                          {selectedImages.map((image, index) => (
+                            <div key={index} className="relative">
+                              <img
+                                src={URL.createObjectURL(image)}
+                                alt={`Preview ${index + 1}`}
+                                className="w-full h-24 object-cover rounded-lg"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-1 right-1 h-6 w-6 p-0"
+                                onClick={() => removeImage(index)}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="flex justify-end">
                       <Button
                         onClick={handleCreatePost}
-                        disabled={!newPost.trim() || createPostMutation.isPending}
+                        disabled={(!newPost.trim() && selectedImages.length === 0) || createPostMutation.isPending}
                         data-testid="button-create-post"
                       >
                         <Send className="h-4 w-4 mr-2" />
@@ -265,16 +401,72 @@ export default function CommunityDetailPage() {
                             <p className="text-foreground whitespace-pre-wrap mb-3">
                               {post.content}
                             </p>
+
+                            {/* Display shared event */}
+                            {post.eventId && post.eventTitle && (
+                              <Card className="mb-3 border-l-4 border-l-blue-500">
+                                <CardContent className="p-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Calendar className="h-4 w-4 text-blue-500" />
+                                    <span className="font-medium text-sm">Shared Event</span>
+                                  </div>
+                                  <p className="font-medium">{post.eventTitle}</p>
+                                  <p className="text-sm text-muted-foreground">{new Date(post.eventDate).toLocaleDateString()}</p>
+                                  {post.eventDescription && (
+                                    <p className="text-sm mt-1">{post.eventDescription}</p>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            )}
+
+                            {/* Display images */}
+                            {post.images && post.images.length > 0 && (
+                              <div className={`grid gap-2 mb-3 ${post.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                                {post.images.map((imageUrl: string, index: number) => (
+                                  <img
+                                    key={index}
+                                    src={imageUrl}
+                                    alt={`Post image ${index + 1}`}
+                                    className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90"
+                                    onClick={() => window.open(imageUrl, '_blank')}
+                                  />
+                                ))}
+                              </div>
+                            )}
+
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                                <Heart className="h-4 w-4" />
-                                <span>Like</span>
+                              <button 
+                                className={`flex items-center gap-1 hover:text-red-500 transition-colors ${post.isLiked ? 'text-red-500' : ''}`}
+                                onClick={() => likePostMutation.mutate(post.id)}
+                                disabled={likePostMutation.isPending}
+                              >
+                                <Heart className={`h-4 w-4 ${post.isLiked ? 'fill-current' : ''}`} />
+                                <span>{post.likesCount || 0} Likes</span>
                               </button>
-                              <button className="flex items-center gap-1 hover:text-foreground transition-colors">
+                              <button 
+                                className="flex items-center gap-1 hover:text-blue-500 transition-colors"
+                                onClick={() => {
+                                  const content = prompt("Add a comment:");
+                                  if (content) {
+                                    commentOnPostMutation.mutate({ postId: post.id, content });
+                                  }
+                                }}
+                                disabled={commentOnPostMutation.isPending}
+                              >
                                 <MessageCircle className="h-4 w-4" />
-                                <span>Comment</span>
+                                <span>{post.commentsCount || 0} Comments</span>
                               </button>
-                              <button className="flex items-center gap-1 hover:text-foreground transition-colors">
+                              <button 
+                                className="flex items-center gap-1 hover:text-green-500 transition-colors"
+                                onClick={() => {
+                                  navigator.share?.({
+                                    title: `Post by ${post.authorFirstName} ${post.authorLastName}`,
+                                    text: post.content,
+                                    url: window.location.href
+                                  }) || navigator.clipboard?.writeText(window.location.href);
+                                  toast({ title: "Post link copied to clipboard!" });
+                                }}
+                              >
                                 <Share2 className="h-4 w-4" />
                                 <span>Share</span>
                               </button>

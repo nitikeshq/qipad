@@ -530,12 +530,15 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(communityMembers.communityId, communityId), eq(communityMembers.userId, userId)));
   }
 
-  async getCommunityPosts(communityId: string): Promise<any[]> {
-    return await db.select({
+  async getCommunityPosts(communityId: string, userId?: string): Promise<any[]> {
+    const posts = await db.select({
       id: communityPosts.id,
       content: communityPosts.content,
       images: communityPosts.images,
       videos: communityPosts.videos,
+      eventId: communityPosts.eventId || null,
+      likesCount: communityPosts.likesCount || 0,
+      commentsCount: communityPosts.commentsCount || 0,
       createdAt: communityPosts.createdAt,
       authorId: communityPosts.authorId,
       authorFirstName: users.firstName,
@@ -546,6 +549,30 @@ export class DatabaseStorage implements IStorage {
     .leftJoin(users, eq(communityPosts.authorId, users.id))
     .where(eq(communityPosts.communityId, communityId))
     .orderBy(desc(communityPosts.createdAt));
+
+    // If userId provided, check like status for each post and add event details
+    if (userId) {
+      const { postLikes } = await import("@shared/schema");
+      
+      for (let post of posts) {
+        // Check if user liked this post
+        const liked = await db.select().from(postLikes)
+          .where(and(eq(postLikes.postId, post.id), eq(postLikes.userId, userId)));
+        post.isLiked = liked.length > 0;
+
+        // Add event details if eventId exists
+        if (post.eventId) {
+          const event = await this.getEvent(post.eventId);
+          if (event) {
+            post.eventTitle = event.title;
+            post.eventDate = event.date;
+            post.eventDescription = event.description;
+          }
+        }
+      }
+    }
+
+    return posts;
   }
 
   async createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost> {
@@ -1022,6 +1049,54 @@ export class DatabaseStorage implements IStorage {
       .where(eq(eventTickets.id, participant.ticketId));
     
     return ticket || undefined;
+  }
+  // Post likes and comments methods
+  async togglePostLike(postId: string, userId: string): Promise<{ liked: boolean }> {
+    const { postLikes, communityPosts } = await import("@shared/schema");
+    
+    // Check if user already liked the post
+    const existingLike = await this.db.select().from(postLikes)
+      .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
+
+    if (existingLike.length > 0) {
+      // Unlike the post
+      await this.db.delete(postLikes)
+        .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
+      
+      // Update likes count
+      await this.db.update(communityPosts)
+        .set({ likesCount: sql`${communityPosts.likesCount} - 1` })
+        .where(eq(communityPosts.id, postId));
+      
+      return { liked: false };
+    } else {
+      // Like the post
+      await this.db.insert(postLikes).values({
+        postId,
+        userId
+      });
+      
+      // Update likes count
+      await this.db.update(communityPosts)
+        .set({ likesCount: sql`${communityPosts.likesCount} + 1` })
+        .where(eq(communityPosts.id, postId));
+      
+      return { liked: true };
+    }
+  }
+
+  async createPostComment(data: { postId: string; userId: string; content: string }): Promise<any> {
+    const { postComments, communityPosts } = await import("@shared/schema");
+    
+    // Create comment
+    const [comment] = await this.db.insert(postComments).values(data).returning();
+    
+    // Update comments count
+    await this.db.update(communityPosts)
+      .set({ commentsCount: sql`${communityPosts.commentsCount} + 1` })
+      .where(eq(communityPosts.id, data.postId));
+    
+    return comment;
   }
 }
 

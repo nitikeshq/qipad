@@ -916,6 +916,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Image upload for posts
+  app.post('/api/upload/image', upload.single('image'), (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No image file provided' });
+      }
+      
+      const imageUrl = `/uploads/${req.file.filename}`;
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      res.status(500).json({ message: 'Failed to upload image' });
+    }
+  });
+
+  // Like a community post
+  app.post('/api/community-posts/:id/like', authenticateToken, async (req: any, res) => {
+    try {
+      const result = await storage.togglePostLike(req.params.id, req.user.userId);
+      res.json({ message: result.liked ? 'Post liked' : 'Post unliked', liked: result.liked });
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to like post', error: error.message });
+    }
+  });
+
+  // Comment on a community post
+  app.post('/api/community-posts/:id/comments', authenticateToken, async (req: any, res) => {
+    try {
+      const comment = await storage.createPostComment({
+        postId: req.params.id,
+        userId: req.user.userId,
+        content: req.body.content
+      });
+      res.json(comment);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to add comment', error: error.message });
+    }
+  });
+
   // Company Formation routes for users
   app.get("/api/company-formations/my", authenticateToken, async (req: any, res) => {
     try {
