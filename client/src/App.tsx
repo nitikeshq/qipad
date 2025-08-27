@@ -25,6 +25,7 @@ import BillingSettings from "@/pages/billing-settings";
 import GeneralSettings from "@/pages/general-settings";
 import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
+import Events from "@/pages/events";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();

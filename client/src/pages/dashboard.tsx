@@ -148,7 +148,7 @@ export default function Dashboard() {
                       { name: "Find Projects", icon: "🔍", path: "/projects", category: "projects" },
                       { name: "Get a Job", icon: "💼", path: "/jobs", category: "jobs" },
                       { name: "Networking", icon: "🤝", path: "/network", category: "networking" },
-                      { name: "Events", icon: "📅", path: "/", category: "events" },
+                      { name: "Events", icon: "📅", path: "/events", category: "events" },
                       { name: "Community building", icon: "👥", path: "/community", category: "community" },
                       { name: "Find Investors", icon: "💰", path: "/investors", category: "investors" }
                     ].map((interest) => (
