@@ -133,15 +133,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllUsers(): Promise<User[]> {
-    try {
-      console.log("DEBUG: Starting getAllUsers query...");
-      const result = await db.select().from(users).orderBy(desc(users.createdAt));
-      console.log("DEBUG: Query completed. Found", result.length, "users");
-      return result;
-    } catch (error) {
-      console.error("DEBUG: Error in getAllUsers:", error);
-      throw error;
-    }
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async updateUser(id: string, updateData: Partial<User>): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
   }
 
   async getAllDocuments(): Promise<Document[]> {
@@ -160,6 +165,32 @@ export class DatabaseStorage implements IStorage {
       })
     );
     return projectsWithOwners;
+  }
+
+  async updateProject(id: string, updateData: Partial<Project>): Promise<Project> {
+    const [updatedProject] = await db
+      .update(projects)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(projects.id, id))
+      .returning();
+    return updatedProject;
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    await db.delete(projects).where(eq(projects.id, id));
+  }
+
+  async updateInvestment(id: string, updateData: Partial<Investment>): Promise<Investment> {
+    const [updatedInvestment] = await db
+      .update(investments)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(investments.id, id))
+      .returning();
+    return updatedInvestment;
+  }
+
+  async deleteInvestment(id: string): Promise<void> {
+    await db.delete(investments).where(eq(investments.id, id));
   }
 
   async getAllInvestmentsWithDetails(): Promise<any[]> {

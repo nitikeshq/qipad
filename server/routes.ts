@@ -646,13 +646,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ADMIN ROUTES
 
   // Admin route for getting all users with documents
+  // Users CRUD
   app.get("/api/admin/users", async (req, res) => {
     try {
-      console.log("DEBUG: Admin users route called");
       const users = await storage.getAllUsers();
-      console.log("DEBUG: Got users from storage:", users.length);
       const documents = await storage.getAllDocuments();
-      console.log("DEBUG: Got documents from storage:", documents.length);
       
       const usersWithKyc = users.map(user => {
         const userDocs = documents.filter(doc => doc.userId === user.id);
@@ -668,11 +666,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
       
-      console.log("DEBUG: Sending response with", usersWithKyc.length, "users");
       res.json(usersWithKyc);
     } catch (error: any) {
       console.error("Admin users route error:", error);
       res.status(500).json({ message: "Failed to get users", error: error.message });
+    }
+  });
+
+  app.put("/api/admin/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      delete updateData.passwordHash; // Don't allow password hash updates through admin
+      
+      const updatedUser = await storage.updateUser(id, updateData);
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error("Update user error:", error);
+      res.status(400).json({ message: "Failed to update user", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteUser(id);
+      res.json({ message: "User deleted successfully" });
+    } catch (error: any) {
+      console.error("Delete user error:", error);
+      res.status(400).json({ message: "Failed to delete user", error: error.message });
     }
   });
 
@@ -698,6 +720,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Projects CRUD
   app.get("/api/admin/projects", async (req, res) => {
     try {
       const projects = await storage.getAllProjectsWithOwners();
@@ -708,12 +731,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/admin/projects/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      const updatedProject = await storage.updateProject(id, updateData);
+      res.json(updatedProject);
+    } catch (error: any) {
+      console.error("Update project error:", error);
+      res.status(400).json({ message: "Failed to update project", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/projects/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteProject(id);
+      res.json({ message: "Project deleted successfully" });
+    } catch (error: any) {
+      console.error("Delete project error:", error);
+      res.status(400).json({ message: "Failed to delete project", error: error.message });
+    }
+  });
+
+  // Investments CRUD
   app.get("/api/admin/investments", async (req, res) => {
     try {
       const investments = await storage.getAllInvestmentsWithDetails();
       res.json(investments);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to get investments", error: error.message });
+    }
+  });
+
+  app.put("/api/admin/investments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      const updatedInvestment = await storage.updateInvestment(id, updateData);
+      res.json(updatedInvestment);
+    } catch (error: any) {
+      console.error("Update investment error:", error);
+      res.status(400).json({ message: "Failed to update investment", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/investments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteInvestment(id);
+      res.json({ message: "Investment deleted successfully" });
+    } catch (error: any) {
+      console.error("Delete investment error:", error);
+      res.status(400).json({ message: "Failed to delete investment", error: error.message });
     }
   });
 
