@@ -410,11 +410,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllCommunities(): Promise<any[]> {
-    const communities = await db.select().from(communities).orderBy(desc(communities.createdAt));
+    const communitiesList = await db.select().from(communities).orderBy(desc(communities.createdAt));
     
     // Add member count for each community
     const communitiesWithCounts = await Promise.all(
-      communities.map(async (community) => {
+      communitiesList.map(async (community) => {
         const members = await this.getCommunityMembers(community.id);
         return {
           ...community,

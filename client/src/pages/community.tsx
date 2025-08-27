@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Users, MessageCircle, Calendar, Eye } from "lucide-react";
+import { Plus, Search, Users, MessageCircle, Calendar, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +17,8 @@ import type { User } from "@/lib/auth";
 export default function CommunityPage() {
   const [isCommunityModalOpen, setIsCommunityModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(9); // 3x3 grid
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -39,6 +41,11 @@ export default function CommunityPage() {
                          (community.description && community.description.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesSearch;
   });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredCommunities.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedCommunities = filteredCommunities.slice(startIndex, startIndex + itemsPerPage);
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -141,8 +148,8 @@ export default function CommunityPage() {
                   Loading communities...
                 </div>
               </div>
-            ) : filteredCommunities.length > 0 ? (
-              filteredCommunities.map((community: Community) => (
+            ) : paginatedCommunities.length > 0 ? (
+              paginatedCommunities.map((community: Community) => (
                 <div key={community.id} className="bg-card rounded-lg border border-border p-6 shadow-sm hover:shadow-md transition-shadow" data-testid={`card-community-${community.id}`}>
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
@@ -218,6 +225,37 @@ export default function CommunityPage() {
               </div>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center space-x-4 mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                data-testid="button-prev-page"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              
+              <span className="text-sm text-muted-foreground" data-testid="text-pagination-info">
+                Page {currentPage} of {totalPages} ({filteredCommunities.length} communities)
+              </span>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                data-testid="button-next-page"
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          )}
         </main>
       </div>
 
