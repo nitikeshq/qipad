@@ -1,17 +1,37 @@
+import { useState } from "react";
 import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText, Gavel } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
+import { ProjectModal } from "@/components/modals/ProjectModal";
+import { JobModal } from "@/components/modals/JobModal";
 
 export function Sidebar() {
   const { user } = useAuth();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
 
   const quickActions = [
-    { label: "Create Project", icon: Plus, action: "create-project" },
-    { label: "Find Investors", icon: Search, action: "find-investors" },
-    { label: "Post Job", icon: Briefcase, action: "post-job" },
+    { 
+      label: "Create Project", 
+      icon: Plus, 
+      action: "create-project",
+      onClick: () => setIsProjectModalOpen(true)
+    },
+    { 
+      label: "Find Investors", 
+      icon: Search, 
+      action: "find-investors",
+      onClick: () => navigate("/investors")
+    },
+    { 
+      label: "Post Job", 
+      icon: Briefcase, 
+      action: "post-job",
+      onClick: () => setIsJobModalOpen(true)
+    },
   ];
 
   const menuItems = [
@@ -67,6 +87,7 @@ export function Sidebar() {
                 key={action.action}
                 variant={action.action === "create-project" ? "default" : "ghost"}
                 className="w-full justify-start"
+                onClick={action.onClick}
                 data-testid={`button-${action.action}`}
               >
                 <action.icon className="h-4 w-4 mr-2" />
@@ -98,6 +119,17 @@ export function Sidebar() {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <ProjectModal 
+        open={isProjectModalOpen} 
+        onOpenChange={setIsProjectModalOpen} 
+      />
+      
+      <JobModal 
+        open={isJobModalOpen} 
+        onOpenChange={setIsJobModalOpen} 
+      />
     </aside>
   );
 }
