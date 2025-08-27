@@ -452,7 +452,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         projectId,
         amount,
-        paymentType: 'investment',
+        paymentType: 'investment' as const,
         status: 'pending',
         description: 'Project investment',
         metadata: JSON.stringify({ txnId, expectedStakes, message, phone }),
@@ -467,7 +467,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         successUrl: `${req.protocol}://${req.get('host')}/api/payments/success`,
         failureUrl: `${req.protocol}://${req.get('host')}/api/payments/failure`,
         userId,
-        paymentType: 'investment',
+        paymentType: 'investment' as const,
         metadata: { paymentId: payment.id, projectId, expectedStakes, message, phone },
       };
 
@@ -1861,6 +1861,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Company Services Routes
+  app.get('/api/companies/:id/services', async (req, res) => {
+    try {
+      const services = await storage.getCompanyServices(req.params.id);
+      res.json(services);
+    } catch (error) {
+      console.error('Error fetching company services:', error);
+      res.status(500).json({ message: 'Failed to fetch services' });
+    }
+  });
+
+  app.post('/api/companies/:id/services', authenticateToken, async (req: any, res) => {
+    try {
+      const companyId = req.params.id;
+      const company = await storage.getCompanyById(companyId);
+      
+      if (!company) {
+        return res.status(404).json({ message: 'Company not found' });
+      }
+      
+      if (company.ownerId !== req.user.userId) {
+        return res.status(403).json({ message: 'Not authorized to add services to this company' });
+      }
+
+      const serviceData = { ...req.body, companyId };
+      const service = await storage.createCompanyService(serviceData);
+      res.status(201).json(service);
+    } catch (error: any) {
+      console.error('Error creating service:', error);
+      res.status(400).json({ message: 'Failed to create service', error: error.message });
+    }
+  });
+
+  // Company Products Routes
+  app.get('/api/companies/:id/products', async (req, res) => {
+    try {
+      const products = await storage.getCompanyProducts(req.params.id);
+      res.json(products);
+    } catch (error) {
+      console.error('Error fetching company products:', error);
+      res.status(500).json({ message: 'Failed to fetch products' });
+    }
+  });
+
+  app.post('/api/companies/:id/products', authenticateToken, async (req: any, res) => {
+    try {
+      const companyId = req.params.id;
+      const company = await storage.getCompanyById(companyId);
+      
+      if (!company) {
+        return res.status(404).json({ message: 'Company not found' });
+      }
+      
+      if (company.ownerId !== req.user.userId) {
+        return res.status(403).json({ message: 'Not authorized to add products to this company' });
+      }
+
+      const productData = { ...req.body, companyId };
+      const product = await storage.createCompanyProduct(productData);
+      res.status(201).json(product);
+    } catch (error: any) {
+      console.error('Error creating product:', error);
+      res.status(400).json({ message: 'Failed to create product', error: error.message });
+    }
+  });
+
   // PayUMoney payment routes
   app.post('/api/payments/company-creation', authenticateToken, async (req, res) => {
     try {
@@ -1873,7 +1939,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const payment = await storage.createPayment({
         userId,
         amount,
-        paymentType: 'company_creation',
+        paymentType: 'company_creation' as const,
         status: 'pending',
         description: 'Company registration fee',
         metadata: JSON.stringify({ companyData, txnId }),
@@ -1888,7 +1954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         successUrl: `${req.protocol}://${req.get('host')}/api/payments/success`,
         failureUrl: `${req.protocol}://${req.get('host')}/api/payments/failure`,
         userId,
-        paymentType: 'company_creation',
+        paymentType: 'company_creation' as const,
         metadata: { paymentId: payment.id, companyData },
       };
 
@@ -1924,7 +1990,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         projectId,
         amount,
-        paymentType: 'support',
+        paymentType: 'support' as const,
         status: 'pending',
         description: 'Project support donation',
         metadata: JSON.stringify({ txnId }),
@@ -1939,7 +2005,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         successUrl: `${req.protocol}://${req.get('host')}/api/payments/success`,
         failureUrl: `${req.protocol}://${req.get('host')}/api/payments/failure`,
         userId,
-        paymentType: 'support',
+        paymentType: 'support' as const,
         metadata: { paymentId: payment.id, projectId },
       };
 
@@ -1994,7 +2060,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         subscriptionId: subscription.id,
         amount,
-        paymentType: 'subscription',
+        paymentType: 'subscription' as const,
         status: 'pending',
         description: `Qipad ${planType} subscription`,
         metadata: JSON.stringify({ txnId, subscriptionId: subscription.id }),
@@ -2009,7 +2075,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         successUrl: `${req.protocol}://${req.get('host')}/api/payments/success`,
         failureUrl: `${req.protocol}://${req.get('host')}/api/payments/failure`,
         userId,
-        paymentType: 'subscription',
+        paymentType: 'subscription' as const,
         metadata: { paymentId: payment.id, subscriptionId: subscription.id },
       };
 

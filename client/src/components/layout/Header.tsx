@@ -19,7 +19,7 @@ export function Header() {
 
   const navigationItems = [
     { path: "/dashboard", label: "Dashboard" },
-    { path: "/projects", label: "Projects" },
+    { path: "/innovations", label: "Innovations" },
     { path: "/investors", label: "Investors" },
     { path: "/companies", label: "Companies" },
     { path: "/tenders", label: "Tenders" },

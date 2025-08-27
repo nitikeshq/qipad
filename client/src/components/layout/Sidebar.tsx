@@ -37,15 +37,11 @@ export function Sidebar() {
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/my-innovations", label: "My Innovations", icon: FolderOpen },
-    { path: "/bidding", label: "Bidding", icon: Gavel },
     { path: "/investments", label: "Investments", icon: TrendingUp },
-    { path: "/company-formation", label: "Company Formation", icon: Building },
-    { path: "/companies", label: "Companies Directory", icon: Building2 },
-    { path: "/tenders", label: "Government Tenders", icon: Scroll },
+    { path: "/companies", label: "Companies", icon: Building2 },
     { path: "/jobs", label: "Jobs", icon: Briefcase },
-    { path: "/network", label: "Network", icon: Users },
     { path: "/community", label: "Communities", icon: MessageSquare },
-    { path: "/documents", label: "My KYC", icon: FileText },
+    { path: "/documents", label: "Documents", icon: FileText },
   ];
 
   return (

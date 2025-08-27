@@ -13,10 +13,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, MapPin, Globe, Phone, Mail, Building2, Package, Briefcase, MessageCircle, ExternalLink, Calendar, Users, Check } from "lucide-react";
+import { ArrowLeft, MapPin, Globe, Phone, Mail, Building2, Package, Briefcase, MessageCircle, ExternalLink, Calendar, Users, Check, Plus, Edit } from "lucide-react";
 import { z } from "zod";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { AddServiceModal } from "@/components/modals/AddServiceModal";
+import { AddProductModal } from "@/components/modals/AddProductModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 const inquirySchema = z.object({
   message: z.string().min(10, "Message must be at least 10 characters"),
@@ -73,11 +76,14 @@ interface CompanyProduct {
 }
 
 export default function CompanyDetail() {
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [match, params] = useRoute("/companies/:id");
   const companyId = params?.id;
   const [selectedItem, setSelectedItem] = useState<{type: 'service' | 'product', item: CompanyService | CompanyProduct} | null>(null);
   const [showInquiryModal, setShowInquiryModal] = useState(false);
+  const [showAddServiceModal, setShowAddServiceModal] = useState(false);
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -316,16 +322,42 @@ export default function CompanyDetail() {
 
         {/* Services and Products Tabs */}
         <Tabs defaultValue="services" className="mb-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="services" data-testid="tab-services">
-              <Briefcase className="w-4 h-4 mr-2" />
-              Services ({services.length})
-            </TabsTrigger>
-            <TabsTrigger value="products" data-testid="tab-products">
-              <Package className="w-4 h-4 mr-2" />
-              Products ({products.length})
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between mb-4">
+            <TabsList className="grid w-full grid-cols-2 max-w-md">
+              <TabsTrigger value="services" data-testid="tab-services">
+                <Briefcase className="w-4 h-4 mr-2" />
+                Services ({services.length})
+              </TabsTrigger>
+              <TabsTrigger value="products" data-testid="tab-products">
+                <Package className="w-4 h-4 mr-2" />
+                Products ({products.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Add Service/Product buttons for company owner */}
+            {user && company && company.ownerId === user.id && (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowAddServiceModal(true)}
+                  data-testid="button-add-service"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Service
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowAddProductModal(true)}
+                  data-testid="button-add-product"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Product
+                </Button>
+              </div>
+            )}
+          </div>
 
           {/* Services Tab */}
           <TabsContent value="services">
@@ -595,6 +627,24 @@ export default function CompanyDetail() {
           </div>
         </main>
       </div>
+      
+      {/* Add Service Modal */}
+      {companyId && (
+        <AddServiceModal
+          isOpen={showAddServiceModal}
+          onClose={() => setShowAddServiceModal(false)}
+          companyId={companyId}
+        />
+      )}
+      
+      {/* Add Product Modal */}
+      {companyId && (
+        <AddProductModal
+          isOpen={showAddProductModal}
+          onClose={() => setShowAddProductModal(false)}
+          companyId={companyId}
+        />
+      )}
     </div>
   );
 }
