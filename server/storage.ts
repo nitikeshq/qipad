@@ -10,7 +10,7 @@ import {
   type CompanyFormation, type InsertCompanyFormation
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -116,6 +116,100 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  async getAllProjectsWithOwners(): Promise<any[]> {
+    const projects = await db.select().from(projectsTable);
+    const projectsWithOwners = await Promise.all(
+      projects.map(async (project) => {
+        const owner = await this.getUser(project.userId);
+        return {
+          ...project,
+          owner
+        };
+      })
+    );
+    return projectsWithOwners;
+  }
+
+  async getAllInvestmentsWithDetails(): Promise<any[]> {
+    const investments = await db.select().from(investmentsTable);
+    const investmentsWithDetails = await Promise.all(
+      investments.map(async (investment) => {
+        const investor = await this.getUser(investment.investorId);
+        const project = await this.getProject(investment.projectId);
+        return {
+          ...investment,
+          investor,
+          project
+        };
+      })
+    );
+    return investmentsWithDetails;
+  }
+
+  // Connection management
+  async createConnection(connectionData: any): Promise<any> {
+    const connection = await db.insert(connections).values(connectionData).returning();
+    return connection[0];
+  }
+
+  async getConnectionBetweenUsers(requesterId: string, recipientId: string, projectId?: string): Promise<any> {
+    const whereConditions = and(
+      eq(connections.requesterId, requesterId),
+      eq(connections.recipientId, recipientId)
+    );
+    
+    if (projectId) {
+      whereConditions && eq(connections.projectId, projectId);
+    }
+
+    const [connection] = await db
+      .select()
+      .from(connections)
+      .where(whereConditions);
+    return connection;
+  }
+
+  async updateConnectionStatus(connectionId: string, status: string): Promise<any> {
+    const [connection] = await db
+      .update(connections)
+      .set({ 
+        status, 
+        isAccepted: status === 'accepted',
+        updatedAt: new Date()
+      })
+      .where(eq(connections.id, connectionId))
+      .returning();
+    return connection;
+  }
+
+  async getUserConnections(userId: string): Promise<any[]> {
+    const userConnections = await db
+      .select()
+      .from(connections)
+      .where(
+        or(
+          eq(connections.requesterId, userId),
+          eq(connections.recipientId, userId)
+        )
+      );
+
+    const connectionsWithUsers = await Promise.all(
+      userConnections.map(async (connection) => {
+        const otherUserId = connection.requesterId === userId 
+          ? connection.recipientId 
+          : connection.requesterId;
+        const otherUser = await this.getUser(otherUserId);
+        return {
+          ...connection,
+          otherUser,
+          isRequester: connection.requesterId === userId
+        };
+      })
+    );
+
+    return connectionsWithUsers;
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {

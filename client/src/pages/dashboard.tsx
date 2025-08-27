@@ -10,6 +10,7 @@ import { ProjectModal } from "@/components/modals/ProjectModal";
 import { InvestmentModal } from "@/components/modals/InvestmentModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { Project } from "@shared/schema";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -130,9 +131,9 @@ export default function Dashboard() {
                 <div className="p-6 border-b border-border">
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-foreground">Recent Projects</h2>
-                    <a href="#" className="text-primary hover:text-primary/80 text-sm font-medium">
+                    <Link href="/projects" className="text-primary hover:text-primary/80 text-sm font-medium">
                       View All
-                    </a>
+                    </Link>
                   </div>
                 </div>
                 <div className="divide-y divide-border">
@@ -174,23 +175,39 @@ export default function Dashboard() {
                         <p className="text-xs text-green-600 font-medium mt-1">
                           ₹{parseFloat(project.minimumInvestment).toLocaleString()} - ₹{parseFloat(project.fundingGoal).toLocaleString()}
                         </p>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="mt-2"
-                          onClick={() => handleInvest(project)}
-                          data-testid={`button-invest-opportunity-${project.id}`}
-                        >
-                          Invest
-                        </Button>
+                        <div className="flex gap-1 mt-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1 text-xs"
+                            onClick={() => handleInvest(project)}
+                            data-testid={`button-invest-opportunity-${project.id}`}
+                          >
+                            💼 Invest
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="flex-1 text-xs"
+                            onClick={() => {
+                              setSelectedProject(project);
+                              setIsInvestmentModalOpen(true);
+                            }}
+                            data-testid={`button-support-opportunity-${project.id}`}
+                          >
+                            🤝 Support
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
                 <div className="p-4 border-t border-border">
-                  <Button variant="ghost" className="w-full text-center text-primary hover:text-primary/80 text-sm font-medium">
-                    View All Opportunities
-                  </Button>
+                  <Link href="/projects">
+                    <Button variant="ghost" className="w-full text-center text-primary hover:text-primary/80 text-sm font-medium">
+                      View All Opportunities
+                    </Button>
+                  </Link>
                 </div>
               </div>
 

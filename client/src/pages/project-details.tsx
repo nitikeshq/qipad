@@ -16,12 +16,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Link } from "wouter";
 import { ProjectModal } from "@/components/modals/ProjectModal";
+import { ConnectionRequestButton } from "@/components/ConnectionRequestButton";
 
 export function ProjectDetailsPage() {
   const [match, params] = useRoute("/projects/:id");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editData, setEditData] = useState<any>({});
+  const [showCustomAmount, setShowCustomAmount] = useState(false);
+  const [customAmount, setCustomAmount] = useState("");
   const projectId = params?.id;
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -37,17 +40,23 @@ export function ProjectDetailsPage() {
   });
 
   const investMutation = useMutation({
-    mutationFn: async (amount: number) => {
-      const response = await apiRequest('POST', '/api/investments', {
-        projectId,
-        amount: amount.toString()
+    mutationFn: async ({ amount, type }: { amount: number; type: string }) => {
+      return await apiRequest("/api/investments", {
+        method: "POST",
+        body: JSON.stringify({
+          projectId,
+          amount: amount.toString(),
+          type,
+          expectedStakes: type === "invest" ? "5" : "0" // Default 5% for investments
+        })
       });
-      return response.json();
     },
     onSuccess: () => {
       toast({ title: "Investment successful!" });
+      setShowCustomAmount(false);
+      setCustomAmount("");
       queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/investments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/investments/project', projectId] });
     },
     onError: (error: any) => {
       toast({ title: error.message || "Investment failed", variant: "destructive" });
@@ -159,6 +168,15 @@ export function ProjectDetailsPage() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleCustomInvest = () => {
+    const amount = parseFloat(customAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ title: "Please enter a valid amount", variant: "destructive" });
+      return;
+    }
+    handleInvest(amount, "invest");
   };
 
   return (
@@ -428,7 +446,7 @@ export function ProjectDetailsPage() {
                           disabled={investMutation.isPending}
                           data-testid="button-invest"
                         >
-                          💼 Invest ₹{project.minimumInvestment}
+                          💼 Invest ₹{parseFloat(project.minimumInvestment).toLocaleString()}
                           <span className="text-xs block">Want stakes in company</span>
                         </Button>
                         <Button 
@@ -438,12 +456,49 @@ export function ProjectDetailsPage() {
                           disabled={investMutation.isPending}
                           data-testid="button-support"
                         >
-                          🤝 Support ₹{project.minimumInvestment}
+                          🤝 Support ₹{parseFloat(project.minimumInvestment).toLocaleString()}
                           <span className="text-xs block">No stakes, just support</span>
                         </Button>
-                        <Button variant="ghost" className="w-full text-sm" data-testid="button-custom-investment">
+                        <Button 
+                          variant="ghost" 
+                          className="w-full text-sm" 
+                          onClick={() => setShowCustomAmount(!showCustomAmount)}
+                          data-testid="button-custom-investment"
+                        >
                           Custom Amount
                         </Button>
+                        {showCustomAmount && (
+                          <div className="space-y-3 p-3 border rounded-lg bg-muted/20">
+                            <Input
+                              type="number"
+                              placeholder="Enter amount (₹)"
+                              value={customAmount}
+                              onChange={(e) => setCustomAmount(e.target.value)}
+                            />
+                            <div className="flex gap-2">
+                              <Button 
+                                className="flex-1 bg-green-600 hover:bg-green-700" 
+                                onClick={() => handleCustomInvest()}
+                                disabled={investMutation.isPending}
+                              >
+                                💼 Invest
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                className="flex-1" 
+                                onClick={() => {
+                                  const amount = parseFloat(customAmount);
+                                  if (!isNaN(amount) && amount > 0) {
+                                    handleInvest(amount, "support");
+                                  }
+                                }}
+                                disabled={investMutation.isPending}
+                              >
+                                🤝 Support
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -470,7 +525,9 @@ export function ProjectDetailsPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Email</span>
-                          <span className="font-medium text-sm">{project.owner.email}</span>
+                          <span className="font-medium text-sm">
+                            Contact owner to reveal email
+                          </span>
                         </div>
                         {project.owner.phone && (
                           <div className="flex justify-between">
@@ -478,9 +535,11 @@ export function ProjectDetailsPage() {
                             <span className="font-medium">{project.owner.phone}</span>
                           </div>
                         )}
-                        <div className="text-xs text-muted-foreground mt-2">
-                          * Contact details shared after investment/support
-                        </div>
+                        <ConnectionRequestButton 
+                          projectOwnerId={project.owner.id}
+                          projectId={project.id}
+                          projectTitle={project.title}
+                        />
                       </div>
                     ) : (
                       <p className="text-muted-foreground">Owner information not available</p>

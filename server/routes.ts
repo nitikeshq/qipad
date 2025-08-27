@@ -482,6 +482,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Company Formation routes
+  // Admin routes
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      // Simple admin credentials (in production, use proper authentication)
+      if (username === "admin" && password === "admin123") {
+        const adminToken = jwt.sign(
+          { userId: "admin", isAdmin: true }, 
+          JWT_SECRET, 
+          { expiresIn: "24h" }
+        );
+        res.json({ token: adminToken });
+      } else {
+        res.status(401).json({ message: "Invalid admin credentials" });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: "Admin login failed", error: error.message });
+    }
+  });
+
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users.map(user => ({ ...user, passwordHash: undefined })));
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get users", error: error.message });
+    }
+  });
+
+  app.get("/api/admin/projects", async (req, res) => {
+    try {
+      const projects = await storage.getAllProjectsWithOwners();
+      res.json(projects);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get projects", error: error.message });
+    }
+  });
+
+  app.get("/api/admin/investments", async (req, res) => {
+    try {
+      const investments = await storage.getAllInvestmentsWithDetails();
+      res.json(investments);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get investments", error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/projects/:id/status", async (req, res) => {
+    try {
+      const { status } = req.body;
+      const project = await storage.updateProject(req.params.id, { status });
+      res.json(project);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update project status", error: error.message });
+    }
+  });
+
+  // Connection routes
+  app.post("/api/connections", authenticateToken, async (req: any, res) => {
+    try {
+      const connectionData = {
+        ...req.body,
+        requesterId: req.user.userId
+      };
+      
+      // Check if connection already exists
+      const existingConnection = await storage.getConnectionBetweenUsers(
+        connectionData.requesterId,
+        connectionData.recipientId,
+        connectionData.projectId
+      );
+      
+      if (existingConnection) {
+        return res.status(400).json({ message: "Connection request already exists" });
+      }
+      
+      const connection = await storage.createConnection(connectionData);
+      res.json(connection);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create connection", error: error.message });
+    }
+  });
+
+  app.get("/api/connections", authenticateToken, async (req: any, res) => {
+    try {
+      const connections = await storage.getUserConnections(req.user.userId);
+      res.json(connections);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get connections", error: error.message });
+    }
+  });
+
+  app.patch("/api/connections/:id/status", authenticateToken, async (req: any, res) => {
+    try {
+      const { status } = req.body;
+      const connection = await storage.updateConnectionStatus(req.params.id, status);
+      res.json(connection);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update connection status", error: error.message });
+    }
+  });
+
   app.post("/api/company-formations", authenticateToken, async (req: any, res) => {
     try {
       const formationData = { 

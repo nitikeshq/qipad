@@ -17,6 +17,7 @@ export const users = pgTable("users", {
   phone: text("phone"),
   userType: userTypeEnum("user_type").notNull(),
   isVerified: boolean("is_verified").default(false),
+  isKycComplete: boolean("is_kyc_complete").default(false),
   profileImage: text("profile_image"),
   googleId: text("google_id"),
   passwordHash: text("password_hash"),
@@ -36,7 +37,6 @@ export const projects = pgTable("projects", {
   currentFunding: decimal("current_funding", { precision: 15, scale: 2 }).default("0"),
   campaignDuration: integer("campaign_duration").notNull(), // in days
   status: projectStatusEnum("status").default("draft"),
-  isKycComplete: boolean("is_kyc_complete").default(false),
   images: text("images").array(),
   videos: text("videos").array(),
   businessPlan: text("business_plan"),
@@ -128,8 +128,12 @@ export const connections = pgTable("connections", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   requesterId: varchar("requester_id").notNull().references(() => users.id),
   recipientId: varchar("recipient_id").notNull().references(() => users.id),
+  projectId: varchar("project_id").references(() => projects.id), // Optional project context
+  status: varchar("status", { enum: ["pending", "accepted", "declined"] }).notNull().default("pending"),
+  message: text("message"),
   isAccepted: boolean("is_accepted").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // New bidding project system
