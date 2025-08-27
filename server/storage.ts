@@ -1,13 +1,14 @@
 import { 
   users, projects, documents, investments, communities, communityMembers, 
-  communityPosts, jobs, jobApplications, savedJobs, connections, biddingProjects, projectBids,
+  communityPosts, postLikes, postComments, jobs, jobApplications, savedJobs, connections, biddingProjects, projectBids,
   companyFormations, tenders, tenderEligibility, companies, subscriptions, payments, userInterests,
   events, eventParticipants, eventTickets, companyServices, companyProducts, serviceInquiries, servicePurchases,
   notifications,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
   type Community, type InsertCommunity, type CommunityMember, type InsertCommunityMember,
-  type CommunityPost, type InsertCommunityPost, type Job, type InsertJob,
+  type CommunityPost, type InsertCommunityPost, type PostLike, type InsertPostLike,
+  type PostComment, type InsertPostComment, type Job, type InsertJob,
   type JobApplication, type InsertJobApplication, type Connection,
   type BiddingProject, type InsertBiddingProject, type ProjectBid, type InsertProjectBid,
   type CompanyFormation, type InsertCompanyFormation, type Tender, type InsertTender,
@@ -63,6 +64,8 @@ export interface IStorage {
   getCommunityPosts(communityId: string): Promise<any[]>;
   createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost>;
   isUserMember(communityId: string, userId: string): Promise<boolean>;
+  togglePostLike(postId: string, userId: string): Promise<{ liked: boolean }>;
+  createPostComment(data: { postId: string; userId: string; content: string }): Promise<PostComment>;
 
   // Job methods
   getAllJobs(): Promise<Job[]>;
@@ -1106,48 +1109,44 @@ export class DatabaseStorage implements IStorage {
   }
   // Post likes and comments methods
   async togglePostLike(postId: string, userId: string): Promise<{ liked: boolean }> {
-    const { postLikes, communityPosts } = await import("@shared/schema");
-    
     // Check if user already liked the post
-    const existingLike = await this.db.select().from(postLikes)
+    const existingLike = await db.select().from(postLikes)
       .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
 
     if (existingLike.length > 0) {
       // Unlike the post
-      await this.db.delete(postLikes)
+      await db.delete(postLikes)
         .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
       
       // Update likes count
-      await this.db.update(communityPosts)
-        .set({ likesCount: sql`${communityPosts.likesCount} - 1` })
+      await db.update(communityPosts)
+        .set({ likesCount: sql`COALESCE(${communityPosts.likesCount}, 0) - 1` })
         .where(eq(communityPosts.id, postId));
       
       return { liked: false };
     } else {
       // Like the post
-      await this.db.insert(postLikes).values({
+      await db.insert(postLikes).values({
         postId,
         userId
       });
       
       // Update likes count
-      await this.db.update(communityPosts)
-        .set({ likesCount: sql`${communityPosts.likesCount} + 1` })
+      await db.update(communityPosts)
+        .set({ likesCount: sql`COALESCE(${communityPosts.likesCount}, 0) + 1` })
         .where(eq(communityPosts.id, postId));
       
       return { liked: true };
     }
   }
 
-  async createPostComment(data: { postId: string; userId: string; content: string }): Promise<any> {
-    const { postComments, communityPosts } = await import("@shared/schema");
-    
+  async createPostComment(data: { postId: string; userId: string; content: string }): Promise<PostComment> {
     // Create comment
-    const [comment] = await this.db.insert(postComments).values(data).returning();
+    const [comment] = await db.insert(postComments).values(data).returning();
     
     // Update comments count
-    await this.db.update(communityPosts)
-      .set({ commentsCount: sql`${communityPosts.commentsCount} + 1` })
+    await db.update(communityPosts)
+      .set({ commentsCount: sql`COALESCE(${communityPosts.commentsCount}, 0) + 1` })
       .where(eq(communityPosts.id, data.postId));
     
     return comment;
