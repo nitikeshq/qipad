@@ -176,7 +176,7 @@ export const companyFormations = pgTable("company_formations", {
   userId: varchar("user_id").notNull().references(() => users.id),
   companyName: text("company_name"),
   companyType: text("company_type"), // Private Limited, Partnership, Proprietary, LLP, Public Limited
-  currentStep: integer("current_step").default(1), // 1-8 process steps
+  currentStep: integer("current_step").default(1), // 1-9 process steps
   contactPhone: text("contact_phone"),
   contactEmail: text("contact_email"),
   preferredLocation: text("preferred_location"),
@@ -189,6 +189,7 @@ export const companyFormations = pgTable("company_formations", {
   documentsObtained: boolean("documents_obtained").default(false),
   trademarkApplied: boolean("trademark_applied").default(false),
   bankAccountCreated: boolean("bank_account_created").default(false),
+  certificationsObtained: boolean("certifications_obtained").default(false),
   projectPosted: boolean("project_posted").default(false),
   governmentSchemesApplied: boolean("government_schemes_applied").default(false),
   
@@ -199,6 +200,13 @@ export const companyFormations = pgTable("company_formations", {
   dinNumber: text("din_number"),
   trademarkNumber: text("trademark_number"),
   bankAccountDetails: text("bank_account_details"),
+  
+  // Certification fields
+  startupCertificate: text("startup_certificate"),
+  msmeCertificate: text("msme_certificate"),
+  udyamCertificate: text("udyam_certificate"),
+  isoCertificate: text("iso_certificate"),
+  nasscomCertificate: text("nasscom_certificate"),
   
   status: text("status").default("in_progress"), // in_progress, completed, on_hold
   assignedConsultant: varchar("assigned_consultant").references(() => users.id),

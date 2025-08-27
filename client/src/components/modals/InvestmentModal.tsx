@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,9 +102,12 @@ export function InvestmentModal({ open, onOpenChange, project }: InvestmentModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg" data-testid="modal-investment">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-investment">
         <DialogHeader>
           <DialogTitle>Express Investment Interest</DialogTitle>
+          <DialogDescription>
+            Submit your investment interest for this project. No payment required - this is just to express interest.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="mb-6">

@@ -52,20 +52,27 @@ const COMPANY_FORMATION_STEPS = [
   },
   {
     id: 6,
+    title: "Certifications",
+    description: "Startup, MSME/SME, Udyam, ISO, Nasscom certificates",
+    icon: Award,
+    fields: ["startupCertificate", "msmeCertificate", "udyamCertificate", "isoCertificate", "nasscomCertificate"]
+  },
+  {
+    id: 7,
     title: "Post Your Project",
     description: "List your idea for funding",
     icon: TrendingUp,
     fields: []
   },
   {
-    id: 7,
+    id: 8,
     title: "Scale Your Business",
     description: "Growth and expansion support",
     icon: TrendingUp,
     fields: []
   },
   {
-    id: 8,
+    id: 9,
     title: "Government Schemes",
     description: "Find tenders and empanelment dates",
     icon: Award,
@@ -104,7 +111,13 @@ export default function CompanyFormation() {
     panNumber: "",
     dinNumber: "",
     trademarkNumber: "",
-    bankAccountDetails: ""
+    bankAccountDetails: "",
+    // Certification fields
+    startupCertificate: "",
+    msmeCertificate: "",
+    udyamCertificate: "",
+    isoCertificate: "",
+    nasscomCertificate: ""
   });
 
   const { toast } = useToast();
@@ -169,12 +182,13 @@ export default function CompanyFormation() {
     companyFormation.documentsObtained,
     companyFormation.trademarkApplied,
     companyFormation.bankAccountCreated,
+    companyFormation.certificationsObtained,
     companyFormation.projectPosted,
     false, // Scale step - always manual
     companyFormation.governmentSchemesApplied
   ].filter(Boolean).length : 0;
 
-  const progressPercentage = (completedSteps / 8) * 100;
+  const progressPercentage = (completedSteps / 9) * 100;
   const currentStep = companyFormation?.currentStep || 1;
 
   return (
@@ -192,7 +206,7 @@ export default function CompanyFormation() {
               </p>
               <div className="flex items-center justify-center space-x-4">
                 <Progress value={progressPercentage} className="w-64" />
-                <span className="text-sm font-medium">{completedSteps}/8 Steps Complete</span>
+                <span className="text-sm font-medium">{completedSteps}/9 Steps Complete</span>
               </div>
             </div>
 
@@ -202,7 +216,7 @@ export default function CompanyFormation() {
                 <CardTitle>Company Formation Process</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex flex-wrap justify-center items-center gap-2">
                   {COMPANY_FORMATION_STEPS.map((step, index) => {
                     const Icon = step.icon;
                     const isCompleted = companyFormation ? 
@@ -213,32 +227,40 @@ export default function CompanyFormation() {
                     const isCurrent = currentStep === step.id;
 
                     return (
-                      <div 
-                        key={step.id}
-                        className={`p-4 border rounded-lg transition-colors ${
-                          isCompleted ? 'bg-green-50 border-green-200' :
-                          isCurrent ? 'bg-blue-50 border-blue-200' :
-                          'bg-muted/50'
-                        }`}
-                      >
-                        <div className="flex items-start space-x-3">
-                          {isCompleted ? (
-                            <CheckCircle className="h-6 w-6 text-green-600 mt-1" />
-                          ) : (
-                            <Circle className="h-6 w-6 text-muted-foreground mt-1" />
-                          )}
-                          <div className="flex-1">
-                            <Icon className="h-5 w-5 mb-2 text-primary" />
-                            <h3 className="font-semibold text-sm">{step.title}</h3>
-                            <p className="text-xs text-muted-foreground">{step.description}</p>
-                            {isCompleted && (
-                              <Badge variant="default" className="mt-2 text-xs">Completed</Badge>
+                      <div key={step.id} className="flex items-center">
+                        <div 
+                          className={`p-3 border rounded-lg transition-colors min-w-[180px] ${
+                            isCompleted ? 'bg-green-50 border-green-200' :
+                            isCurrent ? 'bg-blue-50 border-blue-200' :
+                            'bg-muted/50'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2">
+                            {isCompleted ? (
+                              <CheckCircle className="h-5 w-5 text-green-600" />
+                            ) : (
+                              <Circle className="h-5 w-5 text-muted-foreground" />
                             )}
-                            {isCurrent && !isCompleted && (
-                              <Badge variant="secondary" className="mt-2 text-xs">In Progress</Badge>
-                            )}
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-1">
+                                <Icon className="h-4 w-4 text-primary" />
+                                <span className="text-xs font-medium">{step.id}</span>
+                              </div>
+                              <h3 className="font-semibold text-xs">{step.title}</h3>
+                              {isCompleted && (
+                                <Badge variant="default" className="mt-1 text-xs">✓</Badge>
+                              )}
+                              {isCurrent && !isCompleted && (
+                                <Badge variant="secondary" className="mt-1 text-xs">Current</Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        {index < COMPANY_FORMATION_STEPS.length - 1 && (
+                          <div className="mx-2 text-muted-foreground">
+                            →
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -445,6 +467,84 @@ export default function CompanyFormation() {
                       onChange={(e) => setFormData({ ...formData, bankAccountDetails: e.target.value })}
                       placeholder="Account number and bank name"
                     />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Certifications Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Award className="h-5 w-5 mr-2" />
+                  Certifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="startupCertificate">Startup Certificate</Label>
+                    <Input
+                      id="startupCertificate"
+                      value={formData.startupCertificate}
+                      onChange={(e) => setFormData({ ...formData, startupCertificate: e.target.value })}
+                      placeholder="Startup India certificate number"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Register under Startup India for tax benefits
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="msmeCertificate">MSME/SME Certificate</Label>
+                    <Input
+                      id="msmeCertificate"
+                      value={formData.msmeCertificate}
+                      onChange={(e) => setFormData({ ...formData, msmeCertificate: e.target.value })}
+                      placeholder="MSME registration number"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Micro, Small & Medium Enterprises registration
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="udyamCertificate">Udyam Certificate</Label>
+                    <Input
+                      id="udyamCertificate"
+                      value={formData.udyamCertificate}
+                      onChange={(e) => setFormData({ ...formData, udyamCertificate: e.target.value })}
+                      placeholder="Udyam registration number"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      New MSME registration under Udyam portal
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="isoCertificate">ISO Certificate</Label>
+                    <Input
+                      id="isoCertificate"
+                      value={formData.isoCertificate}
+                      onChange={(e) => setFormData({ ...formData, isoCertificate: e.target.value })}
+                      placeholder="ISO certification number"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ISO 9001:2015 or other quality standards
+                    </p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label htmlFor="nasscomCertificate">Nasscom Certificate (Optional)</Label>
+                    <Input
+                      id="nasscomCertificate"
+                      value={formData.nasscomCertificate}
+                      onChange={(e) => setFormData({ ...formData, nasscomCertificate: e.target.value })}
+                      placeholder="Nasscom membership/certification number"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      For IT/software companies - Nasscom membership
+                    </p>
                   </div>
                 </div>
               </CardContent>
