@@ -14,7 +14,7 @@ import { Link, useLocation } from "wouter";
 
 export function Header() {
   const { user, logout } = useAuth();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
 
   const navigationItems = [
     { path: "/dashboard", label: "Dashboard" },
@@ -89,13 +89,22 @@ export function Header() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem data-testid="menu-profile">
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/profile-settings")} 
+                    data-testid="menu-profile"
+                  >
                     Profile Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem data-testid="menu-billing">
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/billing-settings")} 
+                    data-testid="menu-billing"
+                  >
                     Billing
                   </DropdownMenuItem>
-                  <DropdownMenuItem data-testid="menu-settings">
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/general-settings")} 
+                    data-testid="menu-settings"
+                  >
                     Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
