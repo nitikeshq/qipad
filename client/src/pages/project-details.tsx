@@ -272,11 +272,55 @@ export function ProjectDetailsPage() {
                   <TabsList>
                     <TabsTrigger value="details">Details</TabsTrigger>
                     <TabsTrigger value="business-plan">Business Plan</TabsTrigger>
+                    <TabsTrigger value="marketing">Marketing</TabsTrigger>
                     <TabsTrigger value="team">Team</TabsTrigger>
                     <TabsTrigger value="financials">Financials</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="details">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h3 className="font-semibold mb-2">Use of Funds</h3>
+                            <p className="text-muted-foreground">
+                              {project.useOfFunds || "Use of funds not specified yet."}
+                            </p>
+                          </div>
+                          <div>
+                            <h3 className="font-semibold mb-2">Exit Strategy</h3>
+                            <p className="text-muted-foreground">
+                              {project.exitStrategy || "Exit strategy not provided yet."}
+                            </p>
+                          </div>
+                          <div>
+                            <h3 className="font-semibold mb-2">Project Timeline</h3>
+                            <p className="text-muted-foreground">
+                              {project.timeline || "Project timeline not provided yet."}
+                            </p>
+                          </div>
+                          <div>
+                            <h3 className="font-semibold mb-2">Investment Returns</h3>
+                            <p className="text-muted-foreground">
+                              {project.expectedReturns || "Expected returns information not provided yet."}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="business-plan">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <p className="text-muted-foreground">
+                          {project.businessPlan || "Business plan documentation is being prepared."}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="marketing">
                     <Card>
                       <CardContent className="pt-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -293,28 +337,18 @@ export function ProjectDetailsPage() {
                             </p>
                           </div>
                           <div>
-                            <h3 className="font-semibold mb-2">Use of Funds</h3>
+                            <h3 className="font-semibold mb-2">Target Market</h3>
                             <p className="text-muted-foreground">
-                              {project.useOfFunds || "Use of funds not specified yet."}
+                              {project.targetMarket || "Target market information not provided yet."}
                             </p>
                           </div>
                           <div>
-                            <h3 className="font-semibold mb-2">Exit Strategy</h3>
+                            <h3 className="font-semibold mb-2">Marketing Strategy</h3>
                             <p className="text-muted-foreground">
-                              {project.exitStrategy || "Exit strategy not provided yet."}
+                              {project.marketingStrategy || "Marketing strategy not provided yet."}
                             </p>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="business-plan">
-                    <Card>
-                      <CardContent className="pt-6">
-                        <p className="text-muted-foreground">
-                          {project.businessPlan || "Business plan documentation is being prepared."}
-                        </p>
                       </CardContent>
                     </Card>
                   </TabsContent>
