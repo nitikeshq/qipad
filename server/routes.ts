@@ -396,25 +396,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Investment routes
+  // Investment payment route (equity-based)
+  app.post("/api/payments/invest", authenticateToken, async (req: any, res) => {
+    try {
+      const { projectId, amount, expectedStakes, message, phone } = req.body;
+      const userId = req.user.userId;
+      const user = await storage.getUser(userId);
+
+      const txnId = payumoneyService.generateTxnId();
+      
+      // Create payment record for investment
+      const payment = await storage.createPayment({
+        userId,
+        projectId,
+        amount,
+        paymentType: 'investment',
+        status: 'pending',
+        description: 'Project investment',
+        metadata: JSON.stringify({ txnId, expectedStakes, message, phone }),
+      });
+
+      const paymentData = {
+        amount,
+        productInfo: 'Project Investment',
+        firstName: user?.firstName || 'User',
+        email: user?.email || 'user@example.com',
+        txnId,
+        successUrl: `${req.protocol}://${req.get('host')}/api/payments/success`,
+        failureUrl: `${req.protocol}://${req.get('host')}/api/payments/failure`,
+        userId,
+        paymentType: 'investment',
+        metadata: { paymentId: payment.id, projectId, expectedStakes, message, phone },
+      };
+
+      const paymentResponse = await payumoneyService.createPayment(paymentData);
+      
+      if (paymentResponse.success) {
+        res.json({
+          success: true,
+          paymentUrl: paymentResponse.paymentUrl,
+          txnId: paymentResponse.txnId,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: paymentResponse.error,
+        });
+      }
+    } catch (error) {
+      console.error('Error creating investment payment:', error);
+      res.status(500).json({ message: 'Failed to create investment payment' });
+    }
+  });
+
+  // Legacy investment route (now redirects to payment)
   app.post("/api/investments", authenticateToken, async (req: any, res) => {
     try {
-      // Get investor's contact information for sharing with project owner
-      const investor = await storage.getUser(req.user.userId);
-      
-      const investmentData = insertInvestmentSchema.parse({ 
-        ...req.body, 
-        investorId: req.user.userId,
-        investorContact: req.body.investorPhone || investor?.phone || '',
-        investorPhone: req.body.investorPhone || investor?.phone || '',
-        investorEmail: investor?.email || '',
-        type: "invest", // Always invest for equity-based investments
-        status: "pending" // Project owner needs to approve
+      // Redirect to payment flow for investments
+      const response = await fetch(`${req.protocol}://${req.get('host')}/api/payments/invest`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': req.headers.authorization 
+        },
+        body: JSON.stringify(req.body)
       });
-      
-      const investment = await storage.createInvestment(investmentData);
-
-      res.json(investment);
+      const investmentResponse = await response.json();
+      res.json(investmentResponse);
     } catch (error: any) {
       res.status(400).json({ message: "Failed to create investment", error: error.message });
     }
@@ -941,6 +989,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Document verification updated", document });
     } catch (error: any) {
       res.status(400).json({ message: "Failed to update document status", error: error.message });
+    }
+  });
+
+  // Admin KYC approval endpoint
+  app.put("/api/admin/users/:userId/kyc", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { kycStatus } = req.body;
+      
+      // Update user's KYC status
+      const user = await storage.updateUser(userId, { 
+        kycStatus: kycStatus,
+        isKycComplete: kycStatus === 'verified' 
+      });
+      
+      // Update all user documents to approved if KYC is verified
+      if (kycStatus === 'verified') {
+        const userDocs = await storage.getDocumentsByUser(userId);
+        for (const doc of userDocs) {
+          await storage.updateDocument(doc.id, { status: 'approved' });
+        }
+      }
+      
+      res.json({ message: "KYC status updated successfully", user });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update KYC status", error: error.message });
     }
   });
 
@@ -1767,6 +1841,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (projectId) {
             await storage.updateProjectFunding(projectId, netAmount);
           }
+        } else if (req.body.udf2 === 'investment') {
+          // Create investment record after successful payment
+          const { projectId, expectedStakes, message, phone } = metadata;
+          const investmentData = {
+            projectId,
+            investorId: req.body.udf1,
+            amount: callbackResult.amount,
+            expectedStakes,
+            type: 'invest',
+            status: 'pending', // Project owner needs to approve
+            investorContact: phone,
+            investorEmail: req.body.email,
+            message,
+            platformFeePaid: true
+          };
+          
+          await storage.createInvestment(investmentData);
         }
         
         res.redirect('/dashboard?payment=success');

@@ -130,6 +130,20 @@ export default function AdminDashboard() {
     }
   });
 
+  const approveKycMutation = useMutation({
+    mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}/kyc`, { kycStatus: status });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "KYC status updated successfully!" });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to update KYC status", description: error.message, variant: "destructive" });
+    },
+  });
+
   const updateFormationMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
       const response = await apiRequest("PUT", `/api/admin/company-formations/${id}`, data);
@@ -477,6 +491,16 @@ export default function AdminDashboard() {
                           >
                             View
                           </Button>
+                          {user.kycStatus === 'pending' && user.documents?.length > 0 && (
+                            <Button 
+                              size="sm" 
+                              variant="default" 
+                              onClick={() => approveKycMutation.mutate({ userId: user.id, status: 'verified' })}
+                              data-testid={`button-approve-kyc-${user.id}`}
+                            >
+                              Approve KYC
+                            </Button>
+                          )}
                           <Button 
                             size="sm" 
                             variant={user.status === 'suspended' ? 'default' : 'destructive'}

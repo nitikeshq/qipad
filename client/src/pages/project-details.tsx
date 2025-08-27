@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Link } from "wouter";
 import { ProjectModal } from "@/components/modals/ProjectModal";
-import { InvestmentModal } from "@/components/modals/InvestmentModal";
+import { InvestModal } from "@/components/modals/InvestModal";
 import { SupportModal } from "@/components/modals/SupportModal";
 import { EditProjectModal } from "@/components/modals/EditProjectModal";
 import { ConnectionRequestButton } from "@/components/ConnectionRequestButton";
@@ -26,7 +26,7 @@ export function ProjectDetailsPage() {
   const [match, params] = useRoute("/projects/:id");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isEditProjectModalOpen, setIsEditProjectModalOpen] = useState(false);
-  const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
+  const [isInvestModalOpen, setIsInvestModalOpen] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editData, setEditData] = useState<any>({});

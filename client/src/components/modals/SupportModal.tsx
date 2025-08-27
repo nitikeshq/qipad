@@ -30,14 +30,19 @@ export function SupportModal({ open, onOpenChange, project }: SupportModalProps)
 
   const supportMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/payment/support", data);
+      const response = await apiRequest("POST", "/api/payments/support", data);
       return response.json();
     },
-    onSuccess: () => {
-      toast({ title: "Support payment initiated successfully!" });
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      onOpenChange(false);
-      resetForm();
+    onSuccess: (data: any) => {
+      if (data.paymentUrl) {
+        // Redirect to PayUMoney payment gateway
+        window.location.href = data.paymentUrl;
+      } else {
+        toast({ title: "Support payment initiated successfully!" });
+        queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+        onOpenChange(false);
+        resetForm();
+      }
     },
     onError: () => {
       toast({ title: "Failed to process support payment", variant: "destructive" });
@@ -61,18 +66,16 @@ export function SupportModal({ open, onOpenChange, project }: SupportModalProps)
 
     setIsProcessing(true);
 
-    // Simulate PayUMoney integration
-    setTimeout(() => {
-      supportMutation.mutate({
-        projectId: project.id,
-        amount: supportAmount.toString(),
-        platformFee: platformFee.toString(),
-        finalAmount: finalAmount.toString(),
-        phone,
-        message,
-        type: "support"
-      });
-    }, 2000);
+    // Direct PayUMoney integration
+    supportMutation.mutate({
+      projectId: project.id,
+      amount: supportAmount.toString(),
+      platformFee: platformFee.toString(),
+      finalAmount: finalAmount.toString(),
+      phone,
+      message,
+      type: "support"
+    });
   };
 
   if (!project) return null;
