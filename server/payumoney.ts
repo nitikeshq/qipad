@@ -30,17 +30,21 @@ export class PayUMoneyService {
   private baseUrl: string;
 
   constructor() {
-    this.merchantId = process.env.PAYUMONEY_MERCHANT_ID!;
-    this.merchantKey = process.env.PAYUMONEY_MERCHANT_KEY!;
-    this.salt = process.env.PAYUMONEY_SALT!;
+    this.merchantId = process.env.PAYUMONEY_MERCHANT_ID || '';
+    this.merchantKey = process.env.PAYUMONEY_MERCHANT_KEY || '';
+    this.salt = process.env.PAYUMONEY_SALT || '';
     this.baseUrl = 'https://secure.payu.in'; // Live PayUMoney URL
     
     if (!this.merchantId || !this.merchantKey || !this.salt) {
-      throw new Error('PayUMoney credentials not configured');
+      console.warn('PayUMoney credentials not configured - payment functionality will be disabled');
     }
   }
 
   generateHash(data: PayUMoneyPaymentData): string {
+    if (!this.merchantKey || !this.salt) {
+      throw new Error('PayUMoney credentials not configured');
+    }
+    
     // PayUMoney hash format: key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT
     const udf1 = data.userId || '';
     const udf2 = data.paymentType || '';
@@ -54,6 +58,10 @@ export class PayUMoneyService {
   }
 
   verifyHash(callbackData: any): boolean {
+    if (!this.salt || !this.merchantKey) {
+      return false;
+    }
+    
     // PayUMoney response hash format: SALT|status||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key
     const { txnid, amount, firstname, email, productinfo, status, hash, udf1, udf2, udf3, udf4, udf5 } = callbackData;
     
@@ -70,6 +78,9 @@ export class PayUMoneyService {
     method: string;
     fields: Record<string, string>;
   } {
+    if (!this.merchantKey || !this.salt || !this.merchantId) {
+      throw new Error('PayUMoney credentials not configured');
+    }
     // Validate and format amount
     let amount = typeof paymentData.amount === 'string' ? parseFloat(paymentData.amount) : Number(paymentData.amount);
     if (isNaN(amount) || amount <= 0) {
