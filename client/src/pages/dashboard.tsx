@@ -177,9 +177,11 @@ export default function Dashboard() {
                         className="w-12 h-12 rounded-lg object-cover"
                       />
                       <div className="flex-1">
-                        <h4 className="font-medium text-foreground text-sm" data-testid={`text-opportunity-title-${project.id}`}>
-                          {project.title}
-                        </h4>
+                        <Link href={`/innovations/${project.id}`}>
+                          <h4 className="font-medium text-foreground text-sm hover:text-primary cursor-pointer transition-colors" data-testid={`text-opportunity-title-${project.id}`}>
+                            {project.title}
+                          </h4>
+                        </Link>
                         <p className="text-xs text-muted-foreground">{project.industry}</p>
                         <p className="text-xs text-green-600 font-medium mt-1">
                           ₹{parseFloat(project.minimumInvestment).toLocaleString()} - ₹{parseFloat(project.fundingGoal).toLocaleString()}
