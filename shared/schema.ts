@@ -608,7 +608,6 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
   id: true,
   currentFunding: true,
   status: true,
-  isKycComplete: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -650,7 +649,7 @@ export const insertJobSchema = createInsertSchema(jobs).omit({
 
 export const insertJobApplicationSchema = createInsertSchema(jobApplications).omit({
   id: true,
-  createdAt: true,
+  appliedAt: true,
 });
 
 export const insertBiddingProjectSchema = createInsertSchema(biddingProjects).omit({
