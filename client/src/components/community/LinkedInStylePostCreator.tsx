@@ -29,7 +29,7 @@ interface PostCreatorProps {
 export function LinkedInStylePostCreator({ communityId, user, onPostCreated }: PostCreatorProps) {
   const [postContent, setPostContent] = useState("");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<string>("");
+  const [selectedEvent, setSelectedEvent] = useState<string>("none");
   const [isExpanded, setIsExpanded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -100,7 +100,7 @@ export function LinkedInStylePostCreator({ communityId, user, onPostCreated }: P
     const formData = new FormData();
     formData.append("content", postContent);
     
-    if (selectedEvent) {
+    if (selectedEvent && selectedEvent !== "none") {
       formData.append("eventId", selectedEvent);
     }
 
@@ -224,7 +224,7 @@ export function LinkedInStylePostCreator({ communityId, user, onPostCreated }: P
                         </div>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {events.map((event: any) => (
                           <SelectItem key={event.id} value={event.id}>
                             <div className="flex flex-col">
@@ -247,7 +247,7 @@ export function LinkedInStylePostCreator({ communityId, user, onPostCreated }: P
                         setIsExpanded(false);
                         setPostContent("");
                         setSelectedImages([]);
-                        setSelectedEvent("");
+                        setSelectedEvent("none");
                       }}
                       data-testid="button-cancel-post"
                     >
@@ -256,7 +256,7 @@ export function LinkedInStylePostCreator({ communityId, user, onPostCreated }: P
                     <Button
                       size="sm"
                       onClick={handleSubmit}
-                      disabled={createPostMutation.isPending || (!postContent.trim() && selectedImages.length === 0 && !selectedEvent)}
+                      disabled={createPostMutation.isPending || (!postContent.trim() && selectedImages.length === 0 && selectedEvent === "none")}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                       data-testid="button-submit-post"
                     >
