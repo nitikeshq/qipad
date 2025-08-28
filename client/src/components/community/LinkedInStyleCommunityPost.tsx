@@ -119,13 +119,13 @@ export function LinkedInStyleCommunityPost({ post, communityId }: CommunityPostP
             <Avatar className="h-12 w-12">
               <AvatarImage src={post.authorAvatar} />
               <AvatarFallback className="bg-blue-100 text-blue-600">
-                {post.authorName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                {post.authorName ? post.authorName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2">
                 <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">
-                  {post.authorName}
+                  {post.authorName || 'Unknown User'}
                 </h3>
                 <span className="text-xs text-gray-500">•</span>
                 <span className="text-xs text-gray-500">{formatDate(post.createdAt)}</span>
