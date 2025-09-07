@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Investment Successful</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+  
+  <div style="background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0; color: white;">
+    <h1 style="margin: 0; font-size: 28px; font-weight: bold;">🎯 Investment Successful!</h1>
+    <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">You're now part of something amazing</p>
+  </div>
+  
+  <div style="background: #ffffff; padding: 40px; border: 1px solid #e1e5e9; border-top: none; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    
+    <p style="font-size: 18px; margin-bottom: 25px;">Hello {{firstName}}! 🎉</p>
+    
+    <p style="font-size: 16px; margin-bottom: 25px;">
+      Congratulations! Your investment in <strong>{{projectTitle}}</strong> has been successfully processed. You're now officially part of this exciting venture!
+    </p>
+    
+    <div style="background: #f3e8ff; border: 1px solid #d8b4fe; padding: 25px; border-radius: 8px; margin: 25px 0;">
+      <h3 style="margin: 0 0 20px 0; color: #6f42c1; font-size: 20px; text-align: center;">Investment Summary</h3>
+      
+      <div style="background: white; padding: 20px; border-radius: 6px; margin: 15px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+          <span style="font-weight: bold; color: #495057;">Project:</span>
+          <span style="color: #6f42c1; font-weight: bold;">{{projectTitle}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+          <span style="font-weight: bold; color: #495057;">Investment Amount:</span>
+          <span style="font-size: 18px; font-weight: bold; color: #28a745;">₹{{investmentAmount}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+          <span style="font-weight: bold; color: #495057;">Equity Percentage:</span>
+          <span style="font-size: 18px; font-weight: bold; color: #6f42c1;">{{equityPercentage}}%</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+          <span style="font-weight: bold; color: #495057;">Transaction ID:</span>
+          <span style="font-family: monospace; color: #6c757d;">{{transactionId}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0; padding: 8px 0;">
+          <span style="font-weight: bold; color: #495057;">Investment Date:</span>
+          <span style="color: #6c757d;">{{investmentDate}}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="background: #e8f5e8; border-left: 4px solid #28a745; padding: 20px; margin: 25px 0; border-radius: 4px;">
+      <h4 style="margin: 0 0 15px 0; color: #28a745; font-size: 16px;">🔔 What happens next?</h4>
+      <ul style="margin: 0; padding-left: 20px; color: #155724;">
+        <li style="margin-bottom: 8px;">You'll receive regular updates about the project's progress</li>
+        <li style="margin-bottom: 8px;">Connect with the project founder and other investors</li>
+        <li style="margin-bottom: 8px;">Monitor your investment performance in your portfolio</li>
+        <li style="margin-bottom: 8px;">Participate in important project decisions (if applicable)</li>
+      </ul>
+    </div>
+    
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 25px 0;">
+      <h4 style="margin: 0 0 10px 0; color: #856404;">📞 Get Connected</h4>
+      <p style="margin: 0; color: #856404; font-size: 14px;">
+        The project founder's contact information has been shared with you. Check your dashboard to connect and start building the future together!
+      </p>
+    </div>
+    
+    <div style="text-align: center; margin: 35px 0;">
+      <a href="{{projectUrl}}" style="display: inline-block; background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3); margin-right: 10px;">
+        View Project
+      </a>
+      <a href="{{portfolioUrl}}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+        My Portfolio
+      </a>
+    </div>
+    
+    <p style="font-size: 14px; color: #6c757d; margin-top: 30px; text-align: center;">
+      Thank you for investing in innovation! Together, we're building the future of entrepreneurship.
+    </p>
+    
+  </div>
+  
+  <div style="text-align: center; padding: 20px; color: #6c757d; font-size: 12px;">
+    <p style="margin: 0;">© 2025 Qipad. All rights reserved.</p>
+  </div>
+  
+</body>
+</html>

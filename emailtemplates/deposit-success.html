@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deposit Successful</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+  
+  <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0; color: white;">
+    <h1 style="margin: 0; font-size: 28px; font-weight: bold;">💰 Deposit Successful!</h1>
+    <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your wallet has been topped up</p>
+  </div>
+  
+  <div style="background: #ffffff; padding: 40px; border: 1px solid #e1e5e9; border-top: none; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    
+    <p style="font-size: 18px; margin-bottom: 25px;">Hello {{firstName}}! 👋</p>
+    
+    <p style="font-size: 16px; margin-bottom: 25px;">
+      Great news! Your deposit has been successfully processed and your wallet has been credited.
+    </p>
+    
+    <div style="background: #e8f5e8; border: 1px solid #c3e6cb; padding: 25px; border-radius: 8px; margin: 25px 0; text-align: center;">
+      <h3 style="margin: 0 0 15px 0; color: #28a745; font-size: 20px;">Transaction Details</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px 0; border-bottom: 1px solid #d4edda;">
+        <span style="font-weight: bold; color: #155724;">Amount Deposited:</span>
+        <span style="font-size: 18px; font-weight: bold; color: #28a745;">₹{{amount}}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px 0; border-bottom: 1px solid #d4edda;">
+        <span style="font-weight: bold; color: #155724;">Credits Added:</span>
+        <span style="font-size: 18px; font-weight: bold; color: #28a745;">{{credits}} Credits</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px 0; border-bottom: 1px solid #d4edda;">
+        <span style="font-weight: bold; color: #155724;">Transaction ID:</span>
+        <span style="font-family: monospace; color: #6c757d;">{{transactionId}}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px 0;">
+        <span style="font-weight: bold; color: #155724;">New Wallet Balance:</span>
+        <span style="font-size: 18px; font-weight: bold; color: #28a745;">₹{{newBalance}}</span>
+      </div>
+    </div>
+    
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 25px 0;">
+      <h4 style="margin: 0 0 15px 0; color: #856404;">💡 What can you do now?</h4>
+      <ul style="margin: 0; padding-left: 20px; color: #856404;">
+        <li style="margin-bottom: 8px;">🚀 <strong>Create Innovation Projects</strong> (100 credits)</li>
+        <li style="margin-bottom: 8px;">💼 <strong>Post Job Openings</strong> (50 credits)</li>
+        <li style="margin-bottom: 8px;">🎯 <strong>Connect with Investors</strong> (10 credits each)</li>
+        <li style="margin-bottom: 8px;">👥 <strong>Join Communities</strong> (10 credits each)</li>
+        <li style="margin-bottom: 8px;">🎪 <strong>Host Events</strong> (50 credits)</li>
+      </ul>
+    </div>
+    
+    <div style="text-align: center; margin: 35px 0;">
+      <a href="{{walletUrl}}" style="display: inline-block; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); margin-right: 10px;">
+        View Wallet
+      </a>
+      <a href="{{dashboardUrl}}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+        Go to Dashboard
+      </a>
+    </div>
+    
+    <p style="font-size: 14px; color: #6c757d; margin-top: 30px; text-align: center;">
+      Thank you for choosing Qipad! If you have any questions about this transaction, please contact our support team.
+    </p>
+    
+  </div>
+  
+  <div style="text-align: center; padding: 20px; color: #6c757d; font-size: 12px;">
+    <p style="margin: 0;">© 2025 Qipad. All rights reserved.</p>
+  </div>
+  
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Referral Reward Earned</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+  
+  <div style="background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0; color: white;">
+    <h1 style="margin: 0; font-size: 28px; font-weight: bold;">🎁 Referral Reward Earned!</h1>
+    <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your network is growing</p>
+  </div>
+  
+  <div style="background: #ffffff; padding: 40px; border: 1px solid #e1e5e9; border-top: none; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    
+    <p style="font-size: 18px; margin-bottom: 25px;">Hello {{firstName}}! 🎉</p>
+    
+    <p style="font-size: 16px; margin-bottom: 25px;">
+      Fantastic news! <strong>{{referredEmail}}</strong> has successfully joined Qipad using your referral link, and you've earned a referral reward!
+    </p>
+    
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 25px; border-radius: 8px; margin: 25px 0; text-align: center;">
+      <h3 style="margin: 0 0 15px 0; color: #856404; font-size: 20px;">💰 Reward Details</h3>
+      <div style="background: white; padding: 20px; border-radius: 6px; margin: 15px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px 0; border-bottom: 1px solid #e9ecef;">
+          <span style="font-weight: bold; color: #495057;">Referral Reward:</span>
+          <span style="font-size: 20px; font-weight: bold; color: #fd7e14;">₹{{rewardAmount}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px 0; border-bottom: 1px solid #e9ecef;">
+          <span style="font-weight: bold; color: #495057;">Referred User:</span>
+          <span style="color: #6c757d;">{{referredEmail}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px 0; border-bottom: 1px solid #e9ecef;">
+          <span style="font-weight: bold; color: #495057;">Date Earned:</span>
+          <span style="color: #6c757d;">{{rewardDate}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px 0;">
+          <span style="font-weight: bold; color: #495057;">New Wallet Balance:</span>
+          <span style="font-size: 18px; font-weight: bold; color: #28a745;">₹{{newBalance}}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="background: #e8f5e8; border-left: 4px solid #28a745; padding: 20px; margin: 25px 0; border-radius: 4px;">
+      <h4 style="margin: 0 0 15px 0; color: #28a745; font-size: 16px;">🌟 Keep Growing Your Network!</h4>
+      <p style="margin: 0; color: #155724; font-size: 14px;">
+        You earn <strong>₹50</strong> for every friend who joins Qipad through your referral link. The more you share, the more you earn!
+      </p>
+    </div>
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+      <h4 style="margin: 0 0 15px 0; color: #495057;">📊 Your Referral Stats</h4>
+      <div style="display: flex; justify-content: space-around; text-align: center;">
+        <div>
+          <div style="font-size: 24px; font-weight: bold; color: #fd7e14;">{{totalReferrals}}</div>
+          <div style="font-size: 12px; color: #6c757d;">Total Referrals</div>
+        </div>
+        <div>
+          <div style="font-size: 24px; font-weight: bold; color: #28a745;">₹{{totalEarned}}</div>
+          <div style="font-size: 12px; color: #6c757d;">Total Earned</div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="text-align: center; margin: 35px 0;">
+      <a href="{{walletUrl}}" style="display: inline-block; background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(253, 126, 20, 0.3); margin-right: 10px;">
+        View Wallet
+      </a>
+      <a href="{{referralUrl}}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+        Refer More Friends
+      </a>
+    </div>
+    
+    <p style="font-size: 14px; color: #6c757d; margin-top: 30px; text-align: center;">
+      Thank you for helping Qipad grow! Your referrals help more entrepreneurs and investors connect and build amazing things together.
+    </p>
+    
+  </div>
+  
+  <div style="text-align: center; padding: 20px; color: #6c757d; font-size: 12px;">
+    <p style="margin: 0;">© 2025 Qipad. All rights reserved.</p>
+  </div>
+  
+</body>
+</html>
