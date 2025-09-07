@@ -140,12 +140,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser(userData);
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
+      // Give 10 credits joining bonus
+      try {
+        await storage.addCredits(
+          user.id,
+          10,
+          'Joining bonus - Welcome to Qipad!',
+          'joining_bonus',
+          user.id
+        );
+      } catch (creditError) {
+        console.error('Failed to add joining bonus:', creditError);
+        // Don't fail registration if credit bonus fails
+      }
+
       // Send welcome email
       try {
         await emailService.sendWelcomeEmail({
           toEmail: user.email,
           firstName: user.firstName,
-          welcomeBonus: '50',
+          welcomeBonus: '10',
           dashboardUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`
         });
       } catch (emailError) {
@@ -200,12 +214,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userType,
           });
 
+          // Give 10 credits joining bonus
+          try {
+            await storage.addCredits(
+              user.id,
+              10,
+              'Joining bonus - Welcome to Qipad!',
+              'joining_bonus',
+              user.id
+            );
+          } catch (creditError) {
+            console.error('Failed to add joining bonus:', creditError);
+            // Don't fail registration if credit bonus fails
+          }
+
           // Send welcome email for new Google users
           try {
             await emailService.sendWelcomeEmail({
               toEmail: user.email,
               firstName: user.firstName,
-              welcomeBonus: '50',
+              welcomeBonus: '10',
               dashboardUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`
             });
           } catch (emailError) {
@@ -1203,6 +1231,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const userDocs = await storage.getDocumentsByUser(userId);
         for (const doc of userDocs) {
           await storage.updateDocument(doc.id, { status: 'approved' });
+        }
+        
+        // Give 20 credits verification bonus
+        try {
+          await storage.addCredits(
+            userId,
+            20,
+            'Account verification bonus - Thank you for completing KYC!',
+            'verification_bonus',
+            userId
+          );
+          console.log(`Added 20 verification bonus credits to user ${userId}`);
+        } catch (creditError) {
+          console.error('Failed to add verification bonus:', creditError);
+          // Don't fail the verification if credit bonus fails
         }
       }
       
