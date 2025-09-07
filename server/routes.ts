@@ -35,7 +35,7 @@ async function calculateMonthlyProfits(payments: any[], subscriptions: any[]) {
   return monthlyData;
 }
 import { storage } from "./storage";
-import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema, insertCompanySchema, insertPaymentSchema, insertSubscriptionSchema, insertCompanyServiceSchema, insertCompanyProductSchema, insertServiceInquirySchema } from "@shared/schema";
+import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema, insertCompanySchema, insertPaymentSchema, insertSubscriptionSchema, insertCompanyServiceSchema, insertCompanyProductSchema, insertServiceInquirySchema, insertWalletSchema, insertWalletTransactionSchema, insertReferralSchema } from "@shared/schema";
 import { payumoneyService } from "./payumoney";
 import { PlatformSettingsService } from "./platformSettingsService";
 import { z } from "zod";
@@ -2985,6 +2985,344 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error creating service purchase:', error);
       res.status(500).json({ message: 'Failed to create service purchase' });
+    }
+  });
+
+  // ========================================
+  // WALLET SYSTEM ROUTES
+  // ========================================
+
+  // Get user's wallet balance and details
+  app.get("/api/wallet", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      
+      // Get or create wallet
+      let wallet = await storage.getWalletByUserId(userId);
+      if (!wallet) {
+        wallet = await storage.createWallet({ userId, balance: "0" });
+      }
+
+      res.json({
+        balance: parseFloat(wallet.balance),
+        totalEarned: parseFloat(wallet.totalEarned || "0"),
+        totalSpent: parseFloat(wallet.totalSpent || "0"),
+      });
+    } catch (error) {
+      console.error('Error fetching wallet:', error);
+      res.status(500).json({ message: 'Failed to fetch wallet details' });
+    }
+  });
+
+  // Get wallet transaction history
+  app.get("/api/wallet/transactions", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      const limit = parseInt(req.query.limit as string) || 50;
+      
+      const transactions = await storage.getWalletTransactions(userId, limit);
+      
+      res.json(transactions.map(transaction => ({
+        ...transaction,
+        amount: parseFloat(transaction.amount),
+        balanceBefore: parseFloat(transaction.balanceBefore),
+        balanceAfter: parseFloat(transaction.balanceAfter),
+      })));
+    } catch (error) {
+      console.error('Error fetching wallet transactions:', error);
+      res.status(500).json({ message: 'Failed to fetch transaction history' });
+    }
+  });
+
+  // Initiate wallet deposit via PayUMoney
+  app.post("/api/wallet/deposit", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      const { amount } = req.body;
+
+      // Validate amount
+      const depositAmount = parseFloat(amount);
+      if (isNaN(depositAmount) || depositAmount < 10) {
+        return res.status(400).json({
+          success: false,
+          error: 'Minimum deposit amount is ₹10'
+        });
+      }
+
+      // Calculate fees (2% payment gateway + 1% platform = 3% total)
+      const paymentGatewayFee = depositAmount * 0.02;
+      const platformFee = depositAmount * 0.01;
+      const totalFees = paymentGatewayFee + platformFee;
+      const netCredits = depositAmount - totalFees;
+
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+
+      // Create payment record
+      const payment = await storage.createPayment({
+        userId,
+        amount: depositAmount.toFixed(2),
+        paymentType: 'wallet_deposit',
+        description: `Wallet deposit of ₹${depositAmount} (Net credits: ₹${netCredits.toFixed(2)})`,
+        metadata: JSON.stringify({ netCredits: netCredits.toFixed(2), totalFees: totalFees.toFixed(2) })
+      });
+
+      // Generate unique transaction ID
+      const txnId = `WALLET_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      
+      // PayUMoney payment data
+      const paymentData = {
+        txnId,
+        amount: depositAmount,
+        productInfo: `Qipad Wallet Deposit - ₹${depositAmount}`,
+        firstName: user.firstName,
+        email: user.email,
+        phone: user.phone || '',
+        successUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/api/wallet/callback/success`,
+        failureUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/api/wallet/callback/failure`,
+        userId,
+        paymentType: 'wallet_deposit',
+        metadata: { paymentId: payment.id, netCredits: netCredits.toFixed(2) }
+      };
+
+      const paymentResponse = await payumoneyService.createPayment(paymentData);
+      
+      if (paymentResponse.success) {
+        res.json({
+          success: true,
+          paymentUrl: paymentResponse.paymentUrl,
+          txnId: paymentResponse.txnId,
+          depositAmount,
+          paymentGatewayFee: paymentGatewayFee.toFixed(2),
+          platformFee: platformFee.toFixed(2),
+          totalFees: totalFees.toFixed(2),
+          netCredits: netCredits.toFixed(2),
+          formData: paymentResponse.formData
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: paymentResponse.error,
+        });
+      }
+    } catch (error) {
+      console.error('Error initiating wallet deposit:', error);
+      res.status(500).json({ message: 'Failed to initiate deposit' });
+    }
+  });
+
+  // Handle PayUMoney success callback for wallet deposits
+  app.post("/api/wallet/callback/success", async (req: any, res: any) => {
+    try {
+      const callbackData = req.body;
+      console.log('Wallet deposit callback received:', callbackData);
+
+      // Process the callback
+      const callbackResult = await payumoneyService.processCallback(callbackData);
+      
+      if (callbackResult.success && callbackResult.status === 'success') {
+        const { txnId, amount } = callbackResult;
+        
+        // Extract user ID from transaction metadata
+        const userId = callbackData.udf1;
+        const paymentMetadata = JSON.parse(callbackData.udf3 || '{}');
+        const netCredits = parseFloat(paymentMetadata.netCredits || amount);
+
+        if (userId) {
+          // Add credits to user's wallet
+          const creditResult = await storage.addCredits(
+            userId,
+            netCredits,
+            `Wallet deposit via PayUMoney (TxnID: ${txnId})`,
+            'deposit',
+            txnId
+          );
+
+          if (creditResult.success) {
+            console.log(`Successfully added ${netCredits} credits to user ${userId}`);
+            res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?success=true&amount=${netCredits}`);
+          } else {
+            console.error('Failed to add credits:', creditResult.error);
+            res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=credit_failed`);
+          }
+        } else {
+          console.error('User ID not found in callback data');
+          res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=invalid_callback`);
+        }
+      } else {
+        console.error('Payment verification failed:', callbackResult);
+        res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=payment_failed`);
+      }
+    } catch (error) {
+      console.error('Error processing wallet deposit callback:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=callback_error`);
+    }
+  });
+
+  // Handle PayUMoney failure callback for wallet deposits
+  app.post("/api/wallet/callback/failure", async (req: any, res: any) => {
+    try {
+      const callbackData = req.body;
+      console.log('Wallet deposit failed:', callbackData);
+      
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=payment_cancelled`);
+    } catch (error) {
+      console.error('Error processing wallet deposit failure:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=callback_error`);
+    }
+  });
+
+  // ========================================
+  // REFERRAL SYSTEM ROUTES
+  // ========================================
+
+  // Get user's referrals
+  app.get("/api/referrals", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      const referrals = await storage.getReferralsByUser(userId);
+      
+      res.json(referrals.map(referral => ({
+        ...referral,
+        rewardAmount: parseFloat(referral.rewardAmount),
+      })));
+    } catch (error) {
+      console.error('Error fetching referrals:', error);
+      res.status(500).json({ message: 'Failed to fetch referrals' });
+    }
+  });
+
+  // Create a new referral code
+  app.post("/api/referrals", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      const { referredEmail } = req.body;
+
+      if (!referredEmail || !referredEmail.includes('@')) {
+        return res.status(400).json({ error: 'Valid email address is required' });
+      }
+
+      // Check if email is already referred by this user
+      const existingReferrals = await storage.getReferralsByUser(userId);
+      const alreadyReferred = existingReferrals.some(ref => ref.referredEmail === referredEmail);
+      
+      if (alreadyReferred) {
+        return res.status(400).json({ error: 'This email has already been referred by you' });
+      }
+
+      // Generate unique referral code
+      const referralCode = `REF_${userId.substring(0, 8)}_${Date.now().toString(36)}`;
+
+      const referral = await storage.createReferral({
+        referrerId: userId,
+        referredEmail,
+        referralCode,
+        status: 'pending',
+        rewardAmount: '50' // Default reward amount
+      });
+
+      res.json({
+        ...referral,
+        rewardAmount: parseFloat(referral.rewardAmount),
+      });
+    } catch (error) {
+      console.error('Error creating referral:', error);
+      res.status(500).json({ message: 'Failed to create referral' });
+    }
+  });
+
+  // ========================================
+  // CREDIT MANAGEMENT ROUTES
+  // ========================================
+
+  // Check if user has sufficient credits for an action
+  app.post("/api/credits/check", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      const { action, amount } = req.body;
+
+      // Get platform settings for credit costs
+      const creditCosts = {
+        'innovation': 100,
+        'job': 50,
+        'investor_connection': 10,
+        'community_create': 100,
+        'community_join': 10,
+        'event': 50
+      };
+
+      const requiredCredits = amount || creditCosts[action as keyof typeof creditCosts] || 0;
+      
+      // Get wallet balance
+      let wallet = await storage.getWalletByUserId(userId);
+      if (!wallet) {
+        wallet = await storage.createWallet({ userId, balance: "0" });
+      }
+
+      const currentBalance = parseFloat(wallet.balance);
+      const hasEnoughCredits = currentBalance >= requiredCredits;
+
+      res.json({
+        hasEnoughCredits,
+        currentBalance,
+        requiredCredits,
+        shortfall: hasEnoughCredits ? 0 : requiredCredits - currentBalance
+      });
+    } catch (error) {
+      console.error('Error checking credits:', error);
+      res.status(500).json({ message: 'Failed to check credits' });
+    }
+  });
+
+  // Deduct credits for an action
+  app.post("/api/credits/deduct", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      const { action, amount, description, referenceType, referenceId } = req.body;
+
+      // Get platform settings for credit costs
+      const creditCosts = {
+        'innovation': 100,
+        'job': 50,
+        'investor_connection': 10,
+        'community_create': 100,
+        'community_join': 10,
+        'event': 50
+      };
+
+      const creditsToDeduct = amount || creditCosts[action as keyof typeof creditCosts] || 0;
+      
+      if (creditsToDeduct <= 0) {
+        return res.status(400).json({ error: 'Invalid credit amount' });
+      }
+
+      const result = await storage.deductCredits(
+        userId,
+        creditsToDeduct,
+        description || `Credits deducted for ${action}`,
+        referenceType || action,
+        referenceId
+      );
+
+      if (result.success) {
+        res.json({
+          success: true,
+          newBalance: result.newBalance,
+          deductedAmount: creditsToDeduct
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error,
+          currentBalance: result.newBalance
+        });
+      }
+    } catch (error) {
+      console.error('Error deducting credits:', error);
+      res.status(500).json({ message: 'Failed to deduct credits' });
     }
   });
 
