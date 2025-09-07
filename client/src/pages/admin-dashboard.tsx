@@ -794,54 +794,6 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Analytics Tab */}
-          <TabsContent value="analytics">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card data-testid="card-user-analytics">
-                <CardHeader>
-                  <CardTitle>User Analytics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span>Business Owners</span>
-                      <span className="font-bold">{users.filter((u: any) => u.userType === 'business_owner').length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Investors</span>
-                      <span className="font-bold">{users.filter((u: any) => u.userType === 'investor').length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>KYC Verified</span>
-                      <span className="font-bold">{users.filter((u: any) => u.kycStatus === 'verified').length}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card data-testid="card-financial-analytics">
-                <CardHeader>
-                  <CardTitle>Financial Analytics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span>Total Funding Raised</span>
-                      <span className="font-bold text-green-600">₹{projects.reduce((sum: number, p: any) => sum + (p.currentFunding || 0), 0).toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Platform Revenue (2%)</span>
-                      <span className="font-bold text-purple-600">₹{Math.floor(investments.length * 1000).toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Success Rate</span>
-                      <span className="font-bold text-blue-600">87%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
 
           {/* Tenders Management Tab */}
           <TabsContent value="tenders">
@@ -1649,9 +1601,7 @@ export default function AdminDashboard() {
         </Card>
       </TabsContent>
     </Tabs>
-  </div>
-
-      {/* Create/Edit Media Content Modal - Temporarily removed for debugging */}
+      </div>
     </div>
   );
 }
