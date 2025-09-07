@@ -342,10 +342,55 @@ export function WalletPage() {
                       Deposit via PayUMoney
                     </Button>
 
-                    <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
-                      <strong>Credit Usage:</strong> Innovation (100 credits), Jobs (50 credits), 
-                      Investor Connections (10 credits), Communities (100 credits), 
-                      Community Joining (10 credits), Events (50 credits)
+                    <div className="text-sm text-muted-foreground bg-muted p-4 rounded-lg">
+                      <h4 className="font-semibold text-foreground mb-3">💰 Platform Credit Usage Guide</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center p-2 bg-background rounded">
+                          <span className="flex items-center gap-2">
+                            🚀 <strong>Create Innovation Project</strong>
+                            <span className="text-xs text-muted-foreground">(Most popular)</span>
+                          </span>
+                          <span className="font-bold text-primary">100 credits</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-background rounded">
+                          <span className="flex items-center gap-2">
+                            💼 <strong>Post Job Opening</strong>
+                            <span className="text-xs text-muted-foreground">(30-day listing)</span>
+                          </span>
+                          <span className="font-bold text-blue-600">50 credits</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-background rounded">
+                          <span className="flex items-center gap-2">
+                            🎯 <strong>Connect with Investors</strong>
+                            <span className="text-xs text-muted-foreground">(Per connection)</span>
+                          </span>
+                          <span className="font-bold text-green-600">10 credits</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-background rounded">
+                          <span className="flex items-center gap-2">
+                            👥 <strong>Create Community</strong>
+                            <span className="text-xs text-muted-foreground">(Permanent)</span>
+                          </span>
+                          <span className="font-bold text-purple-600">100 credits</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-background rounded">
+                          <span className="flex items-center gap-2">
+                            🤝 <strong>Join Premium Community</strong>
+                            <span className="text-xs text-muted-foreground">(Access fee)</span>
+                          </span>
+                          <span className="font-bold text-orange-600">10 credits</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-background rounded">
+                          <span className="flex items-center gap-2">
+                            🎪 <strong>Host Event/Workshop</strong>
+                            <span className="text-xs text-muted-foreground">(60-day promotion)</span>
+                          </span>
+                          <span className="font-bold text-pink-600">50 credits</span>
+                        </div>
+                      </div>
+                      <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-blue-800 dark:text-blue-200 text-xs">
+                        💡 <strong>Tip:</strong> Credits are deducted only when your submission is approved and goes live on the platform.
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
