@@ -140,6 +140,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser(userData);
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
+      // Send welcome email
+      try {
+        await emailService.sendWelcomeEmail({
+          toEmail: user.email,
+          firstName: user.firstName,
+          welcomeBonus: '50',
+          dashboardUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`
+        });
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't fail registration if email fails
+      }
+
       res.json({ user: { ...user, passwordHash: undefined }, token });
     } catch (error: any) {
       res.status(400).json({ message: "Invalid user data", error: error.message });
@@ -186,6 +199,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName,
             userType,
           });
+
+          // Send welcome email for new Google users
+          try {
+            await emailService.sendWelcomeEmail({
+              toEmail: user.email,
+              firstName: user.firstName,
+              welcomeBonus: '50',
+              dashboardUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`
+            });
+          } catch (emailError) {
+            console.error('Failed to send welcome email:', emailError);
+            // Don't fail registration if email fails
+          }
         }
       }
 
@@ -2414,7 +2440,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
             platformFeePaid: true
           };
           
-          await storage.createInvestment(investmentData);
+          const investment = await storage.createInvestment(investmentData);
+          
+          // Send investment success email
+          try {
+            const [user, project] = await Promise.all([
+              storage.getUser(req.body.udf1),
+              storage.getProject(projectId)
+            ]);
+            
+            if (user && project) {
+              await emailService.sendInvestmentSuccessEmail({
+                toEmail: user.email,
+                firstName: user.firstName,
+                projectTitle: project.title,
+                investmentAmount: callbackResult.amount.toString(),
+                equityPercentage: expectedStakes.toString(),
+                transactionId: callbackResult.txnId,
+                investmentDate: new Date().toLocaleDateString(),
+                projectUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/projects/${projectId}`,
+                portfolioUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/portfolio`
+              });
+            }
+          } catch (emailError) {
+            console.error('Failed to send investment success email:', emailError);
+            // Don't fail the investment if email fails
+          }
         } else if (req.body.udf2 === 'event') {
           // Handle event registration payment
           const { eventId } = metadata;
@@ -3144,6 +3195,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           if (creditResult.success) {
             console.log(`Successfully added ${netCredits} credits to user ${userId}`);
+            
+            // Send deposit success email
+            try {
+              const user = await storage.getUser(userId);
+              if (user) {
+                await emailService.sendDepositSuccessEmail({
+                  toEmail: user.email,
+                  firstName: user.firstName,
+                  amount: amount.toString(),
+                  credits: netCredits.toString(),
+                  transactionId: txnId,
+                  newBalance: creditResult.newBalance?.toString() || '0',
+                  walletUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/wallet`,
+                  dashboardUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`
+                });
+              }
+            } catch (emailError) {
+              console.error('Failed to send deposit success email:', emailError);
+              // Don't fail the deposit if email fails
+            }
+            
             res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?success=true&amount=${netCredits}`);
           } else {
             console.error('Failed to add credits:', creditResult.error);
