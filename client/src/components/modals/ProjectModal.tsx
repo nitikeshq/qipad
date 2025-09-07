@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Shield, Upload } from "lucide-react";
+import { Shield, Upload, AlertCircle, Wallet } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link } from "wouter";
 
 interface ProjectModalProps {
   open: boolean;
@@ -33,6 +35,16 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Check wallet balance and credit requirements
+  const { data: creditCheck, isLoading: creditCheckLoading } = useQuery({
+    queryKey: ['/api/credits/check', { action: 'innovation', amount: 100 }],
+    queryFn: async () => {
+      const response = await apiRequest('POST', '/api/credits/check', { action: 'innovation', amount: 100 });
+      return response.json();
+    },
+    enabled: open
+  });
 
   const createProjectMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -59,14 +71,54 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    createProjectMutation.mutate({
-      ...formData,
-      fundingGoal: formData.fundingGoal.toString(),
-      minimumInvestment: formData.minimumInvestment.toString(),
-      campaignDuration: parseInt(formData.campaignDuration)
-    });
+    
+    // Check if user has enough credits
+    if (!creditCheck?.hasEnoughCredits) {
+      toast({
+        title: "Insufficient Credits",
+        description: `You need 100 credits to create an innovation. Your current balance: ${creditCheck?.currentBalance || 0} credits`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Deduct credits first
+      const deductResponse = await apiRequest('POST', '/api/credits/deduct', {
+        action: 'innovation',
+        amount: 100,
+        description: 'Innovation creation',
+        referenceType: 'innovation_creation'
+      });
+
+      const deductResult = await deductResponse.json();
+      
+      if (!deductResult.success) {
+        toast({
+          title: "Credit Deduction Failed",
+          description: deductResult.error || "Unable to deduct credits",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Proceed with project creation
+      createProjectMutation.mutate({
+        ...formData,
+        fundingGoal: formData.fundingGoal.toString(),
+        minimumInvestment: formData.minimumInvestment.toString(),
+        campaignDuration: parseInt(formData.campaignDuration)
+      });
+    } catch (error) {
+      console.error('Credit deduction error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process credit payment",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFileChange = (documentType: string, file: File | null) => {
@@ -208,6 +260,33 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
               ))}
             </div>
           </div>
+
+          {/* Credit Information */}
+          {!creditCheckLoading && (
+            <div className="bg-muted p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Wallet className="h-4 w-4" />
+                <span className="font-medium">Credit Cost</span>
+              </div>
+              <div className="text-sm text-muted-foreground mb-3">
+                Creating an innovation costs <strong>100 credits</strong>. 
+                Your current balance: <strong>{creditCheck?.currentBalance || 0} credits</strong>
+              </div>
+              {!creditCheck?.hasEnoughCredits && (
+                <Alert variant="destructive" data-testid="alert-insufficient-credits">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Insufficient credits! You need {creditCheck?.shortfall || 100} more credits. 
+                    <Link href="/wallet">
+                      <Button variant="link" className="p-0 h-auto text-destructive-foreground underline ml-1">
+                        Top up your wallet
+                      </Button>
+                    </Link>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} data-testid="button-cancel-project">
