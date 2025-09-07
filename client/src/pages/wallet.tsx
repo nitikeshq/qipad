@@ -47,6 +47,8 @@ interface Referral {
   id: string;
   referredEmail: string;
   referralCode: string;
+  referralId: string;
+  referralUrl: string;
   status: string;
   rewardAmount: number;
   createdAt: string;
@@ -56,6 +58,7 @@ export function WalletPage() {
   const [depositAmount, setDepositAmount] = useState("");
   const [referredEmail, setReferredEmail] = useState("");
   const [copiedCode, setCopiedCode] = useState("");
+  const [copiedUrl, setCopiedUrl] = useState("");
   const { toast } = useToast();
 
   const { data: wallet, isLoading: walletLoading, refetch: refetchWallet } = useQuery<WalletData>({
@@ -180,6 +183,16 @@ export function WalletPage() {
     toast({
       title: "Code Copied",
       description: "Referral code copied to clipboard",
+    });
+  };
+
+  const copyReferralUrl = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+    setTimeout(() => setCopiedUrl(""), 2000);
+    toast({
+      title: "URL Copied",
+      description: "Referral URL copied to clipboard",
     });
   };
 
@@ -491,36 +504,65 @@ export function WalletPage() {
                           No referrals yet. Start referring friends to earn credits!
                         </div>
                       ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           <h4 className="font-medium">Your Referrals</h4>
                           {referrals.map((referral) => (
                             <div 
                               key={referral.id} 
-                              className="flex items-center justify-between p-3 border rounded-lg"
+                              className="p-4 border rounded-lg space-y-3"
                               data-testid={`referral-${referral.id}`}
                             >
-                              <div>
-                                <div className="font-medium">{referral.referredEmail}</div>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="font-medium">{referral.referredEmail}</div>
+                                  <Badge variant={referral.status === 'completed' ? 'default' : 'secondary'} className="mt-1">
+                                    {referral.status}
+                                  </Badge>
+                                </div>
                                 <div className="text-sm text-muted-foreground">
-                                  Code: {referral.referralCode}
+                                  ₹{referral.rewardAmount} reward
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Badge variant={referral.status === 'completed' ? 'default' : 'secondary'}>
-                                  {referral.status}
-                                </Badge>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => copyReferralCode(referral.referralCode)}
-                                  data-testid={`button-copy-${referral.id}`}
-                                >
-                                  {copiedCode === referral.referralCode ? (
-                                    <Check className="h-4 w-4" />
-                                  ) : (
-                                    <Copy className="h-4 w-4" />
-                                  )}
-                                </Button>
+                              
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+                                  <div>
+                                    <span className="font-medium">Referral ID:</span> <code className="ml-1">{referral.referralId}</code>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => copyReferralCode(referral.referralId)}
+                                    data-testid={`button-copy-id-${referral.id}`}
+                                  >
+                                    {copiedCode === referral.referralId ? (
+                                      <Check className="h-4 w-4" />
+                                    ) : (
+                                      <Copy className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </div>
+                                
+                                <div className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+                                  <div className="flex-1 min-w-0">
+                                    <span className="font-medium">Referral URL:</span>
+                                    <div className="text-xs text-muted-foreground truncate mt-1">
+                                      {referral.referralUrl}
+                                    </div>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => copyReferralUrl(referral.referralUrl)}
+                                    data-testid={`button-copy-url-${referral.id}`}
+                                  >
+                                    {copiedUrl === referral.referralUrl ? (
+                                      <Check className="h-4 w-4" />
+                                    ) : (
+                                      <Copy className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           ))}

@@ -3188,6 +3188,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(referrals.map(referral => ({
         ...referral,
         rewardAmount: parseFloat(referral.rewardAmount),
+        referralId: referral.referralCode, // The code is actually the ID now
+        referralUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${referral.referralCode}`
       })));
     } catch (error) {
       console.error('Error fetching referrals:', error);
@@ -3213,13 +3215,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'This email has already been referred by you' });
       }
 
-      // Generate unique referral code
+      // Generate unique referral ID and code
+      const referralId = `QIP${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       const referralCode = `REF_${userId.substring(0, 8)}_${Date.now().toString(36)}`;
+      const referralUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${referralId}`;
 
       const referral = await storage.createReferral({
         referrerId: userId,
         referredEmail,
-        referralCode,
+        referralCode: referralId, // Using the short ID as the main code
         status: 'pending',
         rewardAmount: '50' // Default reward amount
       });
@@ -3227,6 +3231,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         ...referral,
         rewardAmount: parseFloat(referral.rewardAmount),
+        referralId: referralId,
+        referralUrl: referralUrl
       });
     } catch (error) {
       console.error('Error creating referral:', error);

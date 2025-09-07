@@ -315,7 +315,7 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
                   <AlertDescription>
                     Insufficient credits! You need {creditCheck?.shortfall || 50} more credits. 
                     <Link href="/wallet">
-                      <Button variant="link" className="p-0 h-auto text-destructive-foreground underline ml-1">
+                      <Button variant="outline" size="sm" className="ml-2 bg-white dark:bg-gray-900 text-red-700 dark:text-red-300 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20">
                         Top up your wallet
                       </Button>
                     </Link>
