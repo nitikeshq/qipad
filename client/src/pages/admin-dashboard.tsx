@@ -1649,7 +1649,7 @@ export default function AdminDashboard() {
         </Card>
       </TabsContent>
     </Tabs>
-      </div>
+  </div>
 
       {/* Create/Edit Media Content Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
