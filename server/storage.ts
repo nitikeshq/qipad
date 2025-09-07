@@ -3,7 +3,7 @@ import {
   communityPosts, postLikes, postComments, jobs, jobApplications, savedJobs, connections, biddingProjects, projectBids,
   companyFormations, tenders, tenderEligibility, companies, subscriptions, payments, userInterests,
   events, eventParticipants, eventTickets, companyServices, companyProducts, serviceInquiries, servicePurchases,
-  notifications,
+  mediaContent, notifications,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
   type Community, type InsertCommunity, type CommunityMember, type InsertCommunityMember,
@@ -185,6 +185,13 @@ export interface IStorage {
   createServicePurchase(purchase: InsertServicePurchase): Promise<ServicePurchase>;
   getServicePurchases(companyId: string): Promise<ServicePurchase[]>;
   getUserServicePurchases(userId: string): Promise<ServicePurchase[]>;
+
+  // Media Content methods
+  getAllMediaContent(): Promise<any[]>;
+  getMediaContent(id: string): Promise<any | undefined>;
+  createMediaContent(mediaContent: any): Promise<any>;
+  updateMediaContent(id: string, updates: any): Promise<any>;
+  deleteMediaContent(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -932,8 +939,44 @@ export class DatabaseStorage implements IStorage {
 
   // Media Content methods
   async getAllMediaContent(): Promise<any[]> {
-    // Return empty for now - will be populated by admin
-    return [];
+    const result = await db
+      .select()
+      .from(mediaContent)
+      .where(eq(mediaContent.isActive, true))
+      .orderBy(desc(mediaContent.createdAt));
+    return result;
+  }
+
+  async getMediaContent(id: string): Promise<any | undefined> {
+    const [result] = await db
+      .select()
+      .from(mediaContent)
+      .where(eq(mediaContent.id, id));
+    return result || undefined;
+  }
+
+  async createMediaContent(insertMediaContent: any): Promise<any> {
+    const [result] = await db
+      .insert(mediaContent)
+      .values(insertMediaContent)
+      .returning();
+    return result;
+  }
+
+  async updateMediaContent(id: string, updates: any): Promise<any> {
+    const [result] = await db
+      .update(mediaContent)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(mediaContent.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteMediaContent(id: string): Promise<void> {
+    await db
+      .update(mediaContent)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(mediaContent.id, id));
   }
 
   async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {
