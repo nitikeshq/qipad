@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, X } from "lucide-react";
+import { Plus, X, AlertCircle, Wallet } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link } from "wouter";
 
 interface JobModalProps {
   open: boolean;
@@ -31,6 +33,16 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Check wallet balance and credit requirements
+  const { data: creditCheck, isLoading: creditCheckLoading } = useQuery({
+    queryKey: ['/api/credits/check', { action: 'job', amount: 50 }],
+    queryFn: async () => {
+      const response = await apiRequest('POST', '/api/credits/check', { action: 'job', amount: 50 });
+      return response.json();
+    },
+    enabled: open
+  });
 
   const createJobMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -65,23 +77,62 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
     setNewSkill('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    createJobMutation.mutate({
-      title: formData.title,
-      description: formData.description,
-      company: formData.company,
-      location: formData.location,
-      experienceLevel: formData.experienceLevel || 'entry',
-      salaryMin: formData.salaryMin ? parseFloat(formData.salaryMin) : 0,
-      salaryMax: formData.salaryMax ? parseFloat(formData.salaryMax) : 0,
-      jobType: formData.jobType,
-      requiredSkills: skills,
-      requirements: skills.join(', '),
-      benefits: '',
-      applicationDeadline: null
-    });
+    // Check if user has enough credits
+    if (!creditCheck?.hasEnoughCredits) {
+      toast({
+        title: "Insufficient Credits",
+        description: `You need 50 credits to post a job. Your current balance: ${creditCheck?.currentBalance || 0} credits`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Deduct credits first
+      const deductResponse = await apiRequest('POST', '/api/credits/deduct', {
+        action: 'job',
+        amount: 50,
+        description: 'Job posting',
+        referenceType: 'job_creation'
+      });
+
+      const deductResult = await deductResponse.json();
+      
+      if (!deductResult.success) {
+        toast({
+          title: "Credit Deduction Failed",
+          description: deductResult.error || "Unable to deduct credits",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Proceed with job creation
+      createJobMutation.mutate({
+        title: formData.title,
+        description: formData.description,
+        company: formData.company,
+        location: formData.location,
+        experienceLevel: formData.experienceLevel || 'entry',
+        salaryMin: formData.salaryMin ? parseFloat(formData.salaryMin) : 0,
+        salaryMax: formData.salaryMax ? parseFloat(formData.salaryMax) : 0,
+        jobType: formData.jobType,
+        requiredSkills: skills,
+        requirements: skills.join(', '),
+        benefits: '',
+        applicationDeadline: null
+      });
+    } catch (error) {
+      console.error('Credit deduction error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process credit payment",
+        variant: "destructive",
+      });
+    }
   };
 
   const addSkill = () => {
@@ -246,6 +297,33 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
               ))}
             </div>
           </div>
+
+          {/* Credit Information */}
+          {!creditCheckLoading && (
+            <div className="bg-muted p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Wallet className="h-4 w-4" />
+                <span className="font-medium">Credit Cost</span>
+              </div>
+              <div className="text-sm text-muted-foreground mb-3">
+                Posting a job costs <strong>50 credits</strong>. 
+                Your current balance: <strong>{creditCheck?.currentBalance || 0} credits</strong>
+              </div>
+              {!creditCheck?.hasEnoughCredits && (
+                <Alert variant="destructive" data-testid="alert-insufficient-credits-job">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Insufficient credits! You need {creditCheck?.shortfall || 50} more credits. 
+                    <Link href="/wallet">
+                      <Button variant="outline" size="sm" className="ml-2 bg-white dark:bg-gray-900 text-red-700 dark:text-red-300 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20">
+                        Top up your wallet
+                      </Button>
+                    </Link>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} data-testid="button-cancel-job">

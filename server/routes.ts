@@ -35,8 +35,10 @@ async function calculateMonthlyProfits(payments: any[], subscriptions: any[]) {
   return monthlyData;
 }
 import { storage } from "./storage";
-import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema, insertCompanySchema, insertPaymentSchema, insertSubscriptionSchema, insertCompanyServiceSchema, insertCompanyProductSchema, insertServiceInquirySchema } from "@shared/schema";
+import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema, insertCompanySchema, insertPaymentSchema, insertSubscriptionSchema, insertCompanyServiceSchema, insertCompanyProductSchema, insertServiceInquirySchema, insertWalletSchema, insertWalletTransactionSchema, insertReferralSchema } from "@shared/schema";
 import { payumoneyService } from "./payumoney";
+import { PlatformSettingsService } from "./platformSettingsService";
+import { emailService } from "./emailService";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -138,6 +140,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser(userData);
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
+      // Give 10 credits joining bonus
+      try {
+        await storage.addCredits(
+          user.id,
+          10,
+          'Joining bonus - Welcome to Qipad!',
+          'joining_bonus',
+          user.id
+        );
+      } catch (creditError) {
+        console.error('Failed to add joining bonus:', creditError);
+        // Don't fail registration if credit bonus fails
+      }
+
+      // Send welcome email
+      try {
+        await emailService.sendWelcomeEmail({
+          toEmail: user.email,
+          firstName: user.firstName,
+          welcomeBonus: '10',
+          dashboardUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`
+        });
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't fail registration if email fails
+      }
+
       res.json({ user: { ...user, passwordHash: undefined }, token });
     } catch (error: any) {
       res.status(400).json({ message: "Invalid user data", error: error.message });
@@ -184,6 +213,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName,
             userType,
           });
+
+          // Give 10 credits joining bonus
+          try {
+            await storage.addCredits(
+              user.id,
+              10,
+              'Joining bonus - Welcome to Qipad!',
+              'joining_bonus',
+              user.id
+            );
+          } catch (creditError) {
+            console.error('Failed to add joining bonus:', creditError);
+            // Don't fail registration if credit bonus fails
+          }
+
+          // Send welcome email for new Google users
+          try {
+            await emailService.sendWelcomeEmail({
+              toEmail: user.email,
+              firstName: user.firstName,
+              welcomeBonus: '10',
+              dashboardUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`
+            });
+          } catch (emailError) {
+            console.error('Failed to send welcome email:', emailError);
+            // Don't fail registration if email fails
+          }
         }
       }
 
@@ -1176,6 +1232,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (const doc of userDocs) {
           await storage.updateDocument(doc.id, { status: 'approved' });
         }
+        
+        // Give 20 credits verification bonus
+        try {
+          await storage.addCredits(
+            userId,
+            20,
+            'Account verification bonus - Thank you for completing KYC!',
+            'verification_bonus',
+            userId
+          );
+          console.log(`Added 20 verification bonus credits to user ${userId}`);
+        } catch (creditError) {
+          console.error('Failed to add verification bonus:', creditError);
+          // Don't fail the verification if credit bonus fails
+        }
       }
       
       res.json({ message: "KYC status updated successfully", user });
@@ -1633,6 +1704,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Category deleted successfully" });
     } catch (error: any) {
       res.status(400).json({ message: "Failed to delete category", error: error.message });
+    }
+  });
+
+  // Admin - Media Content Management
+  app.get("/api/admin/media-content", async (req, res) => {
+    try {
+      const mediaContent = await storage.getAllMediaContent();
+      res.json(mediaContent);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get media content", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/media-content", async (req, res) => {
+    try {
+      const { title, description, type, url, thumbnailUrl, tags, featured, author } = req.body;
+      const mediaContentData = {
+        title,
+        description,
+        type,
+        url,
+        thumbnailUrl,
+        tags: tags || [],
+        featured: featured || false,
+        author,
+        isActive: true
+      };
+      const newMediaContent = await storage.createMediaContent(mediaContentData);
+      res.json(newMediaContent);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create media content", error: error.message });
+    }
+  });
+
+  app.put("/api/admin/media-content/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      const updatedMediaContent = await storage.updateMediaContent(id, updateData);
+      res.json(updatedMediaContent);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update media content", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/media-content/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteMediaContent(id);
+      res.json({ message: "Media content deleted successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to delete media content", error: error.message });
+    }
+  });
+
+  // Admin - Platform Settings Management
+  app.get("/api/admin/platform-settings", async (req, res) => {
+    try {
+      const settings = await storage.getAllPlatformSettings();
+      res.json(settings);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get platform settings", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/platform-settings", async (req, res) => {
+    try {
+      const { key, value, description, category } = req.body;
+      const setting = await storage.setPlatformSetting(key, value, description, category);
+      res.json(setting);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create platform setting", error: error.message });
+    }
+  });
+
+  app.put("/api/admin/platform-settings/:key", async (req, res) => {
+    try {
+      const { key } = req.params;
+      const { value } = req.body;
+      const setting = await storage.updatePlatformSetting(key, value);
+      res.json(setting);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update platform setting", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/platform-settings/:key", async (req, res) => {
+    try {
+      const { key } = req.params;
+      await storage.deletePlatformSetting(key);
+      res.json({ message: "Platform setting deleted successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to delete platform setting", error: error.message });
     }
   });
 
@@ -2294,9 +2458,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.updateSubscriptionStatus(subscriptionId, 'active');
           }
         } else if (req.body.udf2 === 'support') {
-          // Update project funding (with 2% platform fee deducted)
+          // Update project funding (with configurable platform fee deducted)
           const projectId = metadata.projectId;
-          const platformFee = callbackResult.amount * 0.02;
+          const platformFeePercentage = await PlatformSettingsService.getPlatformFeePercentage();
+          const platformFee = callbackResult.amount * platformFeePercentage;
           const netAmount = callbackResult.amount - platformFee;
           
           if (projectId) {
@@ -2318,7 +2483,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
             platformFeePaid: true
           };
           
-          await storage.createInvestment(investmentData);
+          const investment = await storage.createInvestment(investmentData);
+          
+          // Send investment success email
+          try {
+            const [user, project] = await Promise.all([
+              storage.getUser(req.body.udf1),
+              storage.getProject(projectId)
+            ]);
+            
+            if (user && project) {
+              await emailService.sendInvestmentSuccessEmail({
+                toEmail: user.email,
+                firstName: user.firstName,
+                projectTitle: project.title,
+                investmentAmount: callbackResult.amount.toString(),
+                equityPercentage: expectedStakes.toString(),
+                transactionId: callbackResult.txnId,
+                investmentDate: new Date().toLocaleDateString(),
+                projectUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/projects/${projectId}`,
+                portfolioUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/portfolio`
+              });
+            }
+          } catch (emailError) {
+            console.error('Failed to send investment success email:', emailError);
+            // Don't fail the investment if email fails
+          }
         } else if (req.body.udf2 === 'event') {
           // Handle event registration payment
           const { eventId } = metadata;
@@ -2831,8 +3021,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const txnId = payumoneyService.generateTxnId();
       
-      // Calculate platform fee (2% of service amount)
-      const platformFee = amount * 0.02;
+      // Calculate platform fee (configurable percentage of service amount)
+      const platformFeePercentage = await PlatformSettingsService.getPlatformFeePercentage();
+      const platformFee = amount * platformFeePercentage;
       const netAmount = amount - platformFee;
 
       // Create service purchase record
@@ -2889,6 +3080,407 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error creating service purchase:', error);
       res.status(500).json({ message: 'Failed to create service purchase' });
+    }
+  });
+
+  // ========================================
+  // WALLET SYSTEM ROUTES
+  // ========================================
+
+  // Get user's wallet balance and details
+  app.get("/api/wallet", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      
+      // Get or create wallet
+      let wallet = await storage.getWalletByUserId(userId);
+      if (!wallet) {
+        wallet = await storage.createWallet({ userId, balance: "0" });
+      }
+
+      res.json({
+        balance: parseFloat(wallet.balance),
+        totalEarned: parseFloat(wallet.totalEarned || "0"),
+        totalSpent: parseFloat(wallet.totalSpent || "0"),
+      });
+    } catch (error) {
+      console.error('Error fetching wallet:', error);
+      res.status(500).json({ message: 'Failed to fetch wallet details' });
+    }
+  });
+
+  // Get wallet transaction history
+  app.get("/api/wallet/transactions", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      const limit = parseInt(req.query.limit as string) || 50;
+      
+      const transactions = await storage.getWalletTransactions(userId, limit);
+      
+      res.json(transactions.map(transaction => ({
+        ...transaction,
+        amount: parseFloat(transaction.amount),
+        balanceBefore: parseFloat(transaction.balanceBefore),
+        balanceAfter: parseFloat(transaction.balanceAfter),
+      })));
+    } catch (error) {
+      console.error('Error fetching wallet transactions:', error);
+      res.status(500).json({ message: 'Failed to fetch transaction history' });
+    }
+  });
+
+  // Initiate wallet deposit via PayUMoney
+  app.post("/api/wallet/deposit", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      const { amount } = req.body;
+
+      // Validate amount
+      const depositAmount = parseFloat(amount);
+      if (isNaN(depositAmount) || depositAmount < 10) {
+        return res.status(400).json({
+          success: false,
+          error: 'Minimum deposit amount is ₹10'
+        });
+      }
+
+      // Calculate fees (2% payment gateway + 1% platform = 3% total)
+      const paymentGatewayFee = depositAmount * 0.02;
+      const platformFee = depositAmount * 0.01;
+      const totalFees = paymentGatewayFee + platformFee;
+      const netCredits = depositAmount - totalFees;
+
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+
+      // Create payment record
+      const payment = await storage.createPayment({
+        userId,
+        amount: depositAmount.toFixed(2),
+        paymentType: 'wallet_deposit',
+        description: `Wallet deposit of ₹${depositAmount} (Net credits: ₹${netCredits.toFixed(2)})`,
+        metadata: JSON.stringify({ netCredits: netCredits.toFixed(2), totalFees: totalFees.toFixed(2) })
+      });
+
+      // Generate unique transaction ID
+      const txnId = `WALLET_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      
+      // PayUMoney payment data
+      const paymentData = {
+        txnId,
+        amount: depositAmount,
+        productInfo: `Qipad Wallet Deposit - ₹${depositAmount}`,
+        firstName: user.firstName,
+        email: user.email,
+        phone: user.phone || '',
+        successUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/api/wallet/callback/success`,
+        failureUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/api/wallet/callback/failure`,
+        userId,
+        paymentType: 'wallet_deposit',
+        metadata: { paymentId: payment.id, netCredits: netCredits.toFixed(2) }
+      };
+
+      const paymentResponse = await payumoneyService.createPayment(paymentData);
+      
+      if (paymentResponse.success) {
+        res.json({
+          success: true,
+          paymentUrl: paymentResponse.paymentUrl,
+          txnId: paymentResponse.txnId,
+          depositAmount,
+          paymentGatewayFee: paymentGatewayFee.toFixed(2),
+          platformFee: platformFee.toFixed(2),
+          totalFees: totalFees.toFixed(2),
+          netCredits: netCredits.toFixed(2),
+          formData: paymentResponse.formData
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: paymentResponse.error,
+        });
+      }
+    } catch (error) {
+      console.error('Error initiating wallet deposit:', error);
+      res.status(500).json({ message: 'Failed to initiate deposit' });
+    }
+  });
+
+  // Handle PayUMoney success callback for wallet deposits
+  app.post("/api/wallet/callback/success", async (req: any, res: any) => {
+    try {
+      const callbackData = req.body;
+      console.log('Wallet deposit callback received:', callbackData);
+
+      // Process the callback
+      const callbackResult = await payumoneyService.processCallback(callbackData);
+      
+      if (callbackResult.success && callbackResult.status === 'success') {
+        const { txnId, amount } = callbackResult;
+        
+        // Extract user ID from transaction metadata
+        const userId = callbackData.udf1;
+        const paymentMetadata = JSON.parse(callbackData.udf3 || '{}');
+        const netCredits = parseFloat(paymentMetadata.netCredits || amount);
+
+        if (userId) {
+          // Add credits to user's wallet
+          const creditResult = await storage.addCredits(
+            userId,
+            netCredits,
+            `Wallet deposit via PayUMoney (TxnID: ${txnId})`,
+            'deposit',
+            txnId
+          );
+
+          if (creditResult.success) {
+            console.log(`Successfully added ${netCredits} credits to user ${userId}`);
+            
+            // Send deposit success email
+            try {
+              const user = await storage.getUser(userId);
+              if (user) {
+                await emailService.sendDepositSuccessEmail({
+                  toEmail: user.email,
+                  firstName: user.firstName,
+                  amount: amount.toString(),
+                  credits: netCredits.toString(),
+                  transactionId: txnId,
+                  newBalance: creditResult.newBalance?.toString() || '0',
+                  walletUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/wallet`,
+                  dashboardUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`
+                });
+              }
+            } catch (emailError) {
+              console.error('Failed to send deposit success email:', emailError);
+              // Don't fail the deposit if email fails
+            }
+            
+            res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?success=true&amount=${netCredits}`);
+          } else {
+            console.error('Failed to add credits:', creditResult.error);
+            res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=credit_failed`);
+          }
+        } else {
+          console.error('User ID not found in callback data');
+          res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=invalid_callback`);
+        }
+      } else {
+        console.error('Payment verification failed:', callbackResult);
+        res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=payment_failed`);
+      }
+    } catch (error) {
+      console.error('Error processing wallet deposit callback:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=callback_error`);
+    }
+  });
+
+  // Handle PayUMoney failure callback for wallet deposits
+  app.post("/api/wallet/callback/failure", async (req: any, res: any) => {
+    try {
+      const callbackData = req.body;
+      console.log('Wallet deposit failed:', callbackData);
+      
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=payment_cancelled`);
+    } catch (error) {
+      console.error('Error processing wallet deposit failure:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=callback_error`);
+    }
+  });
+
+  // ========================================
+  // REFERRAL SYSTEM ROUTES
+  // ========================================
+
+  // Get user's personal referral info and referrals
+  app.get("/api/referrals", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      
+      // Generate or get user's permanent referral code
+      const userReferralId = `QIP${userId.substring(0, 6).toUpperCase()}`;
+      const userReferralUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${userReferralId}`;
+      
+      const referrals = await storage.getReferralsByUser(userId);
+      
+      res.json({
+        personalReferral: {
+          referralId: userReferralId,
+          referralUrl: userReferralUrl,
+          totalReferrals: referrals.length,
+          totalEarned: referrals.reduce((sum, ref) => sum + parseFloat(ref.rewardAmount || '0'), 0)
+        },
+        referrals: referrals.map(referral => ({
+          ...referral,
+          rewardAmount: parseFloat(referral.rewardAmount),
+          referralId: referral.referralCode,
+          referralUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${referral.referralCode}`
+        }))
+      });
+    } catch (error) {
+      console.error('Error fetching referrals:', error);
+      res.status(500).json({ message: 'Failed to fetch referrals' });
+    }
+  });
+
+  // Send referral invitation
+  app.post("/api/referrals", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      const { referredEmail } = req.body;
+
+      if (!referredEmail || !referredEmail.includes('@')) {
+        return res.status(400).json({ error: 'Valid email address is required' });
+      }
+
+      // Get user info for the email
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Check if email is already referred by this user
+      const existingReferrals = await storage.getReferralsByUser(userId);
+      const alreadyReferred = existingReferrals.some(ref => ref.referredEmail === referredEmail);
+      
+      if (alreadyReferred) {
+        return res.status(400).json({ error: 'This email has already been referred by you' });
+      }
+
+      // Use user's permanent referral ID and URL
+      const userReferralId = `QIP${userId.substring(0, 6).toUpperCase()}`;
+      const userReferralUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${userReferralId}`;
+
+      // Send referral email
+      const referrerName = `${user.firstName} ${user.lastName}`;
+      const emailSent = await emailService.sendReferralEmail({
+        toEmail: referredEmail,
+        referrerName,
+        referralUrl: userReferralUrl,
+        referralId: userReferralId
+      });
+
+      if (!emailSent) {
+        return res.status(500).json({ error: 'Failed to send referral email' });
+      }
+
+      // Create referral record
+      const referral = await storage.createReferral({
+        referrerId: userId,
+        referredEmail,
+        referralCode: userReferralId,
+        status: 'pending',
+        rewardAmount: '50'
+      });
+
+      res.json({
+        success: true,
+        message: `Referral invitation sent to ${referredEmail}`,
+        referral: {
+          ...referral,
+          rewardAmount: parseFloat(referral.rewardAmount),
+          referralId: userReferralId,
+          referralUrl: userReferralUrl
+        }
+      });
+    } catch (error) {
+      console.error('Error sending referral:', error);
+      res.status(500).json({ message: 'Failed to send referral invitation' });
+    }
+  });
+
+  // ========================================
+  // CREDIT MANAGEMENT ROUTES
+  // ========================================
+
+  // Check if user has sufficient credits for an action
+  app.post("/api/credits/check", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      const { action, amount } = req.body;
+
+      // Get platform settings for credit costs
+      const creditCosts = {
+        'innovation': 100,
+        'job': 50,
+        'investor_connection': 10,
+        'community_create': 100,
+        'community_join': 10,
+        'event': 50
+      };
+
+      const requiredCredits = amount || creditCosts[action as keyof typeof creditCosts] || 0;
+      
+      // Get wallet balance
+      let wallet = await storage.getWalletByUserId(userId);
+      if (!wallet) {
+        wallet = await storage.createWallet({ userId, balance: "0" });
+      }
+
+      const currentBalance = parseFloat(wallet.balance);
+      const hasEnoughCredits = currentBalance >= requiredCredits;
+
+      res.json({
+        hasEnoughCredits,
+        currentBalance,
+        requiredCredits,
+        shortfall: hasEnoughCredits ? 0 : requiredCredits - currentBalance
+      });
+    } catch (error) {
+      console.error('Error checking credits:', error);
+      res.status(500).json({ message: 'Failed to check credits' });
+    }
+  });
+
+  // Deduct credits for an action
+  app.post("/api/credits/deduct", authenticateToken, async (req: any, res: any) => {
+    try {
+      const userId = req.user.userId;
+      const { action, amount, description, referenceType, referenceId } = req.body;
+
+      // Get platform settings for credit costs
+      const creditCosts = {
+        'innovation': 100,
+        'job': 50,
+        'investor_connection': 10,
+        'community_create': 100,
+        'community_join': 10,
+        'event': 50
+      };
+
+      const creditsToDeduct = amount || creditCosts[action as keyof typeof creditCosts] || 0;
+      
+      if (creditsToDeduct <= 0) {
+        return res.status(400).json({ error: 'Invalid credit amount' });
+      }
+
+      const result = await storage.deductCredits(
+        userId,
+        creditsToDeduct,
+        description || `Credits deducted for ${action}`,
+        referenceType || action,
+        referenceId
+      );
+
+      if (result.success) {
+        res.json({
+          success: true,
+          newBalance: result.newBalance,
+          deductedAmount: creditsToDeduct
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error,
+          currentBalance: result.newBalance
+        });
+      }
+    } catch (error) {
+      console.error('Error deducting credits:', error);
+      res.status(500).json({ message: 'Failed to deduct credits' });
     }
   });
 

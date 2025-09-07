@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText, Gavel, Building, Building2, Scroll, PlayCircle } from "lucide-react";
+import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText, Gavel, Building, Building2, Scroll, PlayCircle, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,16 +21,10 @@ export function Sidebar() {
       onClick: () => setIsProjectModalOpen(true)
     },
     { 
-      label: "Find Innovations", 
-      icon: Search, 
-      action: "find-innovations",
-      onClick: () => navigate("/innovations")
-    },
-    { 
-      label: "Post Job", 
-      icon: Briefcase, 
-      action: "post-job",
-      onClick: () => setIsJobModalOpen(true)
+      label: "Wallet", 
+      icon: Wallet, 
+      action: "wallet",
+      onClick: () => navigate("/wallet")
     },
   ];
 

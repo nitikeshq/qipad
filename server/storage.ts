@@ -3,7 +3,7 @@ import {
   communityPosts, postLikes, postComments, jobs, jobApplications, savedJobs, connections, biddingProjects, projectBids,
   companyFormations, tenders, tenderEligibility, companies, subscriptions, payments, userInterests,
   events, eventParticipants, eventTickets, companyServices, companyProducts, serviceInquiries, servicePurchases,
-  notifications,
+  mediaContent, platformSettings, notifications, wallets, walletTransactions, referrals,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
   type Community, type InsertCommunity, type CommunityMember, type InsertCommunityMember,
@@ -18,7 +18,9 @@ import {
   type Event, type InsertEvent, type EventParticipant, type InsertEventParticipant,
   type EventTicket, type InsertEventTicket, type CompanyService, type InsertCompanyService,
   type CompanyProduct, type InsertCompanyProduct, type ServiceInquiry, type InsertServiceInquiry,
-  type ServicePurchase, type InsertServicePurchase, type Notification, type InsertNotification
+  type ServicePurchase, type InsertServicePurchase, type Notification, type InsertNotification,
+  type Wallet, type InsertWallet, type WalletTransaction, type InsertWalletTransaction,
+  type Referral, type InsertReferral
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, sql, ne } from "drizzle-orm";
@@ -185,6 +187,39 @@ export interface IStorage {
   createServicePurchase(purchase: InsertServicePurchase): Promise<ServicePurchase>;
   getServicePurchases(companyId: string): Promise<ServicePurchase[]>;
   getUserServicePurchases(userId: string): Promise<ServicePurchase[]>;
+
+  // Media Content methods
+  getAllMediaContent(): Promise<any[]>;
+  getMediaContent(id: string): Promise<any | undefined>;
+  createMediaContent(mediaContent: any): Promise<any>;
+  updateMediaContent(id: string, updates: any): Promise<any>;
+  deleteMediaContent(id: string): Promise<void>;
+
+  // Platform Settings methods
+  getPlatformSetting(key: string): Promise<any | undefined>;
+  getAllPlatformSettings(): Promise<any[]>;
+  setPlatformSetting(key: string, value: string, description?: string, category?: string, updatedBy?: string): Promise<any>;
+  updatePlatformSetting(key: string, value: string, updatedBy?: string): Promise<any>;
+  deletePlatformSetting(key: string): Promise<void>;
+
+  // Wallet methods
+  getWalletByUserId(userId: string): Promise<Wallet | undefined>;
+  createWallet(wallet: InsertWallet): Promise<Wallet>;
+  updateWalletBalance(userId: string, newBalance: string): Promise<Wallet>;
+  
+  // Wallet Transaction methods
+  getWalletTransactions(userId: string, limit?: number): Promise<WalletTransaction[]>;
+  createWalletTransaction(transaction: InsertWalletTransaction): Promise<WalletTransaction>;
+  
+  // Referral methods
+  getReferralsByUser(userId: string): Promise<Referral[]>;
+  getReferralByCode(code: string): Promise<Referral | undefined>;
+  createReferral(referral: InsertReferral): Promise<Referral>;
+  updateReferral(id: string, updates: Partial<Referral>): Promise<Referral>;
+  
+  // Credit operations
+  deductCredits(userId: string, amount: number, description: string, referenceType?: string, referenceId?: string): Promise<{ success: boolean; newBalance: number; error?: string }>;
+  addCredits(userId: string, amount: number, description: string, referenceType?: string, referenceId?: string): Promise<{ success: boolean; newBalance: number; error?: string }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -932,8 +967,90 @@ export class DatabaseStorage implements IStorage {
 
   // Media Content methods
   async getAllMediaContent(): Promise<any[]> {
-    // Return empty for now - will be populated by admin
-    return [];
+    const result = await db
+      .select()
+      .from(mediaContent)
+      .where(eq(mediaContent.isActive, true))
+      .orderBy(desc(mediaContent.createdAt));
+    return result;
+  }
+
+  async getMediaContent(id: string): Promise<any | undefined> {
+    const [result] = await db
+      .select()
+      .from(mediaContent)
+      .where(eq(mediaContent.id, id));
+    return result || undefined;
+  }
+
+  async createMediaContent(insertMediaContent: any): Promise<any> {
+    const [result] = await db
+      .insert(mediaContent)
+      .values(insertMediaContent)
+      .returning();
+    return result;
+  }
+
+  async updateMediaContent(id: string, updates: any): Promise<any> {
+    const [result] = await db
+      .update(mediaContent)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(mediaContent.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteMediaContent(id: string): Promise<void> {
+    await db
+      .update(mediaContent)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(mediaContent.id, id));
+  }
+
+  // Platform Settings methods
+  async getPlatformSetting(key: string): Promise<any | undefined> {
+    const [setting] = await db
+      .select()
+      .from(platformSettings)
+      .where(eq(platformSettings.key, key));
+    return setting || undefined;
+  }
+
+  async getAllPlatformSettings(): Promise<any[]> {
+    const result = await db
+      .select()
+      .from(platformSettings)
+      .orderBy(platformSettings.category, platformSettings.key);
+    return result;
+  }
+
+  async setPlatformSetting(key: string, value: string, description?: string, category?: string, updatedBy?: string): Promise<any> {
+    const [setting] = await db
+      .insert(platformSettings)
+      .values({
+        key,
+        value,
+        description,
+        category: category || "general",
+        updatedBy
+      })
+      .returning();
+    return setting;
+  }
+
+  async updatePlatformSetting(key: string, value: string, updatedBy?: string): Promise<any> {
+    const [setting] = await db
+      .update(platformSettings)
+      .set({ value, updatedBy, updatedAt: new Date() })
+      .where(eq(platformSettings.key, key))
+      .returning();
+    return setting;
+  }
+
+  async deletePlatformSetting(key: string): Promise<void> {
+    await db
+      .delete(platformSettings)
+      .where(eq(platformSettings.key, key));
   }
 
   async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {
@@ -1266,6 +1383,187 @@ export class DatabaseStorage implements IStorage {
 
   async getAllSubscriptions(): Promise<Subscription[]> {
     return await db.select().from(subscriptions).orderBy(desc(subscriptions.createdAt));
+  }
+
+  // Wallet methods implementation
+  async getWalletByUserId(userId: string): Promise<Wallet | undefined> {
+    const [wallet] = await db.select().from(wallets).where(eq(wallets.userId, userId));
+    return wallet;
+  }
+
+  async createWallet(wallet: InsertWallet): Promise<Wallet> {
+    const [newWallet] = await db.insert(wallets).values(wallet).returning();
+    return newWallet;
+  }
+
+  async updateWalletBalance(userId: string, newBalance: string): Promise<Wallet> {
+    const [updatedWallet] = await db
+      .update(wallets)
+      .set({ 
+        balance: newBalance, 
+        updatedAt: new Date()
+      })
+      .where(eq(wallets.userId, userId))
+      .returning();
+    return updatedWallet;
+  }
+
+  // Wallet Transaction methods implementation
+  async getWalletTransactions(userId: string, limit: number = 50): Promise<WalletTransaction[]> {
+    return await db.select().from(walletTransactions)
+      .where(eq(walletTransactions.userId, userId))
+      .orderBy(desc(walletTransactions.createdAt))
+      .limit(limit);
+  }
+
+  async createWalletTransaction(transaction: InsertWalletTransaction): Promise<WalletTransaction> {
+    const [newTransaction] = await db.insert(walletTransactions).values(transaction).returning();
+    return newTransaction;
+  }
+
+  // Referral methods implementation
+  async getReferralsByUser(userId: string): Promise<Referral[]> {
+    return await db.select().from(referrals)
+      .where(eq(referrals.referrerId, userId))
+      .orderBy(desc(referrals.createdAt));
+  }
+
+  async getReferralByCode(code: string): Promise<Referral | undefined> {
+    const [referral] = await db.select().from(referrals).where(eq(referrals.referralCode, code));
+    return referral;
+  }
+
+  async createReferral(referral: InsertReferral): Promise<Referral> {
+    const [newReferral] = await db.insert(referrals).values(referral).returning();
+    return newReferral;
+  }
+
+  async updateReferral(id: string, updates: Partial<Referral>): Promise<Referral> {
+    const [updatedReferral] = await db
+      .update(referrals)
+      .set(updates)
+      .where(eq(referrals.id, id))
+      .returning();
+    return updatedReferral;
+  }
+
+  // Credit operations implementation
+  async deductCredits(userId: string, amount: number, description: string, referenceType?: string, referenceId?: string): Promise<{ success: boolean; newBalance: number; error?: string }> {
+    try {
+      // Get current wallet
+      let wallet = await this.getWalletByUserId(userId);
+      
+      // Create wallet if doesn't exist
+      if (!wallet) {
+        wallet = await this.createWallet({ userId, balance: "0" });
+      }
+
+      const currentBalance = parseFloat(wallet.balance);
+      
+      // Check if sufficient balance
+      if (currentBalance < amount) {
+        return {
+          success: false,
+          newBalance: currentBalance,
+          error: "Insufficient credits"
+        };
+      }
+
+      const newBalance = currentBalance - amount;
+      const newBalanceStr = newBalance.toFixed(2);
+
+      // Update wallet balance
+      await this.updateWalletBalance(userId, newBalanceStr);
+
+      // Create transaction record
+      await this.createWalletTransaction({
+        userId,
+        type: "spend",
+        amount: amount.toFixed(2),
+        balanceBefore: wallet.balance,
+        balanceAfter: newBalanceStr,
+        description,
+        referenceType: referenceType || null,
+        referenceId: referenceId || null,
+        status: "completed"
+      });
+
+      // Update wallet totalSpent
+      await db
+        .update(wallets)
+        .set({ 
+          totalSpent: sql`${wallets.totalSpent} + ${amount}`,
+          updatedAt: new Date()
+        })
+        .where(eq(wallets.userId, userId));
+
+      return {
+        success: true,
+        newBalance
+      };
+    } catch (error) {
+      console.error("Failed to deduct credits:", error);
+      return {
+        success: false,
+        newBalance: 0,
+        error: "Transaction failed"
+      };
+    }
+  }
+
+  async addCredits(userId: string, amount: number, description: string, referenceType?: string, referenceId?: string): Promise<{ success: boolean; newBalance: number; error?: string }> {
+    try {
+      // Get current wallet
+      let wallet = await this.getWalletByUserId(userId);
+      
+      // Create wallet if doesn't exist
+      if (!wallet) {
+        wallet = await this.createWallet({ userId, balance: "0" });
+      }
+
+      const currentBalance = parseFloat(wallet.balance);
+      const newBalance = currentBalance + amount;
+      const newBalanceStr = newBalance.toFixed(2);
+
+      // Update wallet balance
+      await this.updateWalletBalance(userId, newBalanceStr);
+
+      // Create transaction record
+      await this.createWalletTransaction({
+        userId,
+        type: referenceType === "referral_bonus" ? "referral_bonus" : referenceType === "deposit" ? "deposit" : "earn",
+        amount: amount.toFixed(2),
+        balanceBefore: wallet.balance,
+        balanceAfter: newBalanceStr,
+        description,
+        referenceType: referenceType || null,
+        referenceId: referenceId || null,
+        status: "completed"
+      });
+
+      // Update wallet totalEarned for non-deposit transactions
+      if (referenceType !== "deposit") {
+        await db
+          .update(wallets)
+          .set({ 
+            totalEarned: sql`${wallets.totalEarned} + ${amount}`,
+            updatedAt: new Date()
+          })
+          .where(eq(wallets.userId, userId));
+      }
+
+      return {
+        success: true,
+        newBalance
+      };
+    } catch (error) {
+      console.error("Failed to add credits:", error);
+      return {
+        success: false,
+        newBalance: 0,
+        error: "Transaction failed"
+      };
+    }
   }
 }
 

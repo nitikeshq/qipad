@@ -186,6 +186,155 @@ export default function CompanyFormation() {
           })}
         </div>
 
+        {/* Helpful Resources */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-green-600" />
+              Helpful Resources & Links
+            </CardTitle>
+            <CardDescription>
+              Essential links and tools to help you through the company formation process
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-gray-900">Government Portals</h4>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="p-1 rounded bg-blue-100">
+                      <Building className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <a 
+                        href="https://www.mca.gov.in/content/mca/global/en/mca/fo-llp-services/company-llp-name-search.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                        data-testid="link-mca-name-search"
+                      >
+                        Verify Company Name Availability (MCA Portal)
+                      </a>
+                      <p className="text-xs text-gray-600 mt-1">Check if your proposed company name is available before registration</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="p-1 rounded bg-orange-100">
+                      <FileText className="h-4 w-4 text-orange-600" />
+                    </div>
+                    <div>
+                      <a 
+                        href="https://www.mca.gov.in/content/mca/global/en/home.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                        data-testid="link-mca-portal"
+                      >
+                        Ministry of Corporate Affairs (MCA)
+                      </a>
+                      <p className="text-xs text-gray-600 mt-1">Official portal for company registration and compliance</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="p-1 rounded bg-green-100">
+                      <Award className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div>
+                      <a 
+                        href="https://www.gst.gov.in/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                        data-testid="link-gst-portal"
+                      >
+                        GST Registration Portal
+                      </a>
+                      <p className="text-xs text-gray-600 mt-1">Register for Goods and Services Tax after incorporation</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-gray-900">Banking & Finance</h4>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="p-1 rounded bg-purple-100">
+                      <CreditCard className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <a 
+                        href="https://onlineservices.nsdl.com/paam/endUserRegisterContact.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                        data-testid="link-pan-application"
+                      >
+                        Apply for Company PAN Card
+                      </a>
+                      <p className="text-xs text-gray-600 mt-1">NSDL portal for PAN card application</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="p-1 rounded bg-red-100">
+                      <Shield className="h-4 w-4 text-red-600" />
+                    </div>
+                    <div>
+                      <a 
+                        href="https://www.uidai.gov.in/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                        data-testid="link-aadhaar-portal"
+                      >
+                        Aadhaar Services (UIDAI)
+                      </a>
+                      <p className="text-xs text-gray-600 mt-1">For director KYC and address verification</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="p-1 rounded bg-indigo-100">
+                      <Users className="h-4 w-4 text-indigo-600" />
+                    </div>
+                    <div>
+                      <a 
+                        href="https://www.mca.gov.in/content/mca/global/en/mca/master-data/md.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                        data-testid="link-din-application"
+                      >
+                        Director Identification Number (DIN)
+                      </a>
+                      <p className="text-xs text-gray-600 mt-1">Apply for DIN for company directors</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="p-1 rounded bg-yellow-100">
+                  <Calendar className="h-4 w-4 text-yellow-600" />
+                </div>
+                <div>
+                  <h5 className="font-medium text-sm text-yellow-800">Pro Tip</h5>
+                  <p className="text-xs text-yellow-700 mt-1">
+                    Keep all your documents ready before starting the process. This includes PAN cards, Aadhaar cards, address proofs, 
+                    and passport-size photographs of all directors and shareholders.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Formation Form */}
         <Card>
           <CardHeader>

@@ -12,6 +12,8 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', ['active', '
 export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'completed', 'failed', 'refunded']);
 export const companyStatusEnum = pgEnum('company_status', ['pending', 'approved', 'rejected']);
 export const connectionStatusEnum = pgEnum('connection_status', ['pending', 'accepted', 'rejected']);
+export const transactionTypeEnum = pgEnum('transaction_type', ['deposit', 'withdraw', 'spend', 'earn', 'refund', 'referral_bonus']);
+export const referralStatusEnum = pgEnum('referral_status', ['pending', 'verified', 'credited']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -271,7 +273,7 @@ export const tenderEligibility = pgTable("tender_eligibility", {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   projects: many(projects),
   documents: many(documents),
   investments: many(investments),
@@ -284,6 +286,10 @@ export const usersRelations = relations(users, ({ many }) => ({
   connectionsSent: many(connections, { relationName: "requester" }),
   connectionsReceived: many(connections, { relationName: "recipient" }),
   companyFormations: many(companyFormations),
+  wallet: one(wallets),
+  walletTransactions: many(walletTransactions),
+  referralsSent: many(referrals, { relationName: "referrer" }),
+  referralsReceived: many(referrals, { relationName: "referred" }),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -544,6 +550,45 @@ export const eventTickets = pgTable("event_tickets", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Wallet System Tables
+export const wallets = pgTable("wallets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique().references(() => users.id),
+  balance: decimal("balance", { precision: 15, scale: 2 }).default("0"),
+  totalEarned: decimal("total_earned", { precision: 15, scale: 2 }).default("0"),
+  totalSpent: decimal("total_spent", { precision: 15, scale: 2 }).default("0"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const walletTransactions = pgTable("wallet_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: transactionTypeEnum("type").notNull(),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  balanceBefore: decimal("balance_before", { precision: 15, scale: 2 }).notNull(),
+  balanceAfter: decimal("balance_after", { precision: 15, scale: 2 }).notNull(),
+  description: text("description").notNull(),
+  referenceType: text("reference_type"), // project, job, community, event, investment, deposit, withdraw
+  referenceId: varchar("reference_id"), // ID of the referenced entity
+  paymentId: varchar("payment_id"), // Reference to payments table for deposits/withdraws
+  status: text("status").default("completed"), // pending, completed, failed
+  metadata: text("metadata"), // JSON string for additional data
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const referrals = pgTable("referrals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referrerId: varchar("referrer_id").notNull().references(() => users.id),
+  referredUserId: varchar("referred_user_id").references(() => users.id),
+  referredEmail: text("referred_email").notNull(),
+  referralCode: text("referral_code").notNull().unique(),
+  status: referralStatusEnum("status").default("pending"),
+  rewardAmount: decimal("reward_amount", { precision: 10, scale: 2 }).default("50"),
+  creditedAt: timestamp("credited_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Media Content for Media Center (Admin managed)
 export const mediaContent = pgTable("media_content", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -558,6 +603,18 @@ export const mediaContent = pgTable("media_content", {
   featured: boolean("featured").default(false),
   author: text("author"),
   isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Platform Settings for configurable values
+export const platformSettings = pgTable("platform_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  description: text("description"),
+  category: text("category").default("general"),
+  updatedBy: varchar("updated_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -594,6 +651,39 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   company: one(companies, {
     fields: [payments.companyId],
     references: [companies.id],
+  }),
+}));
+
+// Wallet system relations
+export const walletsRelations = relations(wallets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [wallets.userId],
+    references: [users.id],
+  }),
+  transactions: many(walletTransactions),
+}));
+
+export const walletTransactionsRelations = relations(walletTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [walletTransactions.userId],
+    references: [users.id],
+  }),
+  wallet: one(wallets, {
+    fields: [walletTransactions.userId],
+    references: [wallets.userId],
+  }),
+}));
+
+export const referralsRelations = relations(referrals, ({ one }) => ({
+  referrer: one(users, {
+    fields: [referrals.referrerId],
+    references: [users.id],
+    relationName: "referrer",
+  }),
+  referredUser: one(users, {
+    fields: [referrals.referredUserId],
+    references: [users.id],
+    relationName: "referred",
   }),
 }));
 
@@ -725,6 +815,12 @@ export const insertMediaContentSchema = createInsertSchema(mediaContent).omit({
   updatedAt: true,
 });
 
+export const insertPlatformSettingSchema = createInsertSchema(platformSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -763,6 +859,8 @@ export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type UserInterest = typeof userInterests.$inferSelect;
 export type InsertUserInterest = z.infer<typeof insertUserInterestSchema>;
+export type PlatformSetting = typeof platformSettings.$inferSelect;
+export type InsertPlatformSetting = z.infer<typeof insertPlatformSettingSchema>;
 
 // Events types
 export const insertEventSchema = createInsertSchema(events).omit({
@@ -915,6 +1013,23 @@ export const insertServiceInquirySchema = createInsertSchema(serviceInquiries).o
   createdAt: true,
 });
 
+// Wallet system insert schemas
+export const insertWalletSchema = createInsertSchema(wallets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWalletTransactionSchema = createInsertSchema(walletTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertReferralSchema = createInsertSchema(referrals).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type CompanyService = typeof companyServices.$inferSelect;
 export type InsertCompanyService = z.infer<typeof insertCompanyServiceSchema>;
 export type CompanyProduct = typeof companyProducts.$inferSelect;
@@ -925,3 +1040,11 @@ export type ServicePurchase = typeof servicePurchases.$inferSelect;
 export type InsertServicePurchase = typeof servicePurchases.$inferInsert;
 export type MediaContent = typeof mediaContent.$inferSelect;
 export type InsertMediaContent = z.infer<typeof insertMediaContentSchema>;
+
+// Wallet system types
+export type Wallet = typeof wallets.$inferSelect;
+export type InsertWallet = z.infer<typeof insertWalletSchema>;
+export type WalletTransaction = typeof walletTransactions.$inferSelect;
+export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = z.infer<typeof insertReferralSchema>;
