@@ -1648,7 +1648,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </TabsContent>
-      </div>
     </Tabs>
       </div>
 
