@@ -19,6 +19,25 @@ CREATE TABLE IF NOT EXISTS media_content (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Create platform_settings table for configurable platform settings
+CREATE TABLE IF NOT EXISTS platform_settings (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT NOT NULL UNIQUE,
+  value TEXT NOT NULL,
+  description TEXT,
+  category TEXT DEFAULT 'general',
+  updated_by VARCHAR REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Insert default platform settings
+INSERT INTO platform_settings (key, value, description, category) VALUES
+('platform_fee_percentage', '5.0', 'Platform fee percentage charged on successful transactions (includes payment gateway fees)', 'fees'),
+('max_investment_amount', '10000000', 'Maximum investment amount allowed per transaction (in rupees)', 'limits'),
+('min_investment_amount', '1000', 'Minimum investment amount required per transaction (in rupees)', 'limits')
+ON CONFLICT (key) DO NOTHING;
+
 -- Add company column to jobs table if it doesn't exist
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS company TEXT;
 

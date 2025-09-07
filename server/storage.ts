@@ -3,7 +3,7 @@ import {
   communityPosts, postLikes, postComments, jobs, jobApplications, savedJobs, connections, biddingProjects, projectBids,
   companyFormations, tenders, tenderEligibility, companies, subscriptions, payments, userInterests,
   events, eventParticipants, eventTickets, companyServices, companyProducts, serviceInquiries, servicePurchases,
-  mediaContent, notifications,
+  mediaContent, platformSettings, notifications,
   type User, type InsertUser, type Project, type InsertProject,
   type Document, type InsertDocument, type Investment, type InsertInvestment,
   type Community, type InsertCommunity, type CommunityMember, type InsertCommunityMember,
@@ -192,6 +192,13 @@ export interface IStorage {
   createMediaContent(mediaContent: any): Promise<any>;
   updateMediaContent(id: string, updates: any): Promise<any>;
   deleteMediaContent(id: string): Promise<void>;
+
+  // Platform Settings methods
+  getPlatformSetting(key: string): Promise<any | undefined>;
+  getAllPlatformSettings(): Promise<any[]>;
+  setPlatformSetting(key: string, value: string, description?: string, category?: string, updatedBy?: string): Promise<any>;
+  updatePlatformSetting(key: string, value: string, updatedBy?: string): Promise<any>;
+  deletePlatformSetting(key: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -977,6 +984,52 @@ export class DatabaseStorage implements IStorage {
       .update(mediaContent)
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(mediaContent.id, id));
+  }
+
+  // Platform Settings methods
+  async getPlatformSetting(key: string): Promise<any | undefined> {
+    const [setting] = await db
+      .select()
+      .from(platformSettings)
+      .where(eq(platformSettings.key, key));
+    return setting || undefined;
+  }
+
+  async getAllPlatformSettings(): Promise<any[]> {
+    const result = await db
+      .select()
+      .from(platformSettings)
+      .orderBy(platformSettings.category, platformSettings.key);
+    return result;
+  }
+
+  async setPlatformSetting(key: string, value: string, description?: string, category?: string, updatedBy?: string): Promise<any> {
+    const [setting] = await db
+      .insert(platformSettings)
+      .values({
+        key,
+        value,
+        description,
+        category: category || "general",
+        updatedBy
+      })
+      .returning();
+    return setting;
+  }
+
+  async updatePlatformSetting(key: string, value: string, updatedBy?: string): Promise<any> {
+    const [setting] = await db
+      .update(platformSettings)
+      .set({ value, updatedBy, updatedAt: new Date() })
+      .where(eq(platformSettings.key, key))
+      .returning();
+    return setting;
+  }
+
+  async deletePlatformSetting(key: string): Promise<void> {
+    await db
+      .delete(platformSettings)
+      .where(eq(platformSettings.key, key));
   }
 
   async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {

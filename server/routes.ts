@@ -37,6 +37,7 @@ async function calculateMonthlyProfits(payments: any[], subscriptions: any[]) {
 import { storage } from "./storage";
 import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema, insertCompanySchema, insertPaymentSchema, insertSubscriptionSchema, insertCompanyServiceSchema, insertCompanyProductSchema, insertServiceInquirySchema } from "@shared/schema";
 import { payumoneyService } from "./payumoney";
+import { PlatformSettingsService } from "./platformSettingsService";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -1688,6 +1689,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin - Platform Settings Management
+  app.get("/api/admin/platform-settings", async (req, res) => {
+    try {
+      const settings = await storage.getAllPlatformSettings();
+      res.json(settings);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get platform settings", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/platform-settings", async (req, res) => {
+    try {
+      const { key, value, description, category } = req.body;
+      const setting = await storage.setPlatformSetting(key, value, description, category);
+      res.json(setting);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create platform setting", error: error.message });
+    }
+  });
+
+  app.put("/api/admin/platform-settings/:key", async (req, res) => {
+    try {
+      const { key } = req.params;
+      const { value } = req.body;
+      const setting = await storage.updatePlatformSetting(key, value);
+      res.json(setting);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update platform setting", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/platform-settings/:key", async (req, res) => {
+    try {
+      const { key } = req.params;
+      await storage.deletePlatformSetting(key);
+      res.json({ message: "Platform setting deleted successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to delete platform setting", error: error.message });
+    }
+  });
+
   // Admin - Departments Management
   app.get("/api/admin/departments", async (req, res) => {
     try {
@@ -2346,9 +2388,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.updateSubscriptionStatus(subscriptionId, 'active');
           }
         } else if (req.body.udf2 === 'support') {
-          // Update project funding (with 2% platform fee deducted)
+          // Update project funding (with configurable platform fee deducted)
           const projectId = metadata.projectId;
-          const platformFee = callbackResult.amount * 0.02;
+          const platformFeePercentage = await PlatformSettingsService.getPlatformFeePercentage();
+          const platformFee = callbackResult.amount * platformFeePercentage;
           const netAmount = callbackResult.amount - platformFee;
           
           if (projectId) {
@@ -2883,8 +2926,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const txnId = payumoneyService.generateTxnId();
       
-      // Calculate platform fee (2% of service amount)
-      const platformFee = amount * 0.02;
+      // Calculate platform fee (configurable percentage of service amount)
+      const platformFeePercentage = await PlatformSettingsService.getPlatformFeePercentage();
+      const platformFee = amount * platformFeePercentage;
       const netAmount = amount - platformFee;
 
       // Create service purchase record

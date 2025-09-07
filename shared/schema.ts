@@ -562,6 +562,18 @@ export const mediaContent = pgTable("media_content", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Platform Settings for configurable values
+export const platformSettings = pgTable("platform_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  description: text("description"),
+  category: text("category").default("general"),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations for new tables
 export const companiesRelations = relations(companies, ({ one }) => ({
   owner: one(users, {
@@ -725,6 +737,12 @@ export const insertMediaContentSchema = createInsertSchema(mediaContent).omit({
   updatedAt: true,
 });
 
+export const insertPlatformSettingSchema = createInsertSchema(platformSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -763,6 +781,8 @@ export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type UserInterest = typeof userInterests.$inferSelect;
 export type InsertUserInterest = z.infer<typeof insertUserInterestSchema>;
+export type PlatformSetting = typeof platformSettings.$inferSelect;
+export type InsertPlatformSetting = z.infer<typeof insertPlatformSettingSchema>;
 
 // Events types
 export const insertEventSchema = createInsertSchema(events).omit({

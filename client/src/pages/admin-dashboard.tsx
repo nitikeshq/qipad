@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -89,6 +89,10 @@ export default function AdminDashboard() {
 
   const { data: mediaContent = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/media-content'],
+  });
+
+  const { data: platformSettings = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/platform-settings'],
   });
 
   // Mutations
@@ -318,6 +322,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="categories" data-testid="tab-categories">Categories</TabsTrigger>
               <TabsTrigger value="departments" data-testid="tab-departments">Departments</TabsTrigger>
               <TabsTrigger value="media-center" data-testid="tab-media-center">Media</TabsTrigger>
+              <TabsTrigger value="platform-settings" data-testid="tab-platform-settings">Settings</TabsTrigger>
               <TabsTrigger value="analytics" data-testid="tab-analytics">
                 <BarChart3 className="h-4 w-4 mr-1" />
                 Analytics
@@ -1534,6 +1539,118 @@ export default function AdminDashboard() {
         </Card>
       </TabsContent>
 
+      {/* Platform Settings Management Tab */}
+      <TabsContent value="platform-settings">
+        <Card data-testid="card-platform-settings-management">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-purple-600" />
+              Platform Settings
+            </CardTitle>
+            <CardDescription>
+              Configure platform-wide settings including fees, limits, and policies
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Platform Fee Setting */}
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold text-lg mb-2">Platform Fees</h3>
+                <div className="grid gap-4">
+                  {platformSettings.filter((setting: any) => setting.category === 'fees').map((setting: any) => (
+                    <div key={setting.key} className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{setting.key === 'platform_fee_percentage' ? 'Platform Fee (%)' : setting.key}</p>
+                        <p className="text-sm text-gray-600">{setting.description}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={setting.value}
+                          onChange={(e) => {
+                            const mutation = useMutation({
+                              mutationFn: async (value: string) => {
+                                const response = await apiRequest("PUT", `/api/admin/platform-settings/${setting.key}`, { value });
+                                return response.json();
+                              },
+                              onSuccess: () => {
+                                toast({ title: "Setting updated successfully!" });
+                                queryClient.invalidateQueries({ queryKey: ['/api/admin/platform-settings'] });
+                              },
+                              onError: () => {
+                                toast({ title: "Failed to update setting", variant: "destructive" });
+                              }
+                            });
+                            mutation.mutate(e.target.value);
+                          }}
+                          className="w-20"
+                          data-testid={`input-setting-${setting.key}`}
+                        />
+                        <span className="text-sm text-gray-500">%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Transaction Limits */}
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold text-lg mb-2">Transaction Limits</h3>
+                <div className="grid gap-4">
+                  {platformSettings.filter((setting: any) => setting.category === 'limits').map((setting: any) => (
+                    <div key={setting.key} className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{
+                          setting.key === 'max_investment_amount' ? 'Maximum Investment (₹)' :
+                          setting.key === 'min_investment_amount' ? 'Minimum Investment (₹)' :
+                          setting.key
+                        }</p>
+                        <p className="text-sm text-gray-600">{setting.description}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={setting.value}
+                          onChange={(e) => {
+                            const mutation = useMutation({
+                              mutationFn: async (value: string) => {
+                                const response = await apiRequest("PUT", `/api/admin/platform-settings/${setting.key}`, { value });
+                                return response.json();
+                              },
+                              onSuccess: () => {
+                                toast({ title: "Setting updated successfully!" });
+                                queryClient.invalidateQueries({ queryKey: ['/api/admin/platform-settings'] });
+                              },
+                              onError: () => {
+                                toast({ title: "Failed to update setting", variant: "destructive" });
+                              }
+                            });
+                            mutation.mutate(e.target.value);
+                          }}
+                          className="w-32"
+                          data-testid={`input-setting-${setting.key}`}
+                        />
+                        <span className="text-sm text-gray-500">₹</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {platformSettings.length === 0 && (
+                <div className="text-center text-gray-500 py-8">
+                  <Settings className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No platform settings found. Settings will be automatically initialized.</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
+  </div>
+
       {/* Create/Edit Media Content Modal */}
       <Dialog open={isCreateModalOpen && modalType === "media-content"} onOpenChange={setIsCreateModalOpen}>
         <DialogContent className="max-w-2xl">
@@ -1668,6 +1785,7 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }
