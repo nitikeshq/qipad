@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>({ name: "", description: "", type: "" });
-  const [modalType, setModalType] = useState<"category" | "department" | "tender" | "company-formation" | null>(null);
+  const [modalType, setModalType] = useState<"category" | "department" | "tender" | "company-formation" | "media-content" | null>(null);
   const [viewUserModal, setViewUserModal] = useState<any>(null);
   const [editFormationModal, setEditFormationModal] = useState<any>(null);
 
@@ -239,7 +239,7 @@ export default function AdminDashboard() {
     { title: "Communities", value: communities.length, icon: MessageSquare, color: "text-cyan-600", bgColor: "bg-cyan-50" }
   ];
 
-  const openCreateModal = (type: "category" | "department" | "tender" | "company-formation") => {
+  const openCreateModal = (type: "category" | "department" | "tender" | "company-formation" | "media-content") => {
     setModalType(type);
     setEditingItem({ name: "", description: "", type: "" });
     setIsCreateModalOpen(true);
@@ -1649,143 +1649,9 @@ export default function AdminDashboard() {
         </Card>
       </TabsContent>
     </Tabs>
-  </div>
+      </div>
 
-      {/* Create/Edit Media Content Modal */}
-      <Dialog open={isCreateModalOpen && modalType === "media-content"} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {editingItem.id ? "Edit Media Content" : "Create New Media Content"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={editingItem.title || ""}
-                onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
-                placeholder="Enter content title"
-                data-testid="input-media-title"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={editingItem.description || ""}
-                onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-                placeholder="Enter content description"
-                rows={3}
-                data-testid="textarea-media-description"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="type">Content Type</Label>
-                <Select value={editingItem.type || ""} onValueChange={(value) => setEditingItem({ ...editingItem, type: value })}>
-                  <SelectTrigger data-testid="select-media-type">
-                    <SelectValue placeholder="Select content type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="press_release">Press Release</SelectItem>
-                    <SelectItem value="video">Video</SelectItem>
-                    <SelectItem value="document">Document</SelectItem>
-                    <SelectItem value="image">Image</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="author">Author</Label>
-                <Input
-                  id="author"
-                  value={editingItem.author || ""}
-                  onChange={(e) => setEditingItem({ ...editingItem, author: e.target.value })}
-                  placeholder="Enter author name"
-                  data-testid="input-media-author"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="url">Content URL</Label>
-              <Input
-                id="url"
-                value={editingItem.url || ""}
-                onChange={(e) => setEditingItem({ ...editingItem, url: e.target.value })}
-                placeholder="Enter content URL"
-                data-testid="input-media-url"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="thumbnailUrl">Thumbnail URL (Optional)</Label>
-              <Input
-                id="thumbnailUrl"
-                value={editingItem.thumbnailUrl || ""}
-                onChange={(e) => setEditingItem({ ...editingItem, thumbnailUrl: e.target.value })}
-                placeholder="Enter thumbnail URL"
-                data-testid="input-media-thumbnail"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="tags">Tags (comma-separated)</Label>
-              <Input
-                id="tags"
-                value={Array.isArray(editingItem.tags) ? editingItem.tags.join(", ") : ""}
-                onChange={(e) => setEditingItem({ ...editingItem, tags: e.target.value.split(",").map(tag => tag.trim()).filter(tag => tag) })}
-                placeholder="Enter tags separated by commas"
-                data-testid="input-media-tags"
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="featured"
-                checked={editingItem.featured || false}
-                onChange={(e) => setEditingItem({ ...editingItem, featured: e.target.checked })}
-                data-testid="checkbox-media-featured"
-              />
-              <Label htmlFor="featured">Mark as Featured</Label>
-            </div>
-            
-            <div className="flex justify-end space-x-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsCreateModalOpen(false)}
-                data-testid="button-cancel-media-content"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={() => {
-                  if (editingItem.id) {
-                    updateMediaContentMutation.mutate({ id: editingItem.id, data: editingItem });
-                  } else {
-                    createMediaContentMutation.mutate(editingItem);
-                  }
-                }}
-                disabled={createMediaContentMutation.isPending || updateMediaContentMutation.isPending}
-                data-testid="button-save-media-content"
-              >
-                {(createMediaContentMutation.isPending || updateMediaContentMutation.isPending) ? 
-                  'Saving...' : 
-                  (editingItem.id ? 'Update' : 'Create')
-                }
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+      {/* Create/Edit Media Content Modal - Temporarily removed for debugging */}
     </div>
   );
 }
