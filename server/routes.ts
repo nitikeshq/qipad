@@ -1636,6 +1636,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin - Media Content Management
+  app.get("/api/admin/media-content", async (req, res) => {
+    try {
+      const mediaContent = await storage.getAllMediaContent();
+      res.json(mediaContent);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get media content", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/media-content", async (req, res) => {
+    try {
+      const { title, description, type, url, thumbnailUrl, tags, featured, author } = req.body;
+      const mediaContentData = {
+        title,
+        description,
+        type,
+        url,
+        thumbnailUrl,
+        tags: tags || [],
+        featured: featured || false,
+        author,
+        isActive: true
+      };
+      const newMediaContent = await storage.createMediaContent(mediaContentData);
+      res.json(newMediaContent);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create media content", error: error.message });
+    }
+  });
+
+  app.put("/api/admin/media-content/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      const updatedMediaContent = await storage.updateMediaContent(id, updateData);
+      res.json(updatedMediaContent);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update media content", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/media-content/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteMediaContent(id);
+      res.json({ message: "Media content deleted successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to delete media content", error: error.message });
+    }
+  });
+
   // Admin - Departments Management
   app.get("/api/admin/departments", async (req, res) => {
     try {
