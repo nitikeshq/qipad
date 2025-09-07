@@ -43,6 +43,13 @@ interface Transaction {
   createdAt: string;
 }
 
+interface PersonalReferral {
+  referralId: string;
+  referralUrl: string;
+  totalReferrals: number;
+  totalEarned: number;
+}
+
 interface Referral {
   id: string;
   referredEmail: string;
@@ -52,6 +59,11 @@ interface Referral {
   status: string;
   rewardAmount: number;
   createdAt: string;
+}
+
+interface ReferralResponse {
+  personalReferral: PersonalReferral;
+  referrals: Referral[];
 }
 
 export function WalletPage() {
@@ -69,9 +81,12 @@ export function WalletPage() {
     queryKey: ['/api/wallet/transactions']
   });
 
-  const { data: referrals = [], isLoading: referralsLoading, refetch: refetchReferrals } = useQuery<Referral[]>({
+  const { data: referralData, isLoading: referralsLoading, refetch: refetchReferrals } = useQuery<ReferralResponse>({
     queryKey: ['/api/referrals']
   });
+
+  const personalReferral = referralData?.personalReferral;
+  const referrals = referralData?.referrals || [];
 
   const handleDeposit = async () => {
     try {
@@ -154,15 +169,15 @@ export function WalletPage() {
 
       if (response.ok) {
         toast({
-          title: "Referral Created",
-          description: `Referral code generated for ${referredEmail}`,
+          title: "Invitation Sent! 📧",
+          description: data.message || `Referral invitation sent to ${referredEmail}`,
         });
         setReferredEmail("");
         refetchReferrals();
       } else {
         toast({
-          title: "Referral Failed",
-          description: data.error || "Failed to create referral",
+          title: "Failed to Send Invitation",
+          description: data.error || "Failed to send referral invitation",
           variant: "destructive",
         });
       }
@@ -468,16 +483,71 @@ export function WalletPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
+                    {/* Personal Referral Info */}
+                    {personalReferral && (
+                      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-semibold text-lg">Your Referral Details</h3>
+                          <div className="text-right text-sm text-muted-foreground">
+                            <div>Total Referrals: <span className="font-bold text-blue-600">{personalReferral.totalReferrals}</span></div>
+                            <div>Total Earned: <span className="font-bold text-green-600">₹{personalReferral.totalEarned}</span></div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border">
+                            <div>
+                              <span className="font-medium text-sm">Your Referral ID:</span>
+                              <div className="font-mono text-lg font-bold text-primary">{personalReferral.referralId}</div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => copyReferralCode(personalReferral.referralId)}
+                              data-testid="button-copy-personal-id"
+                            >
+                              {copiedCode === personalReferral.referralId ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                          
+                          <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border">
+                            <div className="flex-1 min-w-0">
+                              <span className="font-medium text-sm">Your Referral URL:</span>
+                              <div className="text-xs text-muted-foreground truncate mt-1 font-mono">
+                                {personalReferral.referralUrl}
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => copyReferralUrl(personalReferral.referralUrl)}
+                              data-testid="button-copy-personal-url"
+                            >
+                              {copiedUrl === personalReferral.referralUrl ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-lg">
-                      <h3 className="font-medium mb-2">Earn ₹50 Credits per Referral!</h3>
+                      <h3 className="font-medium mb-2">📧 Invite Friends via Email</h3>
                       <p className="text-sm text-muted-foreground">
-                        Invite friends to join Qipad and earn 50 credits when they sign up and verify their email.
+                        Send your referral link directly to friends and earn ₹50 credits when they sign up!
                       </p>
                     </div>
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="email">Refer a Friend</Label>
+                        <Label htmlFor="email">Send Invitation Email</Label>
                         <div className="flex gap-2">
                           <Input
                             id="email"
@@ -490,11 +560,15 @@ export function WalletPage() {
                           <Button 
                             onClick={handleReferral}
                             disabled={!referredEmail}
-                            data-testid="button-create-referral"
+                            data-testid="button-send-invitation"
+                            className="whitespace-nowrap"
                           >
-                            Refer
+                            📧 Send Invite
                           </Button>
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                          We'll send them a beautiful email with your referral link and welcome bonus details.
+                        </p>
                       </div>
 
                       {referralsLoading ? (

@@ -38,6 +38,7 @@ import { storage } from "./storage";
 import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema, insertCompanySchema, insertPaymentSchema, insertSubscriptionSchema, insertCompanyServiceSchema, insertCompanyProductSchema, insertServiceInquirySchema, insertWalletSchema, insertWalletTransactionSchema, insertReferralSchema } from "@shared/schema";
 import { payumoneyService } from "./payumoney";
 import { PlatformSettingsService } from "./platformSettingsService";
+import { emailService } from "./emailService";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -3179,25 +3180,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // REFERRAL SYSTEM ROUTES
   // ========================================
 
-  // Get user's referrals
+  // Get user's personal referral info and referrals
   app.get("/api/referrals", authenticateToken, async (req: any, res: any) => {
     try {
       const userId = req.user.userId;
+      
+      // Generate or get user's permanent referral code
+      const userReferralId = `QIP${userId.substring(0, 6).toUpperCase()}`;
+      const userReferralUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${userReferralId}`;
+      
       const referrals = await storage.getReferralsByUser(userId);
       
-      res.json(referrals.map(referral => ({
-        ...referral,
-        rewardAmount: parseFloat(referral.rewardAmount),
-        referralId: referral.referralCode, // The code is actually the ID now
-        referralUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${referral.referralCode}`
-      })));
+      res.json({
+        personalReferral: {
+          referralId: userReferralId,
+          referralUrl: userReferralUrl,
+          totalReferrals: referrals.length,
+          totalEarned: referrals.reduce((sum, ref) => sum + parseFloat(ref.rewardAmount || '0'), 0)
+        },
+        referrals: referrals.map(referral => ({
+          ...referral,
+          rewardAmount: parseFloat(referral.rewardAmount),
+          referralId: referral.referralCode,
+          referralUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${referral.referralCode}`
+        }))
+      });
     } catch (error) {
       console.error('Error fetching referrals:', error);
       res.status(500).json({ message: 'Failed to fetch referrals' });
     }
   });
 
-  // Create a new referral code
+  // Send referral invitation
   app.post("/api/referrals", authenticateToken, async (req: any, res: any) => {
     try {
       const userId = req.user.userId;
@@ -3205,6 +3219,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!referredEmail || !referredEmail.includes('@')) {
         return res.status(400).json({ error: 'Valid email address is required' });
+      }
+
+      // Get user info for the email
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
       }
 
       // Check if email is already referred by this user
@@ -3215,28 +3235,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'This email has already been referred by you' });
       }
 
-      // Generate unique referral ID and code
-      const referralId = `QIP${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-      const referralCode = `REF_${userId.substring(0, 8)}_${Date.now().toString(36)}`;
-      const referralUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${referralId}`;
+      // Use user's permanent referral ID and URL
+      const userReferralId = `QIP${userId.substring(0, 6).toUpperCase()}`;
+      const userReferralUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${userReferralId}`;
 
+      // Send referral email
+      const referrerName = `${user.firstName} ${user.lastName}`;
+      const emailSent = await emailService.sendReferralEmail({
+        toEmail: referredEmail,
+        referrerName,
+        referralUrl: userReferralUrl,
+        referralId: userReferralId
+      });
+
+      if (!emailSent) {
+        return res.status(500).json({ error: 'Failed to send referral email' });
+      }
+
+      // Create referral record
       const referral = await storage.createReferral({
         referrerId: userId,
         referredEmail,
-        referralCode: referralId, // Using the short ID as the main code
+        referralCode: userReferralId,
         status: 'pending',
-        rewardAmount: '50' // Default reward amount
+        rewardAmount: '50'
       });
 
       res.json({
-        ...referral,
-        rewardAmount: parseFloat(referral.rewardAmount),
-        referralId: referralId,
-        referralUrl: referralUrl
+        success: true,
+        message: `Referral invitation sent to ${referredEmail}`,
+        referral: {
+          ...referral,
+          rewardAmount: parseFloat(referral.rewardAmount),
+          referralId: userReferralId,
+          referralUrl: userReferralUrl
+        }
       });
     } catch (error) {
-      console.error('Error creating referral:', error);
-      res.status(500).json({ message: 'Failed to create referral' });
+      console.error('Error sending referral:', error);
+      res.status(500).json({ message: 'Failed to send referral invitation' });
     }
   });
 
