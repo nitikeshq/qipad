@@ -1648,10 +1648,63 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </TabsContent>
+      </div>
     </Tabs>
       </div>
 
-      {/* Create/Edit Media Content Modal - Temporarily removed for debugging */}
+      {/* Create/Edit Media Content Modal */}
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingItem.id ? 'Edit' : 'Create'} {modalType === 'media-content' ? 'Media Content' : modalType}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={editingItem.name}
+                onChange={(e) => setEditingItem({...editingItem, name: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={editingItem.description}
+                onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                required
+              />
+            </div>
+            {modalType === 'media-content' && (
+              <div>
+                <Label htmlFor="type">Type</Label>
+                <Select value={editingItem.type} onValueChange={(value) => setEditingItem({...editingItem, type: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="press-release">Press Release</SelectItem>
+                    <SelectItem value="video">Video</SelectItem>
+                    <SelectItem value="startup-material">Startup Material</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createItemMutation.isPending}>
+                {createItemMutation.isPending ? 'Saving...' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
