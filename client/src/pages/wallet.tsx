@@ -541,7 +541,7 @@ export function WalletPage() {
                     <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-lg">
                       <h3 className="font-medium mb-2">📧 Invite Friends via Email</h3>
                       <p className="text-sm text-muted-foreground">
-                        Send your referral link directly to friends and earn ₹50 credits when they sign up!
+                        Send your referral link directly to friends and earn ₹50 credits when they sign up and verify their account! They get ₹10 joining bonus + ₹20 verification bonus.
                       </p>
                     </div>
 
