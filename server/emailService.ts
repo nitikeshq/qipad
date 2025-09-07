@@ -1,8 +1,4 @@
-import sgMail from '@sendgrid/mail';
-
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-}
+import nodemailer from 'nodemailer';
 
 interface SendReferralEmailParams {
   toEmail: string;
@@ -11,17 +7,35 @@ interface SendReferralEmailParams {
   referralId: string;
 }
 
+// Create transporter with Gmail SMTP
+const createTransporter = () => {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    console.log('Gmail SMTP not configured - Email functionality disabled');
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD
+    }
+  });
+};
+
 export const emailService = {
   async sendReferralEmail({ toEmail, referrerName, referralUrl, referralId }: SendReferralEmailParams): Promise<boolean> {
-    if (!process.env.SENDGRID_API_KEY) {
-      console.log('SendGrid not configured - Email would be sent to:', toEmail);
-      return true; // Return true for testing when no API key is set
+    const transporter = createTransporter();
+    
+    if (!transporter) {
+      console.log('Gmail SMTP not configured - Email would be sent to:', toEmail);
+      return true; // Return true for testing when not configured
     }
 
     try {
-      const msg = {
+      const mailOptions = {
+        from: `"Qipad Platform" <${process.env.GMAIL_USER}>`,
         to: toEmail,
-        from: process.env.FROM_EMAIL || 'noreply@qipad.com',
         subject: `${referrerName} invited you to join Qipad - Get ₹50 Welcome Credits!`,
         html: `
           <!DOCTYPE html>
@@ -109,11 +123,11 @@ Welcome to Qipad!
         `
       };
 
-      await sgMail.send(msg);
-      console.log(`Referral email sent to ${toEmail}`);
+      await transporter.sendMail(mailOptions);
+      console.log(`Referral email sent to ${toEmail} via Gmail SMTP`);
       return true;
     } catch (error) {
-      console.error('Error sending referral email:', error);
+      console.error('Error sending referral email via Gmail SMTP:', error);
       return false;
     }
   }
