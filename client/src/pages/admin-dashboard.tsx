@@ -649,6 +649,14 @@ export default function AdminDashboard() {
                         <TableCell>{company.industry}</TableCell>
                         <TableCell>{company.foundedYear}</TableCell>
                         <TableCell>
+                          {company.owner ? (
+                            <div className="text-sm">
+                              <div className="font-medium">{company.owner.firstName} {company.owner.lastName}</div>
+                              <div className="text-gray-500">{company.owner.email}</div>
+                            </div>
+                          ) : 'N/A'}
+                        </TableCell>
+                        <TableCell>
                           <Badge variant="default">Active</Badge>
                         </TableCell>
                         <TableCell className="space-x-2">
@@ -685,7 +693,7 @@ export default function AdminDashboard() {
                     ))}
                     {companies.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center text-gray-500">
+                        <TableCell colSpan={6} className="text-center text-gray-500">
                           No companies found.
                         </TableCell>
                       </TableRow>
