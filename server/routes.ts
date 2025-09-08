@@ -197,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               referredUserId: user.id,
               referralCode: req.body.referralCode,
               rewardAmount: "50",
-              status: "completed"
+              status: "credited"
             });
 
             // Send referral reward email to referrer
