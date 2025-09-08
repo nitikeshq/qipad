@@ -52,6 +52,10 @@ export default function AdminDashboard() {
   const [currentInvestmentPage, setCurrentInvestmentPage] = useState(1);
   const { data: investmentsResponse = {} } = useQuery<any>({
     queryKey: [`/api/admin/investments?page=${currentInvestmentPage}&limit=10`],
+    queryFn: async () => {
+      const response = await adminApiRequest('GET', `/api/admin/investments?page=${currentInvestmentPage}&limit=10`);
+      return response.json();
+    }
   });
   const investments = investmentsResponse.investments || [];
 
@@ -83,7 +87,6 @@ export default function AdminDashboard() {
     queryKey: ['/api/admin/company-formations'],
     queryFn: async () => {
       const response = await adminApiRequest('GET', '/api/admin/company-formations');
-      if (!response.ok) throw new Error('Failed to fetch company formations');
       return response.json();
     }
   });
@@ -1108,71 +1111,6 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Investments Management Tab */}
-          <TabsContent value="investments">
-            <Card data-testid="card-investments-management">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Investments Management</CardTitle>
-                <Button 
-                  onClick={() => openCreateModal("investment")}
-                  data-testid="button-create-investment"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Investment
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Project</TableHead>
-                      <TableHead>Investor</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {investments.map((investment: any) => (
-                      <TableRow key={investment.id}>
-                        <TableCell className="font-medium">{investment.project?.title}</TableCell>
-                        <TableCell>{investment.investor?.firstName} {investment.investor?.lastName}</TableCell>
-                        <TableCell>{investment.amount?.toLocaleString()} QP</TableCell>
-                        <TableCell>{new Date(investment.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <Badge variant="default">{investment.status || 'Confirmed'}</Badge>
-                        </TableCell>
-                        <TableCell className="space-x-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              setEditingItem(investment);
-                              setModalType("investment");
-                              setIsCreateModalOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {investments.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-gray-500">
-                          No investments found.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* Tenders Management Tab */}
           <TabsContent value="tenders">
