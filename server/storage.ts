@@ -23,7 +23,7 @@ import {
   type Referral, type InsertReferral
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, sql, ne } from "drizzle-orm";
+import { eq, and, or, desc, sql, ne, like } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -251,14 +251,6 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
-  async updateUser(id: string, updateData: Partial<User>): Promise<User> {
-    const [updatedUser] = await db
-      .update(users)
-      .set({ ...updateData, updatedAt: new Date() })
-      .where(eq(users.id, id))
-      .returning();
-    return updatedUser;
-  }
 
   async deleteUser(id: string): Promise<void> {
     await db.delete(users).where(eq(users.id, id));
@@ -282,26 +274,9 @@ export class DatabaseStorage implements IStorage {
     return projectsWithOwners;
   }
 
-  async updateProject(id: string, updateData: Partial<Project>): Promise<Project> {
-    const [updatedProject] = await db
-      .update(projects)
-      .set({ ...updateData, updatedAt: new Date() })
-      .where(eq(projects.id, id))
-      .returning();
-    return updatedProject;
-  }
 
   async deleteProject(id: string): Promise<void> {
     await db.delete(projects).where(eq(projects.id, id));
-  }
-
-  async updateInvestment(id: string, updateData: Partial<Investment>): Promise<Investment> {
-    const [updatedInvestment] = await db
-      .update(investments)
-      .set({ ...updateData, updatedAt: new Date() })
-      .where(eq(investments.id, id))
-      .returning();
-    return updatedInvestment;
   }
 
   async deleteInvestment(id: string): Promise<void> {
@@ -1076,7 +1051,6 @@ export class DatabaseStorage implements IStorage {
 
   async updateCreditConfig(id: string, data: any): Promise<any> {
     const { creditConfigurations } = await import("@shared/schema");
-    const { eq } = await import("drizzle-orm");
     const [config] = await db
       .update(creditConfigurations)
       .set({ ...data, updatedAt: new Date() })
@@ -1480,7 +1454,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllReferrals(): Promise<Referral[]> {
-    const { desc } = await import("drizzle-orm");
     return await db.select().from(referrals).orderBy(desc(referrals.createdAt));
   }
 
@@ -1494,7 +1467,6 @@ export class DatabaseStorage implements IStorage {
     const userIdPrefix = code.substring(3).toLowerCase(); // Remove 'QIP' and convert to lowercase
     
     // Find user whose ID starts with this prefix
-    const { like } = await import("drizzle-orm");
     const [user] = await db.select().from(users).where(like(users.id, `${userIdPrefix}%`));
     return user;
   }

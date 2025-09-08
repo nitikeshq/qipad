@@ -1,21 +1,15 @@
-import pkg from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from "ws";
 import * as schema from "@shared/schema";
 
-const { Pool } = pkg;
+neonConfig.webSocketConstructor = ws;
 
-// Local PostgreSQL configuration
-const connectionConfig = {
-  host: '127.0.0.1',
-  port: 5432,
-  database: 'qipaddb',
-  user: 'postgres',
-  password: 'Octamy#1234',
-  ssl: false,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-};
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?",
+  );
+}
 
-export const pool = new Pool(connectionConfig);
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle({ client: pool, schema });
