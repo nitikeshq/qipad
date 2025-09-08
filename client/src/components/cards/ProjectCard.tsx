@@ -88,10 +88,10 @@ export function ProjectCard({ project, showActions = false, onInvest, onSupport 
             <div className="flex items-center space-x-3 text-xs text-muted-foreground mb-2">
               <div className="flex items-center space-x-1">
                 <Calendar className="h-3 w-3" />
-                <span>{new Date(project.createdAt).toLocaleDateString()}</span>
+                <span>{project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'N/A'}</span>
               </div>
               <span>•</span>
-              <span className="capitalize">{project.category}</span>
+              <span className="capitalize">{project.industry}</span>
             </div>
           </div>
           

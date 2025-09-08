@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { User, Camera, Save, ArrowLeft } from "lucide-react";
@@ -87,25 +88,31 @@ export default function ProfileSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 p-6">
-            <div className="text-center">Loading...</div>
-          </main>
+      <SidebarProvider>
+        <div className="min-h-screen bg-background">
+          <Header />
+          <div className="flex">
+            <Sidebar />
+            <SidebarInset>
+              <main className="flex-1 p-6">
+                <div className="text-center">Loading...</div>
+              </main>
+            </SidebarInset>
+          </div>
         </div>
-      </div>
+      </SidebarProvider>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6 max-w-4xl mx-auto">
-          {/* Header */}
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <SidebarInset>
+            <main className="flex-1 p-6 max-w-4xl mx-auto">
+              {/* Header */}
           <div className="mb-8">
             <Button
               variant="ghost"
@@ -303,8 +310,10 @@ export default function ProfileSettingsPage() {
               </CardContent>
             </Card>
           </div>
-        </main>
+            </main>
+          </SidebarInset>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

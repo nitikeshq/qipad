@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Bell, Shield, Globe, Moon, Sun, Monitor, ArrowLeft, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
@@ -141,29 +142,31 @@ export default function GeneralSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6 max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <Button
-              variant="ghost"
-              onClick={() => setLocation("/dashboard")}
-              className="mb-4"
-              data-testid="button-back-to-dashboard"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            <h1 className="text-3xl font-bold text-foreground">General Settings</h1>
-            <p className="text-muted-foreground mt-1">
-              Customize your application preferences and privacy settings
-            </p>
-          </div>
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <SidebarInset>
+            <main className="flex-1 p-6 max-w-4xl mx-auto">
+              {/* Header */}
+              <div className="mb-8">
+                <Button
+                  variant="ghost"
+                  onClick={() => setLocation("/dashboard")}
+                  className="mb-4"
+                  data-testid="button-back-to-dashboard"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+                <h1 className="text-3xl font-bold text-foreground">General Settings</h1>
+                <p className="text-muted-foreground mt-1">
+                  Customize your application preferences and privacy settings
+                </p>
+              </div>
 
-          <div className="grid gap-6">
+              <div className="grid gap-6">
             {/* Appearance Settings */}
             <Card>
               <CardHeader>
@@ -456,8 +459,10 @@ export default function GeneralSettingsPage() {
               </CardContent>
             </Card>
           </div>
-        </main>
+            </main>
+          </SidebarInset>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
