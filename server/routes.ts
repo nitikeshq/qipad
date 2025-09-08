@@ -1722,6 +1722,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin - Update Company Status
+  app.put("/api/admin/companies/:id/status", authenticateAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!status) {
+        return res.status(400).json({ message: "Status is required" });
+      }
+
+      const company = await storage.getCompanyById(id);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      const updatedCompany = await storage.updateCompany(id, { status });
+      if (!updatedCompany) {
+        return res.status(500).json({ message: "Failed to update company status" });
+      }
+
+      res.json({ message: "Company status updated successfully", company: updatedCompany });
+    } catch (error: any) {
+      console.error("Update company status error:", error);
+      res.status(500).json({ message: "Failed to update company status", error: error.message });
+    }
+  });
+
   // Admin - Services Management  
   app.get("/api/admin/services", authenticateAdmin, async (req, res) => {
     try {
