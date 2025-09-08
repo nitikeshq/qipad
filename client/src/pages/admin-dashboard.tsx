@@ -1673,6 +1673,22 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
+                  <Label htmlFor="owner">Owner</Label>
+                  <select 
+                    className="w-full mt-1 p-2 border rounded-md"
+                    value={editingItem.ownerId || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, ownerId: e.target.value })}
+                    required
+                  >
+                    <option value="">Select owner...</option>
+                    {users.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.firstName} {user.lastName} ({user.email}) - {user.userType}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
