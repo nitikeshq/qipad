@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, adminApiRequest } from "@/lib/queryClient";
 import { Shield, Users, FileText, DollarSign, Settings, LogOut, Plus, Edit, Trash2, Search, Filter, Building, Building2, Calendar, Tag, MessageSquare, Briefcase, Target, Home, BarChart3 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -36,8 +36,7 @@ export default function AdminDashboard() {
   const { data: users = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/users');
-      if (!response.ok) throw new Error('Failed to fetch users');
+      const response = await adminApiRequest('GET', '/api/admin/users');
       return response.json();
     }
   });
@@ -45,8 +44,7 @@ export default function AdminDashboard() {
   const { data: projects = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/projects'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/projects');
-      if (!response.ok) throw new Error('Failed to fetch projects');
+      const response = await adminApiRequest('GET', '/api/admin/projects');
       return response.json();
     }
   });
@@ -60,8 +58,7 @@ export default function AdminDashboard() {
   const { data: communities = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/communities'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/communities');
-      if (!response.ok) throw new Error('Failed to fetch communities');
+      const response = await adminApiRequest('GET', '/api/admin/communities');
       return response.json();
     }
   });
@@ -69,8 +66,7 @@ export default function AdminDashboard() {
   const { data: jobs = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/jobs'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/jobs');
-      if (!response.ok) throw new Error('Failed to fetch jobs');
+      const response = await adminApiRequest('GET', '/api/admin/jobs');
       return response.json();
     }
   });
@@ -78,8 +74,7 @@ export default function AdminDashboard() {
   const { data: tenders = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/tenders'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/tenders');
-      if (!response.ok) throw new Error('Failed to fetch tenders');
+      const response = await adminApiRequest('GET', '/api/admin/tenders');
       return response.json();
     }
   });
@@ -87,7 +82,7 @@ export default function AdminDashboard() {
   const { data: companyFormations = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/company-formations'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/company-formations');
+      const response = await adminApiRequest('GET', '/api/admin/company-formations');
       if (!response.ok) throw new Error('Failed to fetch company formations');
       return response.json();
     }
@@ -96,7 +91,7 @@ export default function AdminDashboard() {
   const { data: categories = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/categories'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/categories');
+      const response = await adminApiRequest('GET', '/api/admin/categories');
       if (!response.ok) throw new Error('Failed to fetch categories');
       return response.json();
     }
@@ -105,7 +100,7 @@ export default function AdminDashboard() {
   const { data: departments = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/departments'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/departments');
+      const response = await adminApiRequest('GET', '/api/admin/departments');
       if (!response.ok) throw new Error('Failed to fetch departments');
       return response.json();
     }
@@ -114,7 +109,7 @@ export default function AdminDashboard() {
   const { data: companies = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/companies'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/companies');
+      const response = await adminApiRequest('GET', '/api/admin/companies');
       if (!response.ok) throw new Error('Failed to fetch companies');
       return response.json();
     }
@@ -123,7 +118,7 @@ export default function AdminDashboard() {
   const { data: services = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/services'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/services');
+      const response = await adminApiRequest('GET', '/api/admin/services');
       if (!response.ok) throw new Error('Failed to fetch services');
       return response.json();
     }
@@ -132,7 +127,7 @@ export default function AdminDashboard() {
   const { data: events = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/events'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/events');
+      const response = await adminApiRequest('GET', '/api/admin/events');
       if (!response.ok) throw new Error('Failed to fetch events');
       return response.json();
     }
@@ -141,7 +136,7 @@ export default function AdminDashboard() {
   const { data: profitAnalytics = {} } = useQuery<any>({
     queryKey: ['/api/admin/analytics/profit'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/analytics/profit');
+      const response = await adminApiRequest('GET', '/api/admin/analytics/profit');
       if (!response.ok) throw new Error('Failed to fetch analytics');
       return response.json();
     }
@@ -158,7 +153,7 @@ export default function AdminDashboard() {
   const { data: mediaContent = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/media-content'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/media-content');
+      const response = await adminApiRequest('GET', '/api/admin/media-content');
       if (!response.ok) throw new Error('Failed to fetch media content');
       return response.json();
     }
@@ -167,7 +162,7 @@ export default function AdminDashboard() {
   const { data: platformSettings = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/platform-settings'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/platform-settings');
+      const response = await adminApiRequest('GET', '/api/admin/platform-settings');
       if (!response.ok) throw new Error('Failed to fetch platform settings');
       return response.json();
     }
@@ -279,7 +274,7 @@ export default function AdminDashboard() {
 
   const approveKycMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      const response = await apiRequest("PUT", `/api/admin/users/${userId}/kyc`, { 
+      const response = await adminApiRequest("PUT", `/api/admin/users/${userId}/kyc`, { 
         kycStatus: status, 
         isVerified: status === 'approved',
         isKycComplete: status === 'approved'
