@@ -97,6 +97,29 @@ const authenticateToken = (req: any, res: any, next: any) => {
   });
 };
 
+// Middleware for admin authentication
+const authenticateAdmin = (req: any, res: any, next: any) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'Admin access token required' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid or expired admin token' });
+    }
+    
+    if (!user.isAdmin || user.userId !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    req.user = user;
+    next();
+  });
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded files statically
   app.use('/uploads', express.static('uploads'));
@@ -1116,7 +1139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin route for getting all users with documents
   // Users CRUD
-  app.get("/api/admin/users", async (req, res) => {
+  app.get("/api/admin/users", authenticateAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       const documents = await storage.getAllDocuments();
@@ -1142,7 +1165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/users/:id", async (req, res) => {
+  app.put("/api/admin/users/:id", authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -1156,7 +1179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/users/:id", async (req, res) => {
+  app.delete("/api/admin/users/:id", authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       await storage.deleteUser(id);
@@ -1168,7 +1191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin route for suspending/activating users
-  app.patch("/api/admin/users/:id/status", async (req, res) => {
+  app.patch("/api/admin/users/:id/status", authenticateAdmin, async (req, res) => {
     try {
       const { status } = req.body; // 'active' or 'suspended'
       const user = await storage.updateUser(req.params.id, { status });
@@ -1179,7 +1202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin route for KYC verification with user sync
-  app.patch("/api/admin/documents/:id/verify", async (req, res) => {
+  app.patch("/api/admin/documents/:id/verify", authenticateAdmin, async (req, res) => {
     try {
       const { status, feedback } = req.body; // 'approved' or 'rejected'
       
@@ -1215,7 +1238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin KYC approval endpoint
-  app.put("/api/admin/users/:userId/kyc", async (req, res) => {
+  app.put("/api/admin/users/:userId/kyc", authenticateAdmin, async (req, res) => {
     try {
       const { userId } = req.params;
       const { kycStatus } = req.body;
@@ -1256,7 +1279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Projects CRUD
-  app.get("/api/admin/projects", async (req, res) => {
+  app.get("/api/admin/projects", authenticateAdmin, async (req, res) => {
     try {
       const projects = await storage.getAllProjectsWithOwners();
       res.json(projects);
@@ -1266,7 +1289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/projects/:id", async (req, res) => {
+  app.put("/api/admin/projects/:id", authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -1278,7 +1301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/projects/:id", async (req, res) => {
+  app.delete("/api/admin/projects/:id", authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       await storage.deleteProject(id);
@@ -1290,7 +1313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Investments CRUD
-  app.get("/api/admin/investments", async (req, res) => {
+  app.get("/api/admin/investments", authenticateAdmin, async (req, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
@@ -1320,7 +1343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/investments/:id", async (req, res) => {
+  app.put("/api/admin/investments/:id", authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -1332,7 +1355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/investments/:id", async (req, res) => {
+  app.delete("/api/admin/investments/:id", authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       await storage.deleteInvestment(id);
@@ -1343,7 +1366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/admin/projects/:id/status", async (req, res) => {
+  app.patch("/api/admin/projects/:id/status", authenticateAdmin, async (req, res) => {
     try {
       const { status } = req.body;
       const project = await storage.updateProject(req.params.id, { status });
@@ -1462,7 +1485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin - Companies Management
-  app.get("/api/admin/companies", async (req, res) => {
+  app.get("/api/admin/companies", authenticateAdmin, async (req, res) => {
     try {
       const companies = await storage.getAllCompanies();
       res.json(companies);
@@ -1473,7 +1496,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin - Services Management  
-  app.get("/api/admin/services", async (req, res) => {
+  app.get("/api/admin/services", authenticateAdmin, async (req, res) => {
     try {
       const services = await storage.getAllCompanyServices();
       res.json(services);
@@ -1484,7 +1507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin - Events Management
-  app.get("/api/admin/events", async (req, res) => {
+  app.get("/api/admin/events", authenticateAdmin, async (req, res) => {
     try {
       const events = await storage.getAllEvents();
       res.json(events);
@@ -1495,7 +1518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin - Profit Analytics
-  app.get("/api/admin/analytics/profit", async (req, res) => {
+  app.get("/api/admin/analytics/profit", authenticateAdmin, async (req, res) => {
     try {
       // Calculate profit from various sources
       const payments = await storage.getAllPayments();
@@ -1572,7 +1595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin - Communities Management
-  app.get("/api/admin/communities", async (req, res) => {
+  app.get("/api/admin/communities", authenticateAdmin, async (req, res) => {
     try {
       const communities = await storage.getAllCommunities();
       res.json(communities);
