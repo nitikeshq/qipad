@@ -384,6 +384,191 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
+          {/* Users Management Tab */}
+          <TabsContent value="users">
+            <Card data-testid="card-users-management">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Users Management</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    placeholder="Search users..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-64"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>KYC Status</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user: any) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">
+                          {user.firstName} {user.lastName}
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{user.userType}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.isKycComplete ? "default" : "secondary"}>
+                            {user.isKycComplete ? "Verified" : "Pending"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.status === 'active' ? "default" : "destructive"}>
+                            {user.status || 'active'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setViewUserModal(user)}
+                          >
+                            View
+                          </Button>
+                          {!user.isKycComplete && (
+                            <Button
+                              size="sm"
+                              onClick={() => approveKycMutation.mutate({ userId: user.id, status: 'approved' })}
+                            >
+                              Approve KYC
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant={user.status === 'suspended' ? "default" : "destructive"}
+                            onClick={() => suspendUserMutation.mutate({ 
+                              userId: user.id, 
+                              status: user.status === 'suspended' ? 'active' : 'suspended' 
+                            })}
+                          >
+                            {user.status === 'suspended' ? 'Activate' : 'Suspend'}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredUsers.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-gray-500">
+                          No users found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Projects Management Tab */}
+          <TabsContent value="projects">
+            <Card data-testid="card-projects-management">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Projects Management</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    placeholder="Search projects..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-64"
+                  />
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Filter status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="pending_review">Pending Review</SelectItem>
+                      <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Owner</TableHead>
+                      <TableHead>Funding Goal</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProjects.map((project: any) => (
+                      <TableRow key={project.id}>
+                        <TableCell className="font-medium">{project.title}</TableCell>
+                        <TableCell>{project.owner?.firstName} {project.owner?.lastName}</TableCell>
+                        <TableCell>₹{project.fundingGoal?.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            project.status === 'approved' ? 'default' :
+                            project.status === 'pending_review' ? 'secondary' : 'destructive'
+                          }>
+                            {project.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`/innovations/${project.id}`, '_blank')}
+                          >
+                            View
+                          </Button>
+                          {project.status === 'pending_review' && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => updateProjectStatusMutation.mutate({ 
+                                  projectId: project.id, 
+                                  status: 'approved' 
+                                })}
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => updateProjectStatusMutation.mutate({ 
+                                  projectId: project.id, 
+                                  status: 'rejected' 
+                                })}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredProjects.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-gray-500">
+                          No projects found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Media Center Management Tab - NOW PROPERLY INSIDE TABS */}
           <TabsContent value="media-center">
             <Card data-testid="card-media-center-management">
