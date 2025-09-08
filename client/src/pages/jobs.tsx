@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, Filter, MapPin, DollarSign, Clock } from "lucide-react";
 import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { Sidebar, SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Job } from "@shared/schema";
 import { JobModal } from "@/components/modals/JobModal";
 import { useToast } from "@/hooks/use-toast";
@@ -113,11 +113,13 @@ export default function Jobs() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <SidebarInset className="flex-1">
+            <main className="p-6">
           {/* Jobs Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
@@ -288,13 +290,15 @@ export default function Jobs() {
               </div>
             )}
           </div>
-        </main>
-      </div>
+            </main>
+          </SidebarInset>
+        </div>
 
-      <JobModal 
-        open={isJobModalOpen} 
-        onOpenChange={setIsJobModalOpen} 
-      />
-    </div>
+        <JobModal 
+          open={isJobModalOpen} 
+          onOpenChange={setIsJobModalOpen} 
+        />
+      </div>
+    </SidebarProvider>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { Sidebar, SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -132,11 +132,13 @@ export default function Events() {
   const canCreateEvent = user?.isVerified === true;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <SidebarInset className="flex-1">
+            <main className="p-6">
           <div className="max-w-6xl mx-auto">
             <div className="flex justify-between items-center mb-8">
               <div>
@@ -467,8 +469,10 @@ export default function Events() {
         )}
         </div>
           </div>
-        </main>
+            </main>
+          </SidebarInset>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
