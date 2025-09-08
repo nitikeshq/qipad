@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +11,7 @@ import { Edit, Trash2, Eye, Plus, TrendingUp, Users, DollarSign } from "lucide-r
 import { Link } from "wouter";
 import { ProjectModal } from "@/components/modals/ProjectModal";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface Project {
@@ -26,6 +29,7 @@ interface Project {
 }
 
 export default function MyProjects() {
+  const isMobile = useIsMobile();
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const { toast } = useToast();
@@ -87,11 +91,13 @@ export default function MyProjects() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          {!isMobile && <Sidebar />}
+          <SidebarInset>
+            <main className={`flex-1 p-6 ${isMobile ? 'pb-20' : ''}`}>
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
@@ -223,7 +229,10 @@ export default function MyProjects() {
             )}
           </div>
         </main>
+          </SidebarInset>
+        </div>
       </div>
+      {isMobile && <BottomNav />}
 
       <ProjectModal 
         open={isProjectModalOpen} 
@@ -235,6 +244,6 @@ export default function MyProjects() {
         }}
         project={editingProject}
       />
-    </div>
+    </SidebarProvider>
   );
 }

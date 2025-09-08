@@ -2,16 +2,30 @@ import { useState } from "react";
 import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText, Gavel, Building, Building2, Scroll, PlayCircle, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  Sidebar as SidebarUI,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
 import { ProjectModal } from "@/components/modals/ProjectModal";
 import { JobModal } from "@/components/modals/JobModal";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function Sidebar() {
   const { user } = useAuth();
   const [location, navigate] = useLocation();
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const quickActions = [
     { 
@@ -40,9 +54,9 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-card border-r border-border" data-testid="sidebar-navigation">
-      <div className="p-6">
-        <div className="space-y-6">
+    <>
+      <SidebarUI variant="inset" data-testid="sidebar-navigation">
+        <SidebarHeader>
           {/* User Profile Card */}
           <div className="bg-secondary/50 rounded-lg p-4">
             <div className="flex items-center space-x-3">
@@ -52,11 +66,11 @@ export function Sidebar() {
                   {user?.firstName?.[0]}{user?.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <h3 className="font-semibold text-foreground" data-testid="text-user-name">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-foreground truncate" data-testid="text-user-name">
                   {user?.firstName} {user?.lastName}
                 </h3>
-                <p className="text-sm text-muted-foreground" data-testid="text-user-type">
+                <p className="text-sm text-muted-foreground truncate" data-testid="text-user-type">
                   {user?.userType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </p>
                 {user?.isVerified && (
@@ -70,49 +84,60 @@ export function Sidebar() {
               </div>
             </div>
           </div>
+        </SidebarHeader>
 
+        <SidebarContent>
           {/* Quick Actions */}
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Quick Actions
-            </h4>
-            {quickActions.map((action) => (
-              <Button
-                key={action.action}
-                variant={action.action === "create-project" ? "default" : "ghost"}
-                className="w-full justify-start"
-                onClick={action.onClick}
-                data-testid={`button-${action.action}`}
-              >
-                <action.icon className="h-4 w-4 mr-2" />
-                {action.label}
-              </Button>
-            ))}
-          </div>
+          <SidebarGroup>
+            <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {quickActions.map((action) => (
+                  <SidebarMenuItem key={action.action}>
+                    <SidebarMenuButton
+                      onClick={action.onClick}
+                      className={action.action === "create-innovation" ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}
+                      data-testid={`button-${action.action}`}
+                    >
+                      <action.icon />
+                      <span>{action.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
           {/* Navigation Links */}
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Menu
-            </h4>
-            {menuItems.map((item) => (
-              <Link key={item.path} href={item.path}>
-                <a
-                  className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-                    location === item.path
-                      ? "text-foreground bg-secondary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                  }`}
-                  data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
-                >
-                  <item.icon className={`h-4 w-4 mr-3 ${location === item.path ? 'text-primary' : ''}`} />
-                  {item.label}
-                </a>
-              </Link>
-            ))}
+          <SidebarGroup>
+            <SidebarGroupLabel>Menu</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {menuItems.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton 
+                      asChild
+                      isActive={location === item.path}
+                      data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <Link href={item.path}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+
+        <SidebarFooter>
+          <div className="text-xs text-muted-foreground text-center">
+            © 2025 Qipad
           </div>
-        </div>
-      </div>
+        </SidebarFooter>
+      </SidebarUI>
 
       {/* Modals */}
       <ProjectModal 
@@ -124,6 +149,6 @@ export function Sidebar() {
         open={isJobModalOpen} 
         onOpenChange={setIsJobModalOpen} 
       />
-    </aside>
+    </>
   );
 }

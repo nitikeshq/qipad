@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Download, Plus, FolderOpen, DollarSign, Users, Handshake } from "lucide-react";
+import { Download, Plus, FolderOpen, DollarSign, Users, Handshake, Wallet, Shield, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { ProjectCard } from "@/components/cards/ProjectCard";
 import { StatsCard } from "@/components/cards/StatsCard";
 import { ProjectModal } from "@/components/modals/ProjectModal";
@@ -12,9 +14,13 @@ import { SupportModal } from "@/components/modals/SupportModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { Project } from "@shared/schema";
 import { Link } from "wouter";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
@@ -22,6 +28,16 @@ export default function Dashboard() {
 
   const { data: userStats } = useQuery({
     queryKey: ['/api/users/stats'],
+    enabled: !!user,
+  });
+
+  const { data: walletData } = useQuery({
+    queryKey: ['/api/wallet'],
+    enabled: !!user,
+  });
+
+  const { data: userData } = useQuery({
+    queryKey: ['/api/users/me'],
     enabled: !!user,
   });
 
@@ -81,33 +97,133 @@ export default function Dashboard() {
 
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          {/* Dashboard Header */}
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          {!isMobile && <Sidebar />}
+          <SidebarInset className={isMobile ? "w-full" : ""}>
+            <main className={`flex-1 p-4 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+              {/* Dashboard Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-foreground" data-testid="text-dashboard-title">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground" data-testid="text-dashboard-title">
                   Dashboard
                 </h1>
                 <p className="text-muted-foreground mt-1">
                   Welcome back, {user?.firstName}! Here's what's happening with your business.
                 </p>
               </div>
-              <div className="flex space-x-3">
-                <Button variant="secondary" data-testid="button-export-report">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Report
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <Button variant="secondary" size="sm" className="sm:size-default" data-testid="button-export-report">
+                  <Download className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Export Report</span>
                 </Button>
-                <Button onClick={() => setIsProjectModalOpen(true)} data-testid="button-new-project">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Project
+                <Button onClick={() => setIsProjectModalOpen(true)} size="sm" className="sm:size-default" data-testid="button-new-project">
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">New Project</span>
                 </Button>
               </div>
             </div>
+          </div>
+
+          {/* KYC and Wallet Status Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {/* KYC Status Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">KYC Verification</CardTitle>
+                <Shield className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-2">
+                  {userData?.isVerified ? (
+                    <>
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <div>
+                        <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
+                          Verified
+                        </Badge>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Your account is fully verified
+                        </p>
+                      </div>
+                    </>
+                  ) : userData?.isKycComplete ? (
+                    <>
+                      <AlertCircle className="h-5 w-5 text-amber-600" />
+                      <div>
+                        <Badge variant="outline" className="border-amber-200 text-amber-800">
+                          Under Review
+                        </Badge>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Documents submitted, verification in progress
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-5 w-5 text-red-600" />
+                      <div>
+                        <Badge variant="outline" className="border-red-200 text-red-800">
+                          Not Started
+                        </Badge>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Complete KYC to unlock all features
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                {!userData?.isVerified && (
+                  <Link href="/documents">
+                    <Button size="sm" className="w-full mt-3">
+                      {userData?.isKycComplete ? 'View Status' : 'Complete KYC'}
+                    </Button>
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Wallet Status Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Wallet & Credits</CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold">
+                      ₹{walletData?.balance || '0'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Available Credits
+                    </p>
+                  </div>
+                  <Link href="/wallet">
+                    <Button size="sm" variant="outline">
+                      <Wallet className="h-4 w-4 mr-1" />
+                      View Wallet
+                    </Button>
+                  </Link>
+                </div>
+                <div className="flex items-center space-x-2 mt-3">
+                  <div className="flex-1 bg-muted rounded-full h-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full transition-all duration-300" 
+                      style={{ 
+                        width: `${Math.min((parseFloat(walletData?.balance || '0') / 100) * 100, 100)}%` 
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {walletData?.balance || '0'} credits
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Stats Cards */}
@@ -126,17 +242,17 @@ export default function Dashboard() {
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Interest Categories */}
             <div className="lg:col-span-2">
               <div className="bg-card rounded-lg border border-border shadow-sm" data-testid="section-interest-categories">
-                <div className="p-6 border-b border-border">
+                <div className="p-4 md:p-6 border-b border-border">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-foreground">What are you interested in?</h2>
+                    <h2 className="text-lg md:text-xl font-semibold text-foreground">What are you interested in?</h2>
                   </div>
                 </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 md:p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                     {[
                       { name: "Start a new company", icon: "🏢", path: "/company-formation", category: "company-formation" },
                       { name: "Get Selected in Tenders", icon: "📄", path: "/tenders", category: "tenders" },
@@ -148,12 +264,10 @@ export default function Dashboard() {
                       { name: "Find Investors", icon: "💰", path: "/investors", category: "investors" }
                     ].map((interest) => (
                       <Link key={interest.category} href={interest.path}>
-                        <a>
-                          <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer text-center h-full" data-testid={`card-interest-${interest.category}`}>
-                            <div className="text-3xl mb-2">{interest.icon}</div>
-                            <p className="text-sm font-medium text-foreground">{interest.name}</p>
-                          </div>
-                        </a>
+                        <div className="p-3 md:p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer text-center h-full min-h-[80px] flex flex-col justify-center" data-testid={`card-interest-${interest.category}`}>
+                          <div className="text-2xl md:text-3xl mb-1 md:mb-2">{interest.icon}</div>
+                          <p className="text-xs md:text-sm font-medium text-foreground leading-tight">{interest.name}</p>
+                        </div>
                       </Link>
                     ))}
                   </div>
@@ -162,7 +276,7 @@ export default function Dashboard() {
             </div>
 
             {/* Right Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Investment Opportunities */}
               <div className="bg-card rounded-lg border border-border shadow-sm" data-testid="section-investment-opportunities">
                 <div className="p-4 border-b border-border">
@@ -218,14 +332,13 @@ export default function Dashboard() {
                   </Link>
                 </div>
               </div>
-
-
-
-
             </div>
           </div>
         </main>
+        </SidebarInset>
       </div>
+      </div>
+      {isMobile && <BottomNav />}
 
       <ProjectModal 
         open={isProjectModalOpen} 
@@ -243,6 +356,6 @@ export default function Dashboard() {
         onOpenChange={setIsSupportModalOpen}
         project={selectedProject}
       />
-    </div>
+    </SidebarProvider>
   );
 }

@@ -6,13 +6,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, Filter } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { ProjectCard } from "@/components/cards/ProjectCard";
 import { ProjectModal } from "@/components/modals/ProjectModal";
 import { InvestmentModal } from "@/components/modals/InvestmentModal";
 import { SupportModal } from "@/components/modals/SupportModal";
 import { Project } from "@shared/schema";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Projects() {
+  const isMobile = useIsMobile();
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
@@ -44,46 +48,46 @@ export default function Projects() {
   const industries = ['technology', 'healthcare', 'finance', 'education', 'ecommerce', 'clean-energy'];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          {/* Projects Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground" data-testid="text-projects-title">
-                  All Projects
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  Discover and invest in innovative business projects from all entrepreneurs
-                </p>
-              </div>
-              <Button onClick={() => setIsProjectModalOpen(true)} data-testid="button-create-project">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Project
-              </Button>
-            </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        {!isMobile && <Sidebar />}
+        <SidebarInset className="flex-1">
+          <div className={`p-6 ${isMobile ? 'pb-20' : ''}`}>
+              {/* Projects Header */}
+              <div className="mb-6 md:mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-foreground" data-testid="text-projects-title">
+                      All Projects
+                    </h1>
+                    <p className="text-muted-foreground mt-1">
+                      Discover and invest in innovative business projects from entrepreneurs
+                    </p>
+                  </div>
+                  <Button onClick={() => setIsProjectModalOpen(true)} size="sm" className="sm:size-default" data-testid="button-create-project">
+                    <Plus className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Create Project</span>
+                  </Button>
+                </div>
 
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search projects..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                  data-testid="input-search-projects"
-                />
-              </div>
-              <Select value={industryFilter} onValueChange={setIndustryFilter}>
-                <SelectTrigger className="w-full sm:w-48" data-testid="select-industry-filter">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="All Industries" />
-                </SelectTrigger>
-                <SelectContent>
+                {/* Filters */}
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Search projects..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                      data-testid="input-search-projects"
+                    />
+                  </div>
+                  <Select value={industryFilter} onValueChange={setIndustryFilter}>
+                    <SelectTrigger className="w-full sm:w-48" data-testid="select-industry-filter">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="All Industries" />
+                    </SelectTrigger>
+                    <SelectContent>
                   <SelectItem value="all">All Industries</SelectItem>
                   {industries.map((industry) => (
                     <SelectItem key={industry} value={industry}>
@@ -93,17 +97,17 @@ export default function Projects() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
+              </div>
 
-          {/* View Toggle */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-muted-foreground">
-              Showing {filteredProjects.length} of {projects.length} projects
-            </div>
-          </div>
+              {/* View Toggle */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {filteredProjects.length} of {projects.length} projects
+                </div>
+              </div>
 
-          {/* Projects Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Projects Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {isLoading ? (
               <div className="col-span-full text-center py-12">
                 <div className="text-muted-foreground" data-testid="text-loading-projects">
@@ -142,9 +146,11 @@ export default function Projects() {
                 )}
               </div>
             )}
+              </div>
           </div>
-        </main>
+        </SidebarInset>
       </div>
+      {isMobile && <BottomNav />}
 
       <ProjectModal 
         open={isProjectModalOpen} 
@@ -162,6 +168,7 @@ export default function Projects() {
         onOpenChange={setIsSupportModalOpen}
         project={selectedProject}
       />
-    </div>
+      {isMobile && <BottomNav />}
+    </SidebarProvider>
   );
 }

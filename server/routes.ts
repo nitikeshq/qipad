@@ -1,6 +1,9 @@
 import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { communities, jobs, companyFormations } from "@shared/schema";
 
 // Helper function for calculating monthly profits
 async function calculateMonthlyProfits(payments: any[], subscriptions: any[]) {
@@ -46,6 +49,131 @@ import multer from "multer";
 import path from "path";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+// Referral processing function
+async function processReferralRegistration(newUser: any, referralCode: string) {
+  try {
+    console.log(`Processing referral registration for ${newUser.email} with code ${referralCode}`);
+    
+    // 1. Find pending referral record by code
+    const referral = await storage.getReferralByCode(referralCode);
+    if (!referral) {
+      console.log(`No referral found for code: ${referralCode}`);
+      
+      // Try to find the referrer by reconstructing the user ID from the referral code
+      // Referral code format: QIP{userId.substring(0, 6).toUpperCase()}
+      if (referralCode.startsWith('QIP')) {
+        const userIdPrefix = referralCode.substring(3).toLowerCase();
+        
+        // Find users whose ID starts with this prefix
+        const allUsers = await storage.getAllUsers();
+        const potentialReferrer = allUsers.find(u => u.id.toLowerCase().startsWith(userIdPrefix));
+        
+        if (potentialReferrer) {
+          console.log(`Found potential referrer: ${potentialReferrer.email} for code ${referralCode}`);
+          
+          // Create a retroactive referral record
+          const retroReferral = await storage.createReferral({
+            referrerId: potentialReferrer.id,
+            referredEmail: newUser.email,
+            referralCode: referralCode,
+            status: 'pending',
+            rewardAmount: '50'
+          });
+          
+          console.log(`Created retroactive referral record: ${retroReferral.id}`);
+          
+          // Now continue with the found referral
+          return processExistingReferral(newUser, retroReferral);
+        }
+      }
+      
+      console.log(`Could not find or create referral for code: ${referralCode}`);
+      return;
+    }
+    
+    return processExistingReferral(newUser, referral);
+  } catch (error) {
+    console.error('Error in processReferralRegistration:', error);
+    throw error; // Re-throw to be caught by caller
+  }
+}
+
+// Helper function to process an existing referral record
+async function processExistingReferral(newUser: any, referral: any) {
+  try {
+    
+    if (referral.status !== 'pending') {
+      console.log(`Referral already processed: ${referral.status}`);
+      return;
+    }
+
+    // 2. Check if email matches the referred email
+    if (referral.referredEmail !== newUser.email) {
+      console.log(`Email mismatch: ${referral.referredEmail} vs ${newUser.email}`);
+      return;
+    }
+
+    // 3. Add bonus credits to new user (₹20 referral bonus)
+    await storage.addCredits(
+      newUser.id,
+      20,
+      'Referral bonus - Welcome via referral!',
+      'referral_bonus',
+      referral.id
+    );
+    console.log(`Added ₹20 referral bonus to user ${newUser.id}`);
+
+    // 4. Add reward to referrer (₹50)
+    await storage.addCredits(
+      referral.referrerId,
+      50,
+      `Referral reward - ${newUser.firstName} joined via your referral`,
+      'referral_reward',
+      referral.id
+    );
+    console.log(`Added ₹50 referral reward to referrer ${referral.referrerId}`);
+
+    // 5. Update referral status to completed
+    await storage.updateReferral(referral.id, {
+      status: 'completed',
+      referredUserId: newUser.id,
+      creditedAt: new Date()
+    });
+    console.log(`Updated referral status to completed`);
+
+    // 6. Send reward email to referrer
+    const referrer = await storage.getUser(referral.referrerId);
+    if (referrer) {
+      // Get updated referral stats
+      const allReferrals = await storage.getReferralsByUser(referral.referrerId);
+      const completedReferrals = allReferrals.filter(r => r.status === 'completed');
+      const totalEarned = completedReferrals.reduce((sum, r) => sum + parseFloat(r.rewardAmount || '0'), 0);
+      
+      // Get referrer's current wallet balance
+      const wallet = await storage.getWalletByUserId(referral.referrerId);
+      
+      await emailService.sendReferralRewardEmail({
+        toEmail: referrer.email,
+        firstName: referrer.firstName,
+        referredEmail: newUser.email,
+        rewardAmount: '50',
+        rewardDate: new Date().toLocaleDateString(),
+        newBalance: wallet?.balance?.toString() || '0',
+        totalReferrals: completedReferrals.length.toString(),
+        totalEarned: totalEarned.toString(),
+        walletUrl: `${process.env.BASE_URL || 'https://qipad.co'}/wallet`,
+        referralUrl: `${process.env.BASE_URL || 'https://qipad.co'}/auth?ref=${referral.referralCode}`
+      });
+      console.log(`Sent referral reward email to ${referrer.email}`);
+    }
+    
+    console.log(`Successfully processed referral for ${newUser.email}`);
+  } catch (error) {
+    console.error('Error in processExistingReferral:', error);
+    throw error; // Re-throw to be caught by caller
+  }
+}
 
 // File upload configuration
 const upload = multer({
@@ -148,6 +276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/register", async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
+      const { referralCode } = req.body; // Extract referral code from request
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(userData.email);
@@ -170,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           10,
           'Joining bonus - Welcome to Qipad!',
           'joining_bonus',
-          user.id
+          `registration-${user.id}`
         );
       } catch (creditError) {
         console.error('Failed to add joining bonus:', creditError);
@@ -195,6 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.createReferral({
               referrerId: referrer.id,
               referredUserId: user.id,
+              referredEmail: user.email,
               referralCode: req.body.referralCode,
               rewardAmount: "50",
               status: "credited"
@@ -226,11 +356,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send welcome email
       try {
+        const welcomeBonus = referralCode ? '30' : '10'; // Show total bonus if referred
         await emailService.sendWelcomeEmail({
           toEmail: user.email,
           firstName: user.firstName,
-          welcomeBonus: '10',
-          dashboardUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`
+          welcomeBonus,
+          dashboardUrl: `${process.env.BASE_URL || 'https://qipad.co'}/dashboard`
         });
       } catch (emailError) {
         console.error('Failed to send welcome email:', emailError);
@@ -304,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               toEmail: user.email,
               firstName: user.firstName,
               welcomeBonus: '10',
-              dashboardUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`
+              dashboardUrl: `${process.env.BASE_URL || 'https://qipad.co'}/dashboard`
             });
           } catch (emailError) {
             console.error('Failed to send welcome email:', emailError);
@@ -1749,8 +1880,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/admin/company-formations/:id", async (req, res) => {
     try {
-      const { companyFormations } = await import("@shared/schema");
-      const { eq } = await import("drizzle-orm");
       await db.delete(companyFormations).where(eq(companyFormations.id, req.params.id));
       res.json({ message: "Company formation deleted successfully" });
     } catch (error: any) {
@@ -2699,8 +2828,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 equityPercentage: expectedStakes.toString(),
                 transactionId: callbackResult.txnId,
                 investmentDate: new Date().toLocaleDateString(),
-                projectUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/projects/${projectId}`,
-                portfolioUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/portfolio`
+                projectUrl: `${process.env.BASE_URL || 'https://qipad.co'}/projects/${projectId}`,
+                portfolioUrl: `${process.env.BASE_URL || 'https://qipad.co'}/portfolio`
               });
             }
           } catch (emailError) {
@@ -3374,8 +3503,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName: user.firstName,
         email: user.email,
         phone: user.phone || '',
-        successUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/api/wallet/callback/success`,
-        failureUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/api/wallet/callback/failure`,
+        successUrl: `${process.env.BASE_URL || 'https://qipad.co'}/api/wallet/callback/success`,
+        failureUrl: `${process.env.BASE_URL || 'https://qipad.co'}/api/wallet/callback/failure`,
         userId,
         paymentType: 'wallet_deposit',
         metadata: { paymentId: payment.id, netCredits: netCredits.toFixed(2) }
@@ -3448,8 +3577,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   credits: netCredits.toString(),
                   transactionId: txnId,
                   newBalance: creditResult.newBalance?.toString() || '0',
-                  walletUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/wallet`,
-                  dashboardUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`
+                  walletUrl: `${process.env.BASE_URL || 'https://qipad.co'}/wallet`,
+                  dashboardUrl: `${process.env.BASE_URL || 'https://qipad.co'}/dashboard`
                 });
               }
             } catch (emailError) {
@@ -3457,22 +3586,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Don't fail the deposit if email fails
             }
             
-            res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?success=true&amount=${netCredits}`);
+            res.redirect(`${process.env.FRONTEND_URL || 'https://qipad.co'}/wallet?success=true&amount=${netCredits}`);
           } else {
             console.error('Failed to add credits:', creditResult.error);
-            res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=credit_failed`);
+            res.redirect(`${process.env.FRONTEND_URL || 'https://qipad.co'}/wallet?error=credit_failed`);
           }
         } else {
           console.error('User ID not found in callback data');
-          res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=invalid_callback`);
+          res.redirect(`${process.env.FRONTEND_URL || 'https://qipad.co'}/wallet?error=invalid_callback`);
         }
       } else {
         console.error('Payment verification failed:', callbackResult);
-        res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=payment_failed`);
+        res.redirect(`${process.env.FRONTEND_URL || 'https://qipad.co'}/wallet?error=payment_failed`);
       }
     } catch (error) {
       console.error('Error processing wallet deposit callback:', error);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=callback_error`);
+      res.redirect(`${process.env.FRONTEND_URL || 'https://qipad.co'}/wallet?error=callback_error`);
     }
   });
 
@@ -3482,10 +3611,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const callbackData = req.body;
       console.log('Wallet deposit failed:', callbackData);
       
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=payment_cancelled`);
+      res.redirect(`${process.env.FRONTEND_URL || 'https://qipad.co'}/wallet?error=payment_cancelled`);
     } catch (error) {
       console.error('Error processing wallet deposit failure:', error);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5000'}/wallet?error=callback_error`);
+      res.redirect(`${process.env.FRONTEND_URL || 'https://qipad.co'}/wallet?error=callback_error`);
     }
   });
 
@@ -3500,7 +3629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate or get user's permanent referral code
       const userReferralId = `QIP${userId.substring(0, 6).toUpperCase()}`;
-      const userReferralUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${userReferralId}`;
+      const userReferralUrl = `${process.env.BASE_URL || 'https://qipad.co'}/auth?ref=${userReferralId}`;
       
       const referrals = await storage.getReferralsByUser(userId);
       
@@ -3515,7 +3644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...referral,
           rewardAmount: parseFloat(referral.rewardAmount),
           referralId: referral.referralCode,
-          referralUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${referral.referralCode}`
+          referralUrl: `${process.env.BASE_URL || 'https://qipad.co'}/auth?ref=${referral.referralCode}`
         }))
       });
     } catch (error) {
@@ -3550,7 +3679,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Use user's permanent referral ID and URL
       const userReferralId = `QIP${userId.substring(0, 6).toUpperCase()}`;
-      const userReferralUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/auth?ref=${userReferralId}`;
+      const userReferralUrl = `${process.env.BASE_URL || 'https://qipad.co'}/auth?ref=${userReferralId}`;
 
       // Send referral email
       const referrerName = `${user.firstName} ${user.lastName}`;

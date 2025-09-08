@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +75,7 @@ export function WalletPage() {
   const [copiedCode, setCopiedCode] = useState("");
   const [copiedUrl, setCopiedUrl] = useState("");
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const { data: wallet, isLoading: walletLoading, refetch: refetchWallet } = useQuery<WalletData>({
     queryKey: ['/api/wallet']
@@ -242,16 +246,18 @@ export function WalletPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-foreground mb-2">Wallet</h1>
-              <p className="text-muted-foreground">Manage your credits, deposits, and referrals</p>
-            </div>
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          {!isMobile && <Sidebar />}
+          <SidebarInset className={isMobile ? "w-full" : ""}>
+            <main className={`flex-1 p-4 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+              <div className="max-w-6xl mx-auto">
+                <div className="mb-6">
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Wallet</h1>
+                  <p className="text-muted-foreground">Manage your credits, deposits, and referrals</p>
+                </div>
 
             {/* Wallet Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -649,8 +655,11 @@ export function WalletPage() {
             </Tabs>
           </div>
         </main>
+        </SidebarInset>
       </div>
-    </div>
+      </div>
+      {isMobile && <BottomNav />}
+    </SidebarProvider>
   );
 }
 

@@ -37,7 +37,6 @@ export default function Auth() {
 
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referrerInfo, setReferrerInfo] = useState<any>(null);
-
   // Detect referral code from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -103,7 +102,10 @@ export default function Auth() {
       });
       
       login(response.user, response.token);
-      toast({ title: "Registration successful!" });
+      const successMessage = referralCode 
+        ? "Registration successful! You've received ₹30 bonus credits!" 
+        : "Registration successful!";
+      toast({ title: successMessage });
       setLocation('/dashboard');
     } catch (error) {
       toast({ title: "Registration failed", variant: "destructive" });
@@ -120,16 +122,16 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 md:mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
               <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center">
                 <span className="text-blue-600 font-bold">Q</span>
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-primary" data-testid="logo-qipad-auth">Qipad</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-primary" data-testid="logo-qipad-auth">Qipad</h1>
           </div>
-          <p className="text-muted-foreground">Energized startup space for entrepreneurs and investors</p>
+          <p className="text-sm md:text-base text-muted-foreground px-2">Energized startup space for entrepreneurs and investors</p>
         </div>
 
         <Tabs defaultValue="login" className="w-full">
@@ -234,6 +236,22 @@ export default function Auth() {
                 <CardTitle>Join Qipad {referralCode && "& Claim Your Bonus!"}</CardTitle>
               </CardHeader>
               <CardContent>
+                {referralCode && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-center">
+                      <Gift className="h-5 w-5 text-green-600 mr-2" />
+                      <div>
+                        <p className="text-green-800 font-medium">Referral Bonus Applied! 🎉</p>
+                        <p className="text-green-600 text-sm">
+                          You'll receive ₹30 total credits (₹10 joining + ₹20 referral bonus)
+                        </p>
+                        <p className="text-green-500 text-xs mt-1">
+                          Referral Code: <span className="font-mono">{referralCode}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div>
                     <Label>Account Type</Label>

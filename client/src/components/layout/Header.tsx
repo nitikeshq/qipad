@@ -1,7 +1,9 @@
-import { ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Menu } from "lucide-react";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -10,12 +12,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function Header() {
   const { user, logout } = useAuth();
   const [location, navigate] = useLocation();
+  const isMobile = useIsMobile();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigationItems = [
     { path: "/dashboard", label: "Dashboard" },
@@ -32,7 +45,40 @@ export function Header() {
     <nav className="bg-card border-b border-border sticky top-0 z-50 glass-effect" data-testid="header-navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center space-x-4">
+            {/* Mobile hamburger menu */}
+            {isMobile && (
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="lg:hidden">
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Open main menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                  <SheetHeader>
+                    <SheetTitle>Navigation</SheetTitle>
+                    <SheetDescription>
+                      Navigate through the platform
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-4">
+                    {navigationItems.map((item) => (
+                      <Link key={item.path} href={item.path}>
+                        <Button 
+                          variant={location === item.path ? "default" : "ghost"} 
+                          className="w-full justify-start"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {item.label}
+                        </Button>
+                      </Link>
+                    ))}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+            
             <div className="flex-shrink-0">
               <Link href="/dashboard">
                 <div className="flex items-center space-x-2 cursor-pointer">
@@ -41,13 +87,15 @@ export function Header() {
                       <span className="text-blue-600 font-bold text-sm">Q</span>
                     </div>
                   </div>
-                  <h1 className="text-2xl font-bold text-primary" data-testid="logo-qipad">
+                  <h1 className="text-xl md:text-2xl font-bold text-primary" data-testid="logo-qipad">
                     Qipad
                   </h1>
                 </div>
               </Link>
             </div>
-            <div className="hidden md:block">
+            
+            {/* Desktop Navigation */}
+            {!isMobile && (
               <div className="ml-10 flex items-baseline space-x-4">
                 {navigationItems.map((item) => (
                   <Link key={item.path} href={item.path}>
@@ -64,10 +112,11 @@ export function Header() {
                   </Link>
                 ))}
               </div>
-            </div>
+            )}
           </div>
           
-          <div className="hidden md:block">
+          {/* Desktop Right Side */}
+          {!isMobile && (
             <div className="ml-4 flex items-center md:ml-6 space-x-4">
               <NotificationDropdown />
               
@@ -112,7 +161,50 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          </div>
+          )}
+
+          {/* Mobile Right Side - Just notifications and profile */}
+          {isMobile && (
+            <div className="flex items-center space-x-2">
+              <NotificationDropdown />
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user?.profileImage} alt={`${user?.firstName} ${user?.lastName}`} />
+                      <AvatarFallback>
+                        {user?.firstName?.[0]}{user?.lastName?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>{user?.firstName} {user?.lastName}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/profile-settings")}
+                  >
+                    Profile Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/billing-settings")}
+                  >
+                    Billing
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/general-settings")}
+                  >
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout}>
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </div>
       </div>
     </nav>
