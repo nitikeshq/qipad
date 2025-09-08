@@ -3631,14 +3631,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userReferralId = `QIP${userId.substring(0, 6).toUpperCase()}`;
       const userReferralUrl = `${process.env.BASE_URL || 'https://qipad.co'}/auth?ref=${userReferralId}`;
       
+      // Get referrals from both sources: referrals table and wallet transactions
       const referrals = await storage.getReferralsByUser(userId);
+      const referralTransactions = await storage.getReferralTransactionsByUser(userId);
+      
+      // Use wallet transaction data as the source of truth for counts and totals
+      const totalReferralsFromWallet = referralTransactions.length;
+      const totalEarnedFromWallet = referralTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount || '0'), 0);
       
       res.json({
         personalReferral: {
           referralId: userReferralId,
           referralUrl: userReferralUrl,
-          totalReferrals: referrals.length,
-          totalEarned: referrals.reduce((sum, ref) => sum + parseFloat(ref.rewardAmount || '0'), 0)
+          totalReferrals: totalReferralsFromWallet > 0 ? totalReferralsFromWallet : referrals.length,
+          totalEarned: totalEarnedFromWallet > 0 ? totalEarnedFromWallet : referrals.reduce((sum, ref) => sum + parseFloat(ref.rewardAmount || '0'), 0)
         },
         referrals: referrals.map(referral => ({
           ...referral,

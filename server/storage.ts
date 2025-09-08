@@ -1427,6 +1427,17 @@ export class DatabaseStorage implements IStorage {
     return newTransaction;
   }
 
+  async getReferralTransactionsByUser(userId: string): Promise<WalletTransaction[]> {
+    return await db.select().from(walletTransactions)
+      .where(
+        and(
+          eq(walletTransactions.userId, userId),
+          eq(walletTransactions.type, 'referral_bonus')
+        )
+      )
+      .orderBy(desc(walletTransactions.createdAt));
+  }
+
   // Referral methods implementation
   async getReferralsByUser(userId: string): Promise<Referral[]> {
     return await db.select().from(referrals)
