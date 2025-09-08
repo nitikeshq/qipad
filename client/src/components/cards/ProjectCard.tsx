@@ -53,10 +53,10 @@ export function ProjectCard({ project, showActions = false, onInvest, onSupport 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow" data-testid={`card-project-${project.id}`}>
       {/* Banner Image */}
-      {project.bannerImage && (
+      {project.images && project.images.length > 0 && (
         <div className="h-48 overflow-hidden">
           <img 
-            src={project.bannerImage} 
+            src={project.images[0]} 
             alt={project.title}
             className="w-full h-full object-cover"
           />
