@@ -216,6 +216,7 @@ export interface IStorage {
   getReferralByCode(code: string): Promise<Referral | undefined>;
   createReferral(referral: InsertReferral): Promise<Referral>;
   updateReferral(id: string, updates: Partial<Referral>): Promise<Referral>;
+  getAllReferrals(): Promise<Referral[]>;
   
   // Credit operations
   deductCredits(userId: string, amount: number, description: string, referenceType?: string, referenceId?: string): Promise<{ success: boolean; newBalance: number; error?: string }>;
@@ -1476,6 +1477,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(referrals.id, id))
       .returning();
     return updatedReferral;
+  }
+
+  async getAllReferrals(): Promise<Referral[]> {
+    const { desc } = await import("drizzle-orm");
+    return await db.select().from(referrals).orderBy(desc(referrals.createdAt));
   }
 
   // Credit operations implementation
