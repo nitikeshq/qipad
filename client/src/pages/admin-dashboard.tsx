@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>({ name: "", description: "", type: "" });
-  const [modalType, setModalType] = useState<"category" | "department" | "tender" | "company-formation" | "media-content" | null>(null);
+  const [modalType, setModalType] = useState<"category" | "department" | "tender" | "company-formation" | "media-content" | "company" | "service" | "event" | "investment" | null>(null);
   const [viewUserModal, setViewUserModal] = useState<any>(null);
   const [editFormationModal, setEditFormationModal] = useState<any>(null);
 
