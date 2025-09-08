@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -116,34 +117,42 @@ export function ProjectDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 p-6">
-            <div className="text-center py-8">Loading project details...</div>
-          </main>
+      <SidebarProvider>
+        <div className="min-h-screen bg-background">
+          <Header />
+          <div className="flex">
+            <Sidebar />
+            <SidebarInset>
+              <main className="flex-1 p-6">
+                <div className="text-center py-8">Loading project details...</div>
+              </main>
+            </SidebarInset>
+          </div>
         </div>
-      </div>
+      </SidebarProvider>
     );
   }
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 p-6">
-            <div className="text-center py-8">
-              <p>Project not found</p>
-              <Link href="/projects">
-                <Button className="mt-4">Back to Projects</Button>
-              </Link>
-            </div>
-          </main>
+      <SidebarProvider>
+        <div className="min-h-screen bg-background">
+          <Header />
+          <div className="flex">
+            <Sidebar />
+            <SidebarInset>
+              <main className="flex-1 p-6">
+                <div className="text-center py-8">
+                  <p>Project not found</p>
+                  <Link href="/projects">
+                    <Button className="mt-4">Back to Projects</Button>
+                  </Link>
+                </div>
+              </main>
+            </SidebarInset>
+          </div>
         </div>
-      </div>
+      </SidebarProvider>
     );
   }
 
@@ -153,11 +162,13 @@ export function ProjectDetailsPage() {
 
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <SidebarInset>
+            <main className="flex-1 p-6">
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-6">
@@ -678,10 +689,11 @@ export function ProjectDetailsPage() {
               </div>
             </div>
           </div>
-        </main>
-      </div>
+            </main>
+          </SidebarInset>
+        </div>
 
-      <ProjectModal 
+        <ProjectModal 
         open={isEditModalOpen} 
         onOpenChange={setIsEditModalOpen}
       />
@@ -703,6 +715,7 @@ export function ProjectDetailsPage() {
         onOpenChange={setIsEditProjectModalOpen}
         project={project}
       />
-    </div>
+      </div>
+    </SidebarProvider>
   );
 }
