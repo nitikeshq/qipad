@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Building, TrendingUp, User } from "lucide-react";
+import { Building, TrendingUp, User, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { authAPI } from "@/lib/auth";
@@ -18,6 +18,7 @@ export default function Auth() {
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: ''
@@ -33,6 +34,20 @@ export default function Auth() {
     userType: 'individual' as 'business_owner' | 'investor' | 'individual',
     agreedToTerms: false
   });
+
+  // Detect referral code from URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode);
+      toast({ 
+        title: "Referral Code Applied! 🎉", 
+        description: "You'll receive extra bonus credits when you register!",
+        duration: 5000
+      });
+    }
+  }, [toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,11 +87,15 @@ export default function Auth() {
         email: registerForm.email,
         phone: registerForm.phone,
         userType: registerForm.userType,
-        passwordHash: registerForm.password
+        passwordHash: registerForm.password,
+        referralCode: referralCode || undefined
       });
       
       login(response.user, response.token);
-      toast({ title: "Registration successful!" });
+      const successMessage = referralCode 
+        ? "Registration successful! You've received ₹30 bonus credits!" 
+        : "Registration successful!";
+      toast({ title: successMessage });
       setLocation('/dashboard');
     } catch (error) {
       toast({ title: "Registration failed", variant: "destructive" });
@@ -93,16 +112,16 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 md:mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
               <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center">
                 <span className="text-blue-600 font-bold">Q</span>
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-primary" data-testid="logo-qipad-auth">Qipad</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-primary" data-testid="logo-qipad-auth">Qipad</h1>
           </div>
-          <p className="text-muted-foreground">Energized startup space for entrepreneurs and investors</p>
+          <p className="text-sm md:text-base text-muted-foreground px-2">Energized startup space for entrepreneurs and investors</p>
         </div>
 
         <Tabs defaultValue="login" className="w-full">
@@ -180,6 +199,22 @@ export default function Auth() {
                 <CardTitle>Join Qipad</CardTitle>
               </CardHeader>
               <CardContent>
+                {referralCode && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-center">
+                      <Gift className="h-5 w-5 text-green-600 mr-2" />
+                      <div>
+                        <p className="text-green-800 font-medium">Referral Bonus Applied! 🎉</p>
+                        <p className="text-green-600 text-sm">
+                          You'll receive ₹30 total credits (₹10 joining + ₹20 referral bonus)
+                        </p>
+                        <p className="text-green-500 text-xs mt-1">
+                          Referral Code: <span className="font-mono">{referralCode}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div>
                     <Label>Account Type</Label>

@@ -6,8 +6,9 @@ export const authAPI = {
     firstName: string;
     lastName: string;
     phone?: string;
-    userType: 'business_owner' | 'investor';
+    userType: 'business_owner' | 'investor' | 'individual';
     passwordHash: string;
+    referralCode?: string;
   }) => {
     const response = await apiRequest('POST', '/api/auth/register', userData);
     return response.json();

@@ -12,8 +12,8 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', ['active', '
 export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'completed', 'failed', 'refunded']);
 export const companyStatusEnum = pgEnum('company_status', ['pending', 'approved', 'rejected']);
 export const connectionStatusEnum = pgEnum('connection_status', ['pending', 'accepted', 'rejected']);
-export const transactionTypeEnum = pgEnum('transaction_type', ['deposit', 'withdraw', 'spend', 'earn', 'refund', 'referral_bonus']);
-export const referralStatusEnum = pgEnum('referral_status', ['pending', 'verified', 'credited']);
+export const transactionTypeEnum = pgEnum('transaction_type', ['deposit', 'withdraw', 'spend', 'earn', 'refund', 'referral_bonus', 'joining_bonus', 'referral_reward']);
+export const referralStatusEnum = pgEnum('referral_status', ['pending', 'verified', 'credited', 'completed']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

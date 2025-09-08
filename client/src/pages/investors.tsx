@@ -10,12 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Search, Filter, Mail, Phone, MapPin, DollarSign } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/queryClient";
 import { User } from "@shared/schema";
 
 export default function Investors() {
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('all');
   const [investmentRangeFilter, setInvestmentRangeFilter] = useState('all');
@@ -125,28 +129,30 @@ export default function Investors() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          {/* Investors Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground" data-testid="text-investors-title">
-                  Find Investors
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  Connect with verified investors looking for investment opportunities
-                </p>
-              </div>
-            </div>
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          {!isMobile && <Sidebar />}
+          <SidebarInset>
+            <main className={`flex-1 p-4 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+              {/* Investors Header */}
+              <div className="mb-6 md:mb-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-foreground" data-testid="text-investors-title">
+                      Find Investors
+                    </h1>
+                    <p className="text-muted-foreground mt-1">
+                      Connect with verified investors looking for investment opportunities
+                    </p>
+                  </div>
+                </div>
 
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                {/* Filters */}
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Search investors by name or email..."
                   value={searchTerm}
@@ -183,8 +189,8 @@ export default function Investors() {
             </div>
           </div>
 
-          {/* Investors Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Investors Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {isLoading ? (
               <div className="col-span-full text-center py-12">
                 <div className="text-muted-foreground" data-testid="text-loading-investors">
@@ -276,7 +282,10 @@ export default function Investors() {
             )}
           </div>
         </main>
+          </SidebarInset>
+        </div>
       </div>
+      {isMobile && <BottomNav />}
 
       {/* Investor Profile Modal */}
       <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
@@ -356,6 +365,6 @@ export default function Investors() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </SidebarProvider>
   );
 }

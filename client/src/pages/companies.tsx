@@ -14,10 +14,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Search, MapPin, Globe, Phone, Mail, Building2, Package, Briefcase, MessageCircle, ExternalLink, Plus } from "lucide-react";
 import { z } from "zod";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AddCompanyModal } from "@/components/modals/AddCompanyModal";
 
 const inquirySchema = z.object({
@@ -75,6 +78,7 @@ interface CompanyProduct {
 }
 
 export default function Companies() {
+  const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -179,11 +183,13 @@ export default function Companies() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          {!isMobile && <Sidebar />}
+          <SidebarInset>
+            <main className={`flex-1 p-6 ${isMobile ? 'pb-20' : ''}`}>
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8 flex justify-between items-center">
@@ -617,7 +623,10 @@ export default function Companies() {
         </Dialog>
           </div>
         </main>
+          </SidebarInset>
+        </div>
       </div>
-    </div>
+      {isMobile && <BottomNav />}
+    </SidebarProvider>
   );
 }

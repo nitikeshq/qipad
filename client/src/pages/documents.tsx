@@ -2,16 +2,20 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, CheckCircle, Clock, AlertCircle, Download } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function DocumentsPage() {
+  const isMobile = useIsMobile();
   const { data: user } = useQuery<any>({
-    queryKey: ['/api/user']
+    queryKey: ['/api/users/me']
   });
   
   const { data: documents = [], isLoading } = useQuery<any[]>({
@@ -138,12 +142,14 @@ export function DocumentsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto">
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          {!isMobile && <Sidebar />}
+          <SidebarInset className={isMobile ? "w-full" : ""}>
+            <main className={`flex-1 p-4 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+              <div className="max-w-6xl mx-auto">
             <div className="mb-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -529,9 +535,12 @@ export function DocumentsPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </main>
+              </div>
+            </main>
+          </SidebarInset>
+        </div>
       </div>
-    </div>
+      {isMobile && <BottomNav />}
+    </SidebarProvider>
   );
 }

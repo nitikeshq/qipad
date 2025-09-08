@@ -8,13 +8,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Plus, Search, Users, MessageCircle, Calendar, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { apiRequest } from "@/lib/queryClient";
 import { Community } from "@shared/schema";
 import { CommunityModal } from "@/components/modals/CommunityModal";
 import type { User } from "@shared/schema";
 
 export default function CommunityPage() {
+  const isMobile = useIsMobile();
   const [isCommunityModalOpen, setIsCommunityModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -112,43 +116,45 @@ export default function CommunityPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          {/* Community Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground" data-testid="text-communities-title">
-                  Business Communities
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  Connect, collaborate, and grow with like-minded entrepreneurs
-                </p>
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          {!isMobile && <Sidebar />}
+          <SidebarInset>
+            <main className={`flex-1 p-4 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+              {/* Community Header */}
+              <div className="mb-6 md:mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-foreground" data-testid="text-communities-title">
+                      Business Communities
+                    </h1>
+                    <p className="text-muted-foreground mt-1">
+                      Connect, collaborate, and grow with like-minded entrepreneurs
+                    </p>
+                  </div>
+                  <Button onClick={() => setIsCommunityModalOpen(true)} size="sm" className="sm:size-default" data-testid="button-create-community">
+                    <Plus className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Create Community</span>
+                  </Button>
+                </div>
+
+                {/* Search */}
+                <div className="relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search communities..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                    data-testid="input-search-communities"
+                  />
+                </div>
               </div>
-              <Button onClick={() => setIsCommunityModalOpen(true)} data-testid="button-create-community">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Community
-              </Button>
-            </div>
 
-            {/* Search */}
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search communities..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-                data-testid="input-search-communities"
-              />
-            </div>
-          </div>
-
-          {/* Communities Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Communities Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {isLoading ? (
               <div className="col-span-full text-center py-12">
                 <div className="text-muted-foreground" data-testid="text-loading-communities">
@@ -157,22 +163,22 @@ export default function CommunityPage() {
               </div>
             ) : paginatedCommunities.length > 0 ? (
               paginatedCommunities.map((community: Community) => (
-                <div key={community.id} className="bg-card rounded-lg border border-border p-6 shadow-sm hover:shadow-md transition-shadow" data-testid={`card-community-${community.id}`}>
+                <div key={community.id} className="bg-card rounded-lg border border-border p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow" data-testid={`card-community-${community.id}`}>
                   <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-foreground" data-testid={`text-community-name-${community.id}`}>
+                    <div className="flex items-start justify-between mb-2 gap-2">
+                      <h3 className="text-base md:text-lg font-semibold text-foreground truncate" data-testid={`text-community-name-${community.id}`}>
                         {community.name}
                       </h3>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(community.category || 'general')}`} data-testid={`badge-community-category-${community.id}`}>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${getCategoryColor(community.category || 'general')}`} data-testid={`badge-community-category-${community.id}`}>
                         {(community.category || 'general').toUpperCase()}
                       </span>
                     </div>
                     
-                    <p className="text-muted-foreground text-sm mb-3" data-testid={`text-community-description-${community.id}`}>
+                    <p className="text-muted-foreground text-sm mb-3 line-clamp-2" data-testid={`text-community-description-${community.id}`}>
                       {community.description}
                     </p>
                     
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-muted-foreground mb-4">
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
                         <span data-testid={`text-community-members-${community.id}`}>
@@ -187,7 +193,7 @@ export default function CommunityPage() {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <CommunityActionButton 
                         community={community}
                         onSuccess={() => {
@@ -263,13 +269,16 @@ export default function CommunityPage() {
               </Button>
             </div>
           )}
-        </main>
+            </main>
+          </SidebarInset>
+        </div>
       </div>
 
       <CommunityModal 
         open={isCommunityModalOpen} 
         onOpenChange={setIsCommunityModalOpen} 
       />
-    </div>
+      {isMobile && <BottomNav />}
+    </SidebarProvider>
   );
 }
