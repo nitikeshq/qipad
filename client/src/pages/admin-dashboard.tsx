@@ -628,10 +628,32 @@ export default function AdminDashboard() {
                           <Badge variant="default">Active</Badge>
                         </TableCell>
                         <TableCell className="space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setEditingItem({
+                                id: company.id,
+                                name: company.name,
+                                description: company.description,
+                                industry: company.industry,
+                                foundedYear: company.foundedYear,
+                                website: company.website,
+                                employeeCount: company.employeeCount,
+                                city: company.city,
+                                state: company.state
+                              });
+                              setModalType("company");
+                              setIsCreateModalOpen(true);
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="destructive">
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => deleteItemMutation.mutate({ type: "companies", id: company.id })}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -684,10 +706,29 @@ export default function AdminDashboard() {
                           <Badge variant="default">Active</Badge>
                         </TableCell>
                         <TableCell className="space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setEditingItem({
+                                id: service.id,
+                                name: service.name,
+                                description: service.description,
+                                price: service.price,
+                                category: service.category,
+                                providerId: service.providerId
+                              });
+                              setModalType("service");
+                              setIsCreateModalOpen(true);
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="destructive">
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => deleteItemMutation.mutate({ type: "services", id: service.id })}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -736,16 +777,38 @@ export default function AdminDashboard() {
                       <TableRow key={event.id}>
                         <TableCell className="font-medium">{event.title}</TableCell>
                         <TableCell>{new Date(event.eventDate).toLocaleDateString()}</TableCell>
-                        <TableCell>{event.location}</TableCell>
-                        <TableCell>{event.attendees?.length || 0}</TableCell>
+                        <TableCell>{event.venue}</TableCell>
+                        <TableCell>{event.currentParticipants || 0}</TableCell>
                         <TableCell>
                           <Badge variant="default">Active</Badge>
                         </TableCell>
                         <TableCell className="space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setEditingItem({
+                                id: event.id,
+                                title: event.title,
+                                description: event.description,
+                                eventDate: new Date(event.eventDate).toISOString().slice(0, 16),
+                                eventType: event.eventType,
+                                venue: event.venue,
+                                maxParticipants: event.maxParticipants,
+                                price: event.price,
+                                isPaid: event.isPaid
+                              });
+                              setModalType("event");
+                              setIsCreateModalOpen(true);
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="destructive">
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => deleteItemMutation.mutate({ type: "events", id: event.id })}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -851,19 +914,40 @@ export default function AdminDashboard() {
                     {tenders.map((tender: any) => (
                       <TableRow key={tender.id}>
                         <TableCell className="font-medium">{tender.title}</TableCell>
-                        <TableCell>{new Date(tender.deadline).toLocaleDateString()}</TableCell>
-                        <TableCell>₹{tender.budget?.toLocaleString()}</TableCell>
+                        <TableCell>{new Date(tender.submissionDeadline).toLocaleDateString()}</TableCell>
+                        <TableCell>₹{tender.estimatedValue?.toLocaleString()}</TableCell>
                         <TableCell>{tender.bids?.length || 0}</TableCell>
                         <TableCell>
-                          <Badge variant={tender.status === 'open' ? 'default' : 'secondary'}>
-                            {tender.status || 'Open'}
+                          <Badge variant={tender.isActive ? 'default' : 'secondary'}>
+                            {tender.isActive ? 'Open' : 'Closed'}
                           </Badge>
                         </TableCell>
                         <TableCell className="space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setEditingItem({
+                                id: tender.id,
+                                title: tender.title,
+                                description: tender.description,
+                                organization: tender.organization,
+                                category: tender.category,
+                                estimatedValue: tender.estimatedValue,
+                                submissionDeadline: new Date(tender.submissionDeadline).toISOString().slice(0, 16),
+                                eligibilityCriteria: tender.eligibilityCriteria
+                              });
+                              setModalType("tender");
+                              setIsCreateModalOpen(true);
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="destructive">
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => deleteItemMutation.mutate({ type: "tenders", id: tender.id })}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
