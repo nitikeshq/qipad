@@ -1484,6 +1484,21 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(referrals).orderBy(desc(referrals.createdAt));
   }
 
+  async getUserByReferralCode(code: string): Promise<User | undefined> {
+    // Referral codes are in format QIP{first6CharsOfUserId}
+    // So QIP1D526B means we need user ID starting with 1d526b
+    if (!code.startsWith('QIP')) {
+      return undefined;
+    }
+    
+    const userIdPrefix = code.substring(3).toLowerCase(); // Remove 'QIP' and convert to lowercase
+    
+    // Find user whose ID starts with this prefix
+    const { like } = await import("drizzle-orm");
+    const [user] = await db.select().from(users).where(like(users.id, `${userIdPrefix}%`));
+    return user;
+  }
+
   // Credit operations implementation
   async deductCredits(userId: string, amount: number, description: string, referenceType?: string, referenceId?: string): Promise<{ success: boolean; newBalance: number; error?: string }> {
     try {
