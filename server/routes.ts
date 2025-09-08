@@ -333,6 +333,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user by referral code for referral preview
+  app.get("/api/users/referrer/:code", async (req, res) => {
+    try {
+      const referrer = await storage.getUserByReferralCode(req.params.code);
+      if (!referrer) {
+        return res.status(404).json({ message: "Referral code not found" });
+      }
+      // Only return safe user info for preview
+      res.json({
+        firstName: referrer.firstName,
+        lastName: referrer.lastName,
+        userType: referrer.userType
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch referrer", error: error.message });
+    }
+  });
+
   app.get("/api/users/me", authenticateToken, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.userId);

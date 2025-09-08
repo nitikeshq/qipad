@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Building, TrendingUp, User } from "lucide-react";
+import { Building, TrendingUp, User, Gift, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { authAPI } from "@/lib/auth";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Auth() {
   const [, setLocation] = useLocation();
@@ -33,6 +34,31 @@ export default function Auth() {
     userType: 'individual' as 'business_owner' | 'investor' | 'individual',
     agreedToTerms: false
   });
+
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referrerInfo, setReferrerInfo] = useState<any>(null);
+
+  // Detect referral code from URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode);
+    }
+  }, []);
+
+  // Fetch referrer info when referral code is detected
+  const { data: referrer } = useQuery({
+    queryKey: ['/api/users/referrer', referralCode],
+    enabled: !!referralCode,
+    retry: false
+  });
+
+  useEffect(() => {
+    if (referrer) {
+      setReferrerInfo(referrer);
+    }
+  }, [referrer]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +98,8 @@ export default function Auth() {
         email: registerForm.email,
         phone: registerForm.phone,
         userType: registerForm.userType,
-        passwordHash: registerForm.password
+        passwordHash: registerForm.password,
+        referralCode: referralCode || undefined
       });
       
       login(response.user, response.token);
@@ -175,9 +202,36 @@ export default function Auth() {
           </TabsContent>
           
           <TabsContent value="register">
+            {referralCode && referrerInfo && (
+              <Card className="mb-4 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-green-100 rounded-full">
+                      <Gift className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-green-800">You've been invited!</h3>
+                      <p className="text-sm text-green-700">
+                        <span className="font-medium">{referrerInfo.firstName} {referrerInfo.lastName}</span> invited you to join Qipad
+                      </p>
+                      <div className="flex items-center mt-2 space-x-4 text-xs text-green-600">
+                        <div className="flex items-center space-x-1">
+                          <Gift className="h-3 w-3" />
+                          <span>You'll get 10 QP bonus</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Users className="h-3 w-3" />
+                          <span>They'll get 50 QP bonus</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader>
-                <CardTitle>Join Qipad</CardTitle>
+                <CardTitle>Join Qipad {referralCode && "& Claim Your Bonus!"}</CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRegister} className="space-y-4">
