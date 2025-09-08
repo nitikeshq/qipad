@@ -895,7 +895,15 @@ export default function AdminDashboard() {
                           <Badge variant="default">{investment.status || 'Confirmed'}</Badge>
                         </TableCell>
                         <TableCell className="space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setEditingItem(investment);
+                              setModalType("investment");
+                              setIsCreateModalOpen(true);
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="destructive">
@@ -1926,13 +1934,30 @@ export default function AdminDashboard() {
                 <Button variant="outline" onClick={() => setEditFormationModal(null)}>
                   Close
                 </Button>
-                <Button onClick={() => {
-                  updateFormationMutation.mutate({ 
-                    id: editFormationModal.id, 
-                    data: { currentStep: (editFormationModal.currentStep || 1) + 1 }
-                  });
-                }}>
-                  Advance to Next Step
+                <Button 
+                  onClick={() => {
+                    const currentStep = editFormationModal.currentStep || 1;
+                    const nextStep = currentStep + 1;
+                    
+                    // Don't advance beyond step 9
+                    if (nextStep > 9) return;
+                    
+                    // Update the step and status
+                    const updateData: any = { currentStep: nextStep };
+                    
+                    // Mark as completed when reaching step 9
+                    if (nextStep === 9) {
+                      updateData.status = 'completed';
+                    }
+                    
+                    updateFormationMutation.mutate({ 
+                      id: editFormationModal.id, 
+                      data: updateData
+                    });
+                  }}
+                  disabled={(editFormationModal.currentStep || 1) >= 9}
+                >
+                  {(editFormationModal.currentStep || 1) >= 9 ? 'Completed' : 'Advance to Next Step'}
                 </Button>
               </div>
             </div>
