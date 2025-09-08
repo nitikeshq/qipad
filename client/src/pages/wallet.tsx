@@ -495,8 +495,8 @@ export function WalletPage() {
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="font-semibold text-lg">Your Referral Details</h3>
                           <div className="text-right text-sm text-muted-foreground">
-                            <div>Total Referrals: <span className="font-bold text-blue-600">{personalReferral.totalReferrals}</span></div>
-                            <div>Total Earned: <span className="font-bold text-green-600">{personalReferral.totalEarned}</span></div>
+                            <div>Total Referrals: <span className="font-bold text-blue-600">{personalReferral?.totalReferrals || 0}</span></div>
+                            <div>Total Earned: <span className="font-bold text-green-600">{personalReferral?.totalEarned || 0}</span></div>
                           </div>
                         </div>
                         
