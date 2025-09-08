@@ -481,9 +481,15 @@ export default function AdminDashboard() {
                             <Button
                               size="sm"
                               onClick={() => approveKycMutation.mutate({ userId: user.id, status: 'approved' })}
+                              disabled={approveKycMutation.isPending}
                             >
-                              Approve KYC
+                              {approveKycMutation.isPending ? 'Approving...' : 'Approve KYC'}
                             </Button>
+                          )}
+                          {user.isKycComplete && (
+                            <Badge variant="default" className="text-green-600">
+                              KYC Approved
+                            </Badge>
                           )}
                           <Button
                             size="sm"
