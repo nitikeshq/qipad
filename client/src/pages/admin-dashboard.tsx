@@ -307,7 +307,7 @@ export default function AdminDashboard() {
         {/* Advanced Management Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-            <TabsList className="grid w-full grid-cols-15">
+            <TabsList className="flex flex-wrap justify-start gap-2 w-full h-auto p-2">
               <TabsTrigger value="overview" data-testid="tab-overview">
                 <Home className="h-4 w-4 mr-1" />
                 Overview
