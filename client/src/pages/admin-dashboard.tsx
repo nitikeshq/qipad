@@ -346,6 +346,7 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger value="wallet-management" data-testid="tab-wallet-management">Wallets</TabsTrigger>
               <TabsTrigger value="referral-management" data-testid="tab-referral-management">Referrals</TabsTrigger>
+              <TabsTrigger value="email-settings" data-testid="tab-email-settings">Email Settings</TabsTrigger>
             </TabsList>
           </div>
 

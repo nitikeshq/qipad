@@ -351,6 +351,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Platform Settings Routes
+  app.get("/api/admin/platform-settings", authenticateToken, async (req: any, res) => {
+    try {
+      const settings = await storage.getAllPlatformSettings();
+      res.json(settings);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch platform settings", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/platform-settings", authenticateToken, async (req: any, res) => {
+    try {
+      const { key, value, description, category } = req.body;
+      const setting = await storage.setPlatformSetting(key, value, description, category, req.user.userId);
+      res.json(setting);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to create platform setting", error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/platform-settings/:key", authenticateToken, async (req: any, res) => {
+    try {
+      const { value } = req.body;
+      const setting = await storage.updatePlatformSetting(req.params.key, value, req.user.userId);
+      res.json(setting);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update platform setting", error: error.message });
+    }
+  });
+
   app.get("/api/users/me", authenticateToken, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.userId);
@@ -1653,8 +1683,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const referrals = await storage.getAllReferrals();
       const totalReferrals = referrals.length;
-      const completedReferrals = referrals.filter(r => r.status === 'completed').length;
-      const totalRewards = referrals.filter(r => r.status === 'completed')
+      const completedReferrals = referrals.filter(r => r.status === 'credited').length;
+      const totalRewards = referrals.filter(r => r.status === 'credited')
         .reduce((sum, r) => sum + parseFloat(r.rewardAmount || '0'), 0);
       
       res.json({
