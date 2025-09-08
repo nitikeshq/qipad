@@ -246,6 +246,22 @@ export default function AdminDashboard() {
     setIsCreateModalOpen(true);
   };
 
+  const getProcessName = (step: number) => {
+    const processNames = [
+      "", // Step 0 (not used)
+      "Company Registration",
+      "Director Identification",
+      "Document Collection", 
+      "Trademark Application",
+      "Bank Account Setup",
+      "Certifications",
+      "Project Listing",
+      "Government Schemes",
+      "Final Approval"
+    ];
+    return processNames[step] || "Unknown Process";
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createItemMutation.mutate(editingItem);
@@ -1838,6 +1854,22 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
+                  <Label htmlFor="creator">Event Creator</Label>
+                  <select 
+                    className="w-full mt-1 p-2 border rounded-md"
+                    value={editingItem.creatorId || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, creatorId: e.target.value })}
+                    required
+                  >
+                    <option value="">Select creator...</option>
+                    {users.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.firstName} {user.lastName} ({user.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
@@ -2094,11 +2126,19 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <Label>Current Step</Label>
-                  <p>{editFormationModal.currentStep || 1}/9</p>
+                  <p>{editFormationModal.currentStep || 1}/9 - {getProcessName(editFormationModal.currentStep || 1)}</p>
                 </div>
                 <div>
                   <Label>Status</Label>
                   <Badge>{editFormationModal.status || 'In Progress'}</Badge>
+                </div>
+                <div>
+                  <Label>Assigned Agent</Label>
+                  <p>{editFormationModal.assignedConsultant ? 
+                    users.find(u => u.id === editFormationModal.assignedConsultant)?.firstName + ' ' + 
+                    users.find(u => u.id === editFormationModal.assignedConsultant)?.lastName + ' (' +
+                    users.find(u => u.id === editFormationModal.assignedConsultant)?.email + ')' 
+                    : 'No agent assigned'}</p>
                 </div>
               </div>
               

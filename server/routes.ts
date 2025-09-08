@@ -2283,6 +2283,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/admin/companies/:id", authenticateAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteCompany(id);
+      res.json({ message: "Company deleted successfully" });
+    } catch (error: any) {
+      console.error("Delete company error:", error);
+      res.status(400).json({ message: "Failed to delete company", error: error.message });
+    }
+  });
+
   // Company Services Routes
   app.get('/api/companies/:id/services', async (req, res) => {
     try {
