@@ -1377,7 +1377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // TENDER MANAGEMENT ROUTES
-  app.get("/api/admin/tenders", async (req, res) => {
+  app.get("/api/admin/tenders", authenticateAdmin, async (req, res) => {
     try {
       const tenders = await storage.getAllTenders();
       res.json(tenders);
@@ -1386,7 +1386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/tenders", async (req, res) => {
+  app.post("/api/admin/tenders", authenticateAdmin, async (req, res) => {
     try {
       const tender = await storage.createTender(req.body);
       res.json(tender);
@@ -1395,7 +1395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/tenders/:id", async (req, res) => {
+  app.put("/api/admin/tenders/:id", authenticateAdmin, async (req, res) => {
     try {
       const tender = await storage.updateTender(req.params.id, req.body);
       res.json(tender);
@@ -1404,7 +1404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/tenders/:id", async (req, res) => {
+  app.delete("/api/admin/tenders/:id", authenticateAdmin, async (req, res) => {
     try {
       await storage.deleteTender(req.params.id);
       res.json({ message: "Tender deleted successfully" });
@@ -1414,7 +1414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // COMPANY FORMATION MANAGEMENT ROUTES
-  app.get("/api/admin/company-formations", async (req, res) => {
+  app.get("/api/admin/company-formations", authenticateAdmin, async (req, res) => {
     try {
       const formations = await storage.getAllCompanyFormations();
       const formationsWithUsers = await Promise.all(
@@ -1626,7 +1626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin - Jobs Management
-  app.get("/api/admin/jobs", async (req, res) => {
+  app.get("/api/admin/jobs", authenticateAdmin, async (req, res) => {
     try {
       const jobs = await storage.getAllJobs();
       res.json(jobs);
@@ -1667,7 +1667,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin - Categories Management
-  app.get("/api/admin/categories", async (req, res) => {
+  app.get("/api/admin/categories", authenticateAdmin, async (req, res) => {
     try {
       // Return mock categories for now - in production, this would come from database
       const categories = [
@@ -1687,7 +1687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/categories", async (req, res) => {
+  app.post("/api/admin/categories", authenticateAdmin, async (req, res) => {
     try {
       const { name, description, type } = req.body;
       // Note: In full production, this would use a categories table
@@ -1731,7 +1731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin - Media Content Management
-  app.get("/api/admin/media-content", async (req, res) => {
+  app.get("/api/admin/media-content", authenticateAdmin, async (req, res) => {
     try {
       const mediaContent = await storage.getAllMediaContent();
       res.json(mediaContent);
@@ -1740,7 +1740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/media-content", async (req, res) => {
+  app.post("/api/admin/media-content", authenticateAdmin, async (req, res) => {
     try {
       const { title, description, type, url, thumbnailUrl, tags, featured, author } = req.body;
       const mediaContentData = {
@@ -1783,7 +1783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin - Platform Settings Management
-  app.get("/api/admin/platform-settings", async (req, res) => {
+  app.get("/api/admin/platform-settings", authenticateAdmin, async (req, res) => {
     try {
       const settings = await storage.getAllPlatformSettings();
       res.json(settings);
@@ -1824,7 +1824,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin - Departments Management
-  app.get("/api/admin/departments", async (req, res) => {
+  app.get("/api/admin/departments", authenticateAdmin, async (req, res) => {
     try {
       // Return mock departments for now - in production, this would come from database
       const departments = [

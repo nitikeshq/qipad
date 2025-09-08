@@ -39,11 +39,7 @@ export default function AdminDashboard() {
 
   const [currentInvestmentPage, setCurrentInvestmentPage] = useState(1);
   const { data: investmentsResponse = {} } = useQuery<any>({
-    queryKey: ['/api/admin/investments', { page: currentInvestmentPage, limit: 10 }],
-    queryFn: async () => {
-      const response = await apiRequest('GET', `/api/admin/investments?page=${currentInvestmentPage}&limit=10`);
-      return response.json();
-    }
+    queryKey: [`/api/admin/investments?page=${currentInvestmentPage}&limit=10`],
   });
   const investments = investmentsResponse.investments || [];
 
