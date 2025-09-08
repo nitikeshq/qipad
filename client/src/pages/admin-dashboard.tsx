@@ -1930,6 +1930,37 @@ export default function AdminDashboard() {
                   <Badge>{editFormationModal.status || 'In Progress'}</Badge>
                 </div>
               </div>
+              
+              {editFormationModal.assignAgent && (
+                <div className="mt-6 p-4 border rounded-lg">
+                  <h3 className="text-lg font-semibold mb-4">Assign CA/Agent</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Select CA/Agent</Label>
+                      <select 
+                        className="w-full mt-1 p-2 border rounded-md"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            updateFormationMutation.mutate({
+                              id: editFormationModal.id,
+                              data: { assignedConsultant: e.target.value }
+                            });
+                          }
+                        }}
+                        defaultValue={editFormationModal.assignedConsultant || ''}
+                      >
+                        <option value="">Select an agent...</option>
+                        {users.filter(u => u.userType === 'admin' || u.userType === 'agent').map(user => (
+                          <option key={user.id} value={user.id}>
+                            {user.firstName} {user.lastName} ({user.email})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex justify-end space-x-2 mt-6">
                 <Button variant="outline" onClick={() => setEditFormationModal(null)}>
                   Close
