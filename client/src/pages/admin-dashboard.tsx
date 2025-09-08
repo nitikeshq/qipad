@@ -307,7 +307,7 @@ export default function AdminDashboard() {
         {/* Advanced Management Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-            <TabsList className="grid w-full grid-cols-12">
+            <TabsList className="grid w-full grid-cols-15">
               <TabsTrigger value="overview" data-testid="tab-overview">
                 <Home className="h-4 w-4 mr-1" />
                 Overview
@@ -328,6 +328,8 @@ export default function AdminDashboard() {
                 <BarChart3 className="h-4 w-4 mr-1" />
                 Analytics
               </TabsTrigger>
+              <TabsTrigger value="wallet-management" data-testid="tab-wallet-management">Wallets</TabsTrigger>
+              <TabsTrigger value="referral-management" data-testid="tab-referral-management">Referrals</TabsTrigger>
             </TabsList>
           </div>
 
@@ -1436,6 +1438,153 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Wallet Management Tab */}
+          <TabsContent value="wallet-management">
+            <Card data-testid="card-wallet-management">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                  Wallet Management
+                </CardTitle>
+                <CardDescription>
+                  Manage user wallets, transactions, and credit operations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="p-4">
+                      <div className="text-2xl font-bold text-green-600">
+                        ₹{walletAnalytics.totalDeposits?.toLocaleString('en-IN') || 0}
+                      </div>
+                      <p className="text-sm text-gray-600">Total Deposits</p>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {walletAnalytics.totalDepositors || 0}
+                      </div>
+                      <p className="text-sm text-gray-600">Active Wallets</p>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="text-2xl font-bold text-purple-600">
+                        ₹{walletAnalytics.averageBalance?.toLocaleString('en-IN') || 0}
+                      </div>
+                      <p className="text-sm text-gray-600">Average Balance</p>
+                    </Card>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Recent Wallet Transactions</h3>
+                      <Button size="sm" variant="outline">Export</Button>
+                    </div>
+                    <Card>
+                      <CardContent className="p-0">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>User</TableHead>
+                              <TableHead>Type</TableHead>
+                              <TableHead>Amount</TableHead>
+                              <TableHead>Description</TableHead>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Balance After</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center text-gray-500">
+                                Wallet transactions will be loaded here
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Referral Management Tab */}
+          <TabsContent value="referral-management">
+            <Card data-testid="card-referral-management">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-orange-600" />
+                  Referral Management
+                </CardTitle>
+                <CardDescription>
+                  Manage referral program, track conversions, and handle rewards
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card className="p-4">
+                      <div className="text-2xl font-bold text-orange-600">
+                        {referralAnalytics.totalReferrals || 0}
+                      </div>
+                      <p className="text-sm text-gray-600">Total Referrals</p>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="text-2xl font-bold text-green-600">
+                        {referralAnalytics.completedReferrals || 0}
+                      </div>
+                      <p className="text-sm text-gray-600">Successful</p>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {referralAnalytics.conversionRate || 0}%
+                      </div>
+                      <p className="text-sm text-gray-600">Conversion Rate</p>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="text-2xl font-bold text-purple-600">
+                        ₹{(referralAnalytics.totalRewards || 0).toLocaleString('en-IN')}
+                      </div>
+                      <p className="text-sm text-gray-600">Total Rewards</p>
+                    </Card>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">All Referrals</h3>
+                      <div className="space-x-2">
+                        <Button size="sm" variant="outline">Filter</Button>
+                        <Button size="sm" variant="outline">Export</Button>
+                      </div>
+                    </div>
+                    <Card>
+                      <CardContent className="p-0">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Referrer</TableHead>
+                              <TableHead>Referred Email</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Reward</TableHead>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center text-gray-500">
+                                Referral data will be loaded here
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </CardContent>
             </Card>
