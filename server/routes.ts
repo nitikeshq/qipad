@@ -1562,6 +1562,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Wallet Deposits Analytics
+  app.get("/api/admin/analytics/wallet-deposits", authenticateAdmin, async (req, res) => {
+    try {
+      const payments = await storage.getAllPayments();
+      const walletDeposits = payments.filter(p => p.paymentType === 'wallet_deposit');
+      
+      const totalDeposits = walletDeposits.length;
+      const totalDepositAmount = walletDeposits.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      const uniqueDepositors = new Set(walletDeposits.map(p => p.userId));
+      
+      res.json({
+        totalDeposits,
+        totalDepositAmount,
+        totalDepositors: uniqueDepositors.size,
+        averageDepositAmount: totalDeposits > 0 ? totalDepositAmount / totalDeposits : 0
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get wallet deposit analytics", error: error.message });
+    }
+  });
+
+  // Referrals Analytics
+  app.get("/api/admin/analytics/referrals", authenticateAdmin, async (req, res) => {
+    try {
+      const referrals = await storage.getAllReferrals();
+      const totalReferrals = referrals.length;
+      const completedReferrals = referrals.filter(r => r.status === 'completed').length;
+      const totalRewards = referrals.filter(r => r.status === 'completed')
+        .reduce((sum, r) => sum + parseFloat(r.rewardAmount || '0'), 0);
+      
+      res.json({
+        totalReferrals,
+        completedReferrals,
+        conversionRate: totalReferrals > 0 ? (completedReferrals / totalReferrals) * 100 : 0,
+        totalRewards
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get referral analytics", error: error.message });
+    }
+  });
+
+  // Credit Configuration Management  
+  app.get("/api/admin/credit-configs", authenticateAdmin, async (req, res) => {
+    try {
+      const configs = await storage.getAllCreditConfigs();
+      res.json(configs);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get credit configs", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/credit-configs", authenticateAdmin, async (req, res) => {
+    try {
+      const config = await storage.createCreditConfig(req.body);
+      res.json(config);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create credit config", error: error.message });
+    }
+  });
+
+  app.put("/api/admin/credit-configs/:id", authenticateAdmin, async (req, res) => {
+    try {
+      const config = await storage.updateCreditConfig(req.params.id, req.body);
+      res.json(config);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update credit config", error: error.message });
+    }
+  });
+
   app.post("/api/admin/company-formations", async (req, res) => {
     try {
       const formation = await storage.createCompanyFormation(req.body);

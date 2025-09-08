@@ -619,6 +619,18 @@ export const platformSettings = pgTable("platform_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Credit Configurations for feature costs
+export const creditConfigurations = pgTable("credit_configurations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  featureType: text("feature_type").notNull().unique(),
+  featureName: text("feature_name").notNull(),
+  creditsRequired: integer("credits_required").notNull().default(1),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations for new tables
 export const companiesRelations = relations(companies, ({ one }) => ({
   owner: one(users, {
@@ -821,6 +833,12 @@ export const insertPlatformSettingSchema = createInsertSchema(platformSettings).
   updatedAt: true,
 });
 
+export const insertCreditConfigSchema = createInsertSchema(creditConfigurations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -861,6 +879,8 @@ export type UserInterest = typeof userInterests.$inferSelect;
 export type InsertUserInterest = z.infer<typeof insertUserInterestSchema>;
 export type PlatformSetting = typeof platformSettings.$inferSelect;
 export type InsertPlatformSetting = z.infer<typeof insertPlatformSettingSchema>;
+export type CreditConfiguration = typeof creditConfigurations.$inferSelect;
+export type InsertCreditConfiguration = z.infer<typeof insertCreditConfigSchema>;
 
 // Events types
 export const insertEventSchema = createInsertSchema(events).omit({

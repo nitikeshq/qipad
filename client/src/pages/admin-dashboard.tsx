@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>({ name: "", description: "", type: "" });
-  const [modalType, setModalType] = useState<"category" | "department" | "tender" | "company-formation" | "media-content" | "company" | "service" | "event" | "investment" | null>(null);
+  const [modalType, setModalType] = useState<"category" | "department" | "tender" | "company-formation" | "media-content" | "company" | "service" | "event" | "investment" | "credit-config" | null>(null);
   const [viewUserModal, setViewUserModal] = useState<any>(null);
   const [editFormationModal, setEditFormationModal] = useState<any>(null);
 
@@ -83,12 +83,24 @@ export default function AdminDashboard() {
     queryKey: ['/api/admin/analytics/profit'],
   });
 
+  const { data: walletAnalytics = {} } = useQuery<any>({
+    queryKey: ['/api/admin/analytics/wallet-deposits'],
+  });
+
+  const { data: referralAnalytics = {} } = useQuery<any>({
+    queryKey: ['/api/admin/analytics/referrals'],
+  });
+
   const { data: mediaContent = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/media-content'],
   });
 
   const { data: platformSettings = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/platform-settings'],
+  });
+
+  const { data: creditConfigs = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/credit-configs'],
   });
 
   // Mutations
@@ -222,13 +234,13 @@ export default function AdminDashboard() {
     { title: "Total Projects", value: projects.length, icon: FileText, color: "text-green-600", bgColor: "bg-green-50" },
     { title: "Total Revenue", value: `₹${(profitAnalytics.totalRevenue || 0).toLocaleString('en-IN')}`, icon: DollarSign, color: "text-purple-600", bgColor: "bg-purple-50" },
     { title: "Total Profit", value: `₹${(profitAnalytics.totalProfit || 0).toLocaleString('en-IN')}`, icon: BarChart3, color: "text-emerald-600", bgColor: "bg-emerald-50" },
-    { title: "Companies", value: companies.length, icon: Building, color: "text-indigo-600", bgColor: "bg-indigo-50" },
-    { title: "Services", value: services.length, icon: Settings, color: "text-pink-600", bgColor: "bg-pink-50" },
-    { title: "Events", value: events.length, icon: Target, color: "text-yellow-600", bgColor: "bg-yellow-50" },
-    { title: "Communities", value: communities.length, icon: MessageSquare, color: "text-cyan-600", bgColor: "bg-cyan-50" }
+    { title: "Wallet Deposits", value: walletAnalytics.totalDeposits || 0, icon: DollarSign, color: "text-orange-600", bgColor: "bg-orange-50" },
+    { title: "Total Depositors", value: walletAnalytics.totalDepositors || 0, icon: Users, color: "text-teal-600", bgColor: "bg-teal-50" },
+    { title: "Total Referrals", value: referralAnalytics.totalReferrals || 0, icon: Users, color: "text-red-600", bgColor: "bg-red-50" },
+    { title: "Referral Rewards", value: `₹${(referralAnalytics.totalRewards || 0).toLocaleString('en-IN')}`, icon: DollarSign, color: "text-pink-600", bgColor: "bg-pink-50" }
   ];
 
-  const openCreateModal = (type: "category" | "department" | "tender" | "company-formation" | "media-content" | "company" | "service" | "event" | "investment") => {
+  const openCreateModal = (type: "category" | "department" | "tender" | "company-formation" | "media-content" | "company" | "service" | "event" | "investment" | "credit-config") => {
     setModalType(type);
     setEditingItem({ name: "", description: "", type: "" });
     setIsCreateModalOpen(true);
@@ -608,12 +620,24 @@ export default function AdminDashboard() {
                 </Button>
               </CardHeader>
               <CardContent>
+                <div className="mb-4">
+                  <div className="relative">
+                    <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
+                    <Input
+                      placeholder="Search companies..."
+                      className="pl-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Industry</TableHead>
                       <TableHead>Founded</TableHead>
+                      <TableHead>Owner</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>

@@ -1053,6 +1053,37 @@ export class DatabaseStorage implements IStorage {
       .where(eq(platformSettings.key, key));
   }
 
+  // Credit Configuration methods
+  async getAllCreditConfigs(): Promise<any[]> {
+    const { creditConfigurations } = await import("@shared/schema");
+    const result = await db
+      .select()
+      .from(creditConfigurations)
+      .orderBy(creditConfigurations.featureType);
+    return result;
+  }
+
+  async createCreditConfig(data: any): Promise<any> {
+    const { creditConfigurations, insertCreditConfigSchema } = await import("@shared/schema");
+    const configData = insertCreditConfigSchema.parse(data);
+    const [config] = await db
+      .insert(creditConfigurations)
+      .values(configData)
+      .returning();
+    return config;
+  }
+
+  async updateCreditConfig(id: string, data: any): Promise<any> {
+    const { creditConfigurations } = await import("@shared/schema");
+    const { eq } = await import("drizzle-orm");
+    const [config] = await db
+      .update(creditConfigurations)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(creditConfigurations.id, id))
+      .returning();
+    return config;
+  }
+
   async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {
     const [company] = await db
       .update(companies)
