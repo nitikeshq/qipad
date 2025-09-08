@@ -1235,10 +1235,34 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {platformSettings.length === 0 && (
+                  {platformSettings.length === 0 ? (
                     <div className="text-center text-gray-500 py-8">
                       <Settings className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p>No platform settings found. Settings will be automatically initialized.</p>
+                      <p>Loading platform settings...</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {platformSettings.map((setting: any) => (
+                        <Card key={setting.id} className="p-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium text-gray-900 dark:text-white">{setting.key}</h4>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{setting.description}</p>
+                              </div>
+                              <Badge variant="outline">{setting.category}</Badge>
+                            </div>
+                            <div className="flex justify-between items-center pt-2">
+                              <span className="font-mono text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                                {setting.value}
+                              </span>
+                              <Button size="sm" variant="outline">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -1248,6 +1272,189 @@ export default function AdminDashboard() {
 
         </Tabs>
       </div>
+
+      {/* Create/Edit Item Modal */}
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingItem.id ? 'Edit' : 'Create'} {modalType === 'media-content' ? 'Media Content' : modalType?.charAt(0).toUpperCase() + modalType?.slice(1)}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {modalType === 'media-content' ? (
+              <>
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={editingItem.title || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={editingItem.description || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="type">Type</Label>
+                  <Select value={editingItem.type || ''} onValueChange={(value) => setEditingItem({ ...editingItem, type: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="article">Article</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="guide">Guide</SelectItem>
+                      <SelectItem value="case_study">Case Study</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="author">Author</Label>
+                  <Input
+                    id="author"
+                    value={editingItem.author || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, author: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="url">URL</Label>
+                  <Input
+                    id="url"
+                    value={editingItem.url || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, url: e.target.value })}
+                    required
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    value={editingItem.name || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={editingItem.description || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                    required
+                  />
+                </div>
+              </>
+            )}
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createItemMutation.isPending}>
+                {createItemMutation.isPending ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View User Modal */}
+      <Dialog open={!!viewUserModal} onOpenChange={() => setViewUserModal(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+          </DialogHeader>
+          {viewUserModal && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Name</Label>
+                  <p className="font-medium">{viewUserModal.firstName} {viewUserModal.lastName}</p>
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <p>{viewUserModal.email}</p>
+                </div>
+                <div>
+                  <Label>User Type</Label>
+                  <Badge>{viewUserModal.userType}</Badge>
+                </div>
+                <div>
+                  <Label>KYC Status</Label>
+                  <Badge variant={viewUserModal.isKycComplete ? "default" : "secondary"}>
+                    {viewUserModal.isKycComplete ? "Verified" : "Pending"}
+                  </Badge>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Badge variant={viewUserModal.status === 'active' ? "default" : "destructive"}>
+                    {viewUserModal.status || 'active'}
+                  </Badge>
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <p>{viewUserModal.phone || 'Not provided'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Company Formation Modal */}
+      <Dialog open={!!editFormationModal} onOpenChange={() => setEditFormationModal(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Company Formation Details</DialogTitle>
+          </DialogHeader>
+          {editFormationModal && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Company Name</Label>
+                  <p className="font-medium">{editFormationModal.companyName}</p>
+                </div>
+                <div>
+                  <Label>Company Type</Label>
+                  <p>{editFormationModal.companyType}</p>
+                </div>
+                <div>
+                  <Label>Current Step</Label>
+                  <p>{editFormationModal.currentStep || 1}/9</p>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Badge>{editFormationModal.status || 'In Progress'}</Badge>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2 mt-6">
+                <Button variant="outline" onClick={() => setEditFormationModal(null)}>
+                  Close
+                </Button>
+                <Button onClick={() => {
+                  updateFormationMutation.mutate({ 
+                    id: editFormationModal.id, 
+                    data: { currentStep: (editFormationModal.currentStep || 1) + 1 }
+                  });
+                }}>
+                  Advance to Next Step
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
