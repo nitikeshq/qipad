@@ -38,6 +38,7 @@ async function calculateMonthlyProfits(payments: any[], subscriptions: any[]) {
   return monthlyData;
 }
 import { storage } from "./storage";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInvestmentSchema, insertCommunitySchema, insertJobSchema, insertJobApplicationSchema, insertBiddingProjectSchema, insertProjectBidSchema, insertCompanySchema, insertPaymentSchema, insertSubscriptionSchema, insertCompanyServiceSchema, insertCompanyProductSchema, insertServiceInquirySchema, insertWalletSchema, insertWalletTransactionSchema, insertReferralSchema } from "@shared/schema";
 import { payumoneyService } from "./payumoney";
 import { PlatformSettingsService } from "./platformSettingsService";
@@ -3814,6 +3815,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deducting credits:', error);
       res.status(500).json({ message: 'Failed to deduct credits' });
+    }
+  });
+
+  // ========================================
+  // OBJECT STORAGE ROUTES FOR PROJECT IMAGES
+  // ========================================
+
+  // Serve public object storage files (for images, documents, etc.)
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    const filePath = req.params.filePath;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Serve private objects for project images
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(
+        req.path,
+      );
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error accessing object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Get upload URL for project images
+  app.post("/api/projects/images/upload", authenticateToken, async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error generating upload URL:", error);
+      res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  });
+
+  // Update project images after upload
+  app.put("/api/projects/:projectId/images", authenticateToken, async (req, res) => {
+    if (!req.body.imageURL) {
+      return res.status(400).json({ error: "imageURL is required" });
+    }
+
+    try {
+      const projectId = req.params.projectId;
+      const userId = req.user.userId;
+
+      // Verify project ownership
+      const project = await storage.getProject(projectId);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      
+      if (project.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized to update this project" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = objectStorageService.normalizeObjectEntityPath(
+        req.body.imageURL,
+      );
+
+      // Get existing images and add new one
+      const existingImages = project.images || [];
+      const updatedImages = [...existingImages, objectPath];
+
+      // Update project with new image
+      const updatedProject = await storage.updateProject(projectId, {
+        images: updatedImages,
+        updatedAt: new Date()
+      });
+
+      res.status(200).json({
+        objectPath: objectPath,
+        project: updatedProject
+      });
+    } catch (error) {
+      console.error("Error updating project images:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 

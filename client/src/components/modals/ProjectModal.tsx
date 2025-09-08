@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Shield, Upload, AlertCircle, Wallet } from "lucide-react";
+import { Shield, Upload, AlertCircle, Wallet, Image } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 
 interface ProjectModalProps {
   open: boolean;
@@ -32,6 +34,7 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
     incorporation_certificate: null,
     personal_pan: null
   });
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -63,6 +66,7 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
         minimumInvestment: '',
         campaignDuration: '30'
       });
+      setUploadedImages([]);
     },
     onError: (error: any) => {
       console.error('Project creation error:', error);
@@ -70,6 +74,37 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
       toast({ title: errorMessage, variant: "destructive" });
     }
   });
+
+  // Image upload handlers
+  const handleGetUploadParameters = async () => {
+    try {
+      const response = await apiRequest('POST', '/api/projects/images/upload');
+      const data = await response.json();
+      return {
+        method: 'PUT' as const,
+        url: data.uploadURL,
+      };
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      toast({ title: "Failed to get upload URL", variant: "destructive" });
+      throw error;
+    }
+  };
+
+  const handleImageUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    try {
+      if (result.successful && result.successful.length > 0) {
+        const uploadedFile = result.successful[0];
+        const imageURL = uploadedFile.uploadURL;
+        
+        setUploadedImages(prev => [...prev, imageURL]);
+        toast({ title: "Image uploaded successfully!" });
+      }
+    } catch (error) {
+      console.error('Error processing uploaded image:', error);
+      toast({ title: "Error processing uploaded image", variant: "destructive" });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +144,7 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
         ...formData,
         fundingGoal: formData.fundingGoal.toString(),
         minimumInvestment: formData.minimumInvestment.toString(),
+        images: uploadedImages,
         campaignDuration: parseInt(formData.campaignDuration)
       });
     } catch (error) {
@@ -175,6 +211,53 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
               required
               data-testid="textarea-project-description"
             />
+          </div>
+
+          {/* Project Images Upload Section */}
+          <div className="col-span-2">
+            <Label className="text-base font-medium">Project Images</Label>
+            <p className="text-sm text-muted-foreground mb-4">Upload images to showcase your project. These will be displayed in the Investment Opportunities.</p>
+            
+            <div className="space-y-4">
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760} // 10MB
+                onGetUploadParameters={handleGetUploadParameters}
+                onComplete={handleImageUploadComplete}
+                buttonClassName="w-full"
+              >
+                <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg hover:border-primary transition-colors">
+                  <Image className="h-5 w-5" />
+                  <span>Upload Project Image</span>
+                </div>
+              </ObjectUploader>
+
+              {uploadedImages.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Uploaded Images ({uploadedImages.length})</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {uploadedImages.map((imageUrl, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={imageUrl}
+                          alt={`Project image ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== index))}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Funding Details */}
