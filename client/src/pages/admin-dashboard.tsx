@@ -108,15 +108,36 @@ export default function AdminDashboard() {
 
   const createItemMutation = useMutation({
     mutationFn: async (data: any) => {
-      const endpoint = modalType === "category" ? "/api/admin/categories" : 
-                     modalType === "department" ? "/api/admin/departments" : 
-                     "/api/admin/tenders";
+      const endpointMap = {
+        "category": "/api/admin/categories",
+        "department": "/api/admin/departments", 
+        "tender": "/api/admin/tenders",
+        "media-content": "/api/admin/media-content",
+        "company": "/api/admin/companies",
+        "service": "/api/admin/services",
+        "event": "/api/admin/events",
+        "investment": "/api/admin/investments",
+        "company-formation": "/api/admin/company-formations"
+      };
+      const endpoint = endpointMap[modalType as keyof typeof endpointMap] || "/api/admin/tenders";
       const response = await apiRequest("POST", endpoint, data);
       return response.json();
     },
     onSuccess: () => {
       toast({ title: `${modalType} created successfully!` });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/${modalType === "category" ? "categories" : modalType === "department" ? "departments" : "tenders"}`] });
+      const queryKeyMap = {
+        "category": "categories",
+        "department": "departments",
+        "tender": "tenders",
+        "media-content": "media-content",
+        "company": "companies",
+        "service": "services",
+        "event": "events",
+        "investment": "investments",
+        "company-formation": "company-formations"
+      };
+      const queryKey = queryKeyMap[modalType as keyof typeof queryKeyMap] || "tenders";
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/${queryKey}`] });
       setIsCreateModalOpen(false);
       setEditingItem({ name: "", description: "", type: "" });
     },
@@ -203,7 +224,7 @@ export default function AdminDashboard() {
     { title: "Communities", value: communities.length, icon: MessageSquare, color: "text-cyan-600", bgColor: "bg-cyan-50" }
   ];
 
-  const openCreateModal = (type: "category" | "department" | "tender" | "company-formation" | "media-content") => {
+  const openCreateModal = (type: "category" | "department" | "tender" | "company-formation" | "media-content" | "company" | "service" | "event" | "investment") => {
     setModalType(type);
     setEditingItem({ name: "", description: "", type: "" });
     setIsCreateModalOpen(true);
@@ -567,6 +588,539 @@ export default function AdminDashboard() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Companies Management Tab */}
+          <TabsContent value="companies">
+            <Card data-testid="card-companies-management">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Companies Management</CardTitle>
+                <Button 
+                  onClick={() => openCreateModal("company")}
+                  data-testid="button-create-company"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Company
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Industry</TableHead>
+                      <TableHead>Founded</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {companies.map((company: any) => (
+                      <TableRow key={company.id}>
+                        <TableCell className="font-medium">{company.name}</TableCell>
+                        <TableCell>{company.industry}</TableCell>
+                        <TableCell>{company.foundedYear}</TableCell>
+                        <TableCell>
+                          <Badge variant="default">Active</Badge>
+                        </TableCell>
+                        <TableCell className="space-x-2">
+                          <Button size="sm" variant="outline">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {companies.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-gray-500">
+                          No companies found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Services Management Tab */}
+          <TabsContent value="services">
+            <Card data-testid="card-services-management">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Services Management</CardTitle>
+                <Button 
+                  onClick={() => openCreateModal("service")}
+                  data-testid="button-create-service"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Service
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {services.map((service: any) => (
+                      <TableRow key={service.id}>
+                        <TableCell className="font-medium">{service.name}</TableCell>
+                        <TableCell>{service.category}</TableCell>
+                        <TableCell>₹{service.price?.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Badge variant="default">Active</Badge>
+                        </TableCell>
+                        <TableCell className="space-x-2">
+                          <Button size="sm" variant="outline">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {services.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-gray-500">
+                          No services found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Events Management Tab */}
+          <TabsContent value="events">
+            <Card data-testid="card-events-management">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Events Management</CardTitle>
+                <Button 
+                  onClick={() => openCreateModal("event")}
+                  data-testid="button-create-event"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Event
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Attendees</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {events.map((event: any) => (
+                      <TableRow key={event.id}>
+                        <TableCell className="font-medium">{event.title}</TableCell>
+                        <TableCell>{new Date(event.eventDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{event.location}</TableCell>
+                        <TableCell>{event.attendees?.length || 0}</TableCell>
+                        <TableCell>
+                          <Badge variant="default">Active</Badge>
+                        </TableCell>
+                        <TableCell className="space-x-2">
+                          <Button size="sm" variant="outline">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {events.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-gray-500">
+                          No events found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Investments Management Tab */}
+          <TabsContent value="investments">
+            <Card data-testid="card-investments-management">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Investments Management</CardTitle>
+                <Button 
+                  onClick={() => openCreateModal("investment")}
+                  data-testid="button-create-investment"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Investment
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Project</TableHead>
+                      <TableHead>Investor</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {investments.map((investment: any) => (
+                      <TableRow key={investment.id}>
+                        <TableCell className="font-medium">{investment.project?.title}</TableCell>
+                        <TableCell>{investment.investor?.firstName} {investment.investor?.lastName}</TableCell>
+                        <TableCell>₹{investment.amount?.toLocaleString()}</TableCell>
+                        <TableCell>{new Date(investment.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Badge variant="default">{investment.status || 'Confirmed'}</Badge>
+                        </TableCell>
+                        <TableCell className="space-x-2">
+                          <Button size="sm" variant="outline">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {investments.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-gray-500">
+                          No investments found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tenders Management Tab */}
+          <TabsContent value="tenders">
+            <Card data-testid="card-tenders-management">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Tenders Management</CardTitle>
+                <Button 
+                  onClick={() => openCreateModal("tender")}
+                  data-testid="button-create-tender"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Tender
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Deadline</TableHead>
+                      <TableHead>Budget</TableHead>
+                      <TableHead>Bids</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tenders.map((tender: any) => (
+                      <TableRow key={tender.id}>
+                        <TableCell className="font-medium">{tender.title}</TableCell>
+                        <TableCell>{new Date(tender.deadline).toLocaleDateString()}</TableCell>
+                        <TableCell>₹{tender.budget?.toLocaleString()}</TableCell>
+                        <TableCell>{tender.bids?.length || 0}</TableCell>
+                        <TableCell>
+                          <Badge variant={tender.status === 'open' ? 'default' : 'secondary'}>
+                            {tender.status || 'Open'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="space-x-2">
+                          <Button size="sm" variant="outline">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {tenders.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-gray-500">
+                          No tenders found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Company Formations Management Tab */}
+          <TabsContent value="company-formations">
+            <Card data-testid="card-company-formations-management">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Company Formations</CardTitle>
+                <Button 
+                  onClick={() => openCreateModal("company-formation")}
+                  data-testid="button-create-company-formation"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Formation Request
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Company Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Step</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {companyFormations.map((formation: any) => (
+                      <TableRow key={formation.id}>
+                        <TableCell className="font-medium">{formation.companyName}</TableCell>
+                        <TableCell>{formation.companyType}</TableCell>
+                        <TableCell>
+                          <Badge variant={formation.status === 'completed' ? 'default' : 'secondary'}>
+                            {formation.status || 'In Progress'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formation.currentStep || 1}/9</TableCell>
+                        <TableCell className="space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setEditFormationModal(formation)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {companyFormations.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-gray-500">
+                          No company formation requests found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Categories Management Tab */}
+          <TabsContent value="categories">
+            <Card data-testid="card-categories-management">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Categories Management</CardTitle>
+                <Button 
+                  onClick={() => openCreateModal("category")}
+                  data-testid="button-create-category"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Category
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {categories.map((category: any) => (
+                      <TableRow key={category.id}>
+                        <TableCell className="font-medium">{category.name}</TableCell>
+                        <TableCell>{category.description}</TableCell>
+                        <TableCell className="space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingItem({
+                                id: category.id,
+                                name: category.name,
+                                description: category.description,
+                                type: ""
+                              });
+                              setModalType("category");
+                              setIsCreateModalOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => deleteItemMutation.mutate({ type: "category", id: category.id })}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {categories.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center text-gray-500">
+                          No categories found. Click "Add Category" to create your first category.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Departments Management Tab */}
+          <TabsContent value="departments">
+            <Card data-testid="card-departments-management">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Departments Management</CardTitle>
+                <Button 
+                  onClick={() => openCreateModal("department")}
+                  data-testid="button-create-department"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Department
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {departments.map((department: any) => (
+                      <TableRow key={department.id}>
+                        <TableCell className="font-medium">{department.name}</TableCell>
+                        <TableCell>{department.description}</TableCell>
+                        <TableCell className="space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingItem({
+                                id: department.id,
+                                name: department.name,
+                                description: department.description,
+                                type: ""
+                              });
+                              setModalType("department");
+                              setIsCreateModalOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => deleteItemMutation.mutate({ type: "department", id: department.id })}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {departments.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center text-gray-500">
+                          No departments found. Click "Add Department" to create your first department.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card data-testid="card-user-analytics">
+                <CardHeader>
+                  <CardTitle>User Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-300">Total Users</span>
+                      <span className="font-bold text-blue-600">{users.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-300">Active Users</span>
+                      <span className="font-bold text-green-600">{users.filter((u: any) => u.status === 'active').length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-300">KYC Completed</span>
+                      <span className="font-bold text-purple-600">{users.filter((u: any) => u.isKycComplete).length}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card data-testid="card-project-analytics">
+                <CardHeader>
+                  <CardTitle>Project Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-300">Total Projects</span>
+                      <span className="font-bold text-blue-600">{projects.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-300">Approved Projects</span>
+                      <span className="font-bold text-green-600">{projects.filter((p: any) => p.status === 'approved').length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-300">Pending Review</span>
+                      <span className="font-bold text-orange-600">{projects.filter((p: any) => p.status === 'pending_review').length}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Media Center Management Tab - NOW PROPERLY INSIDE TABS */}
