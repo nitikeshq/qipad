@@ -180,7 +180,11 @@ export default function AdminDashboard() {
 
   const approveKycMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      const response = await apiRequest("PUT", `/api/admin/users/${userId}/kyc`, { kycStatus: status });
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}/kyc`, { 
+        kycStatus: status, 
+        isVerified: status === 'approved',
+        isKycComplete: status === 'approved'
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -1335,7 +1339,328 @@ export default function AdminDashboard() {
                   />
                 </div>
               </>
+            ) : modalType === 'company' ? (
+              <>
+                <div>
+                  <Label htmlFor="name">Company Name</Label>
+                  <Input
+                    id="name"
+                    value={editingItem.name || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={editingItem.description || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="industry">Industry</Label>
+                    <Input
+                      id="industry"
+                      value={editingItem.industry || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, industry: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="foundedYear">Founded Year</Label>
+                    <Input
+                      id="foundedYear"
+                      type="number"
+                      min="1900"
+                      max={new Date().getFullYear()}
+                      value={editingItem.foundedYear || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, foundedYear: parseInt(e.target.value) })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      value={editingItem.website || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, website: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="employeeCount">Employee Count</Label>
+                    <Input
+                      id="employeeCount"
+                      type="number"
+                      min="1"
+                      value={editingItem.employeeCount || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, employeeCount: parseInt(e.target.value) })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      value={editingItem.city || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, city: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="state">State</Label>
+                    <Input
+                      id="state"
+                      value={editingItem.state || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, state: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+              </>
+            ) : modalType === 'service' ? (
+              <>
+                <div>
+                  <Label htmlFor="name">Service Name</Label>
+                  <Input
+                    id="name"
+                    value={editingItem.name || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={editingItem.description || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="price">Price (₹)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      min="0"
+                      value={editingItem.price || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, price: parseFloat(e.target.value) })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={editingItem.category || ''} onValueChange={(value) => setEditingItem({ ...editingItem, category: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Consulting">Consulting</SelectItem>
+                        <SelectItem value="Legal">Legal</SelectItem>
+                        <SelectItem value="Marketing">Marketing</SelectItem>
+                        <SelectItem value="Finance">Finance</SelectItem>
+                        <SelectItem value="Technology">Technology</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="providerId">Service Provider</Label>
+                  <Select value={editingItem.providerId || ''} onValueChange={(value) => setEditingItem({ ...editingItem, providerId: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.filter(u => u.userType === 'individual').map((user: any) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.firstName} {user.lastName} ({user.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            ) : modalType === 'event' ? (
+              <>
+                <div>
+                  <Label htmlFor="title">Event Title</Label>
+                  <Input
+                    id="title"
+                    value={editingItem.title || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={editingItem.description || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="eventDate">Event Date</Label>
+                    <Input
+                      id="eventDate"
+                      type="datetime-local"
+                      value={editingItem.eventDate || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, eventDate: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="eventType">Event Type</Label>
+                    <Select value={editingItem.eventType || ''} onValueChange={(value) => setEditingItem({ ...editingItem, eventType: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Conference">Conference</SelectItem>
+                        <SelectItem value="Workshop">Workshop</SelectItem>
+                        <SelectItem value="Networking">Networking</SelectItem>
+                        <SelectItem value="Competition">Competition</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="venue">Venue</Label>
+                    <Input
+                      id="venue"
+                      value={editingItem.venue || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, venue: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="maxParticipants">Max Participants</Label>
+                    <Input
+                      id="maxParticipants"
+                      type="number"
+                      min="1"
+                      value={editingItem.maxParticipants || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, maxParticipants: parseInt(e.target.value) })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="price">Registration Fee (₹)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      min="0"
+                      value={editingItem.price || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, price: parseFloat(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Is Paid Event?</Label>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <input
+                        type="checkbox"
+                        checked={editingItem.isPaid || false}
+                        onChange={(e) => setEditingItem({ ...editingItem, isPaid: e.target.checked })}
+                      />
+                      <span>This is a paid event</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : modalType === 'tender' ? (
+              <>
+                <div>
+                  <Label htmlFor="title">Tender Title</Label>
+                  <Input
+                    id="title"
+                    value={editingItem.title || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={editingItem.description || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="organization">Organization</Label>
+                    <Input
+                      id="organization"
+                      value={editingItem.organization || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, organization: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={editingItem.category || ''} onValueChange={(value) => setEditingItem({ ...editingItem, category: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Technology">Technology</SelectItem>
+                        <SelectItem value="Energy">Energy</SelectItem>
+                        <SelectItem value="Marketing">Marketing</SelectItem>
+                        <SelectItem value="Finance">Finance</SelectItem>
+                        <SelectItem value="Construction">Construction</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="estimatedValue">Budget (₹)</Label>
+                    <Input
+                      id="estimatedValue"
+                      type="number"
+                      min="0"
+                      value={editingItem.estimatedValue || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, estimatedValue: parseFloat(e.target.value) })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="submissionDeadline">Submission Deadline</Label>
+                    <Input
+                      id="submissionDeadline"
+                      type="datetime-local"
+                      value={editingItem.submissionDeadline || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, submissionDeadline: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="eligibilityCriteria">Eligibility Criteria</Label>
+                  <Textarea
+                    id="eligibilityCriteria"
+                    value={editingItem.eligibilityCriteria || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, eligibilityCriteria: e.target.value })}
+                    required
+                  />
+                </div>
+              </>
             ) : (
+              // Default form for categories, departments, etc.
               <>
                 <div>
                   <Label htmlFor="name">Name</Label>
