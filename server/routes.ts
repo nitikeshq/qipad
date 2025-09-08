@@ -177,6 +177,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't fail registration if credit bonus fails
       }
 
+      // Process referral bonus if referral code was used
+      if (req.body.referralCode) {
+        try {
+          const referrer = await storage.getUserByReferralCode(req.body.referralCode);
+          if (referrer) {
+            // Give 50 credits bonus to referrer
+            const bonusResult = await storage.addCredits(
+              referrer.id,
+              50,
+              `Referral bonus - ${user.firstName} ${user.lastName} joined using your referral code`,
+              'referral_bonus',
+              user.id
+            );
+
+            // Create referral record
+            await storage.createReferral({
+              referrerId: referrer.id,
+              referredUserId: user.id,
+              referralCode: req.body.referralCode,
+              rewardAmount: "50",
+              status: "completed"
+            });
+
+            // Send referral reward email to referrer
+            try {
+              await emailService.sendReferralRewardEmail({
+                toEmail: referrer.email,
+                firstName: referrer.firstName,
+                referredEmail: user.email,
+                rewardAmount: '50',
+                rewardDate: new Date().toLocaleDateString(),
+                newBalance: bonusResult.newBalance.toString(),
+                totalReferrals: '1',
+                totalEarned: bonusResult.newBalance.toString(),
+                walletUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/wallet`,
+                referralUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/referrals`
+              });
+            } catch (emailError) {
+              console.error('Failed to send referral reward email:', emailError);
+            }
+          }
+        } catch (referralError) {
+          console.error('Failed to process referral bonus:', referralError);
+          // Don't fail registration if referral processing fails
+        }
+      }
+
       // Send welcome email
       try {
         await emailService.sendWelcomeEmail({
