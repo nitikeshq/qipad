@@ -232,12 +232,12 @@ export default function AdminDashboard() {
   const stats = [
     { title: "Total Users", value: users.length, icon: Users, color: "text-blue-600", bgColor: "bg-blue-50" },
     { title: "Total Projects", value: projects.length, icon: FileText, color: "text-green-600", bgColor: "bg-green-50" },
-    { title: "Total Revenue", value: `₹${(profitAnalytics.totalRevenue || 0).toLocaleString('en-IN')}`, icon: DollarSign, color: "text-purple-600", bgColor: "bg-purple-50" },
-    { title: "Total Profit", value: `₹${(profitAnalytics.totalProfit || 0).toLocaleString('en-IN')}`, icon: BarChart3, color: "text-emerald-600", bgColor: "bg-emerald-50" },
+    { title: "Total Revenue", value: `${(profitAnalytics.totalRevenue || 0).toLocaleString('en-IN')} QP`, icon: DollarSign, color: "text-purple-600", bgColor: "bg-purple-50" },
+    { title: "Total Profit", value: `${(profitAnalytics.totalProfit || 0).toLocaleString('en-IN')} QP`, icon: BarChart3, color: "text-emerald-600", bgColor: "bg-emerald-50" },
     { title: "Wallet Deposits", value: walletAnalytics.totalDeposits || 0, icon: DollarSign, color: "text-orange-600", bgColor: "bg-orange-50" },
     { title: "Total Depositors", value: walletAnalytics.totalDepositors || 0, icon: Users, color: "text-teal-600", bgColor: "bg-teal-50" },
     { title: "Total Referrals", value: referralAnalytics.totalReferrals || 0, icon: Users, color: "text-red-600", bgColor: "bg-red-50" },
-    { title: "Referral Rewards", value: `₹${(referralAnalytics.totalRewards || 0).toLocaleString('en-IN')}`, icon: DollarSign, color: "text-pink-600", bgColor: "bg-pink-50" }
+    { title: "Referral Rewards", value: `${(referralAnalytics.totalRewards || 0).toLocaleString('en-IN')} QP`, icon: DollarSign, color: "text-pink-600", bgColor: "bg-pink-50" }
   ];
 
   const openCreateModal = (type: "category" | "department" | "tender" | "company-formation" | "media-content" | "company" | "service" | "event" | "investment" | "credit-config") => {
@@ -431,7 +431,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-300">Total Funding Raised</span>
-                      <span className="font-bold text-purple-600">₹{investments.reduce((total: number, inv: any) => total + parseFloat(inv.amount || 0), 0).toLocaleString()}</span>
+                      <span className="font-bold text-purple-600">{investments.reduce((total: number, inv: any) => total + parseFloat(inv.amount || 0), 0).toLocaleString()} QP</span>
                     </div>
                   </div>
                 </CardContent>
@@ -574,7 +574,7 @@ export default function AdminDashboard() {
                       <TableRow key={project.id}>
                         <TableCell className="font-medium">{project.title}</TableCell>
                         <TableCell>{project.owner?.firstName} {project.owner?.lastName}</TableCell>
-                        <TableCell>₹{project.fundingGoal?.toLocaleString()}</TableCell>
+                        <TableCell>{project.fundingGoal?.toLocaleString()} QP</TableCell>
                         <TableCell>
                           <Badge variant={
                             project.status === 'approved' ? 'default' :
@@ -757,7 +757,7 @@ export default function AdminDashboard() {
                       <TableRow key={service.id}>
                         <TableCell className="font-medium">{service.name}</TableCell>
                         <TableCell>{service.category}</TableCell>
-                        <TableCell>₹{service.price?.toLocaleString()}</TableCell>
+                        <TableCell>{service.price?.toLocaleString()} QP</TableCell>
                         <TableCell>
                           <Badge variant="default">Active</Badge>
                         </TableCell>
@@ -913,7 +913,7 @@ export default function AdminDashboard() {
                       <TableRow key={investment.id}>
                         <TableCell className="font-medium">{investment.project?.title}</TableCell>
                         <TableCell>{investment.investor?.firstName} {investment.investor?.lastName}</TableCell>
-                        <TableCell>₹{investment.amount?.toLocaleString()}</TableCell>
+                        <TableCell>{investment.amount?.toLocaleString()} QP</TableCell>
                         <TableCell>{new Date(investment.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <Badge variant="default">{investment.status || 'Confirmed'}</Badge>
@@ -979,7 +979,7 @@ export default function AdminDashboard() {
                       <TableRow key={tender.id}>
                         <TableCell className="font-medium">{tender.title}</TableCell>
                         <TableCell>{new Date(tender.submissionDeadline).toLocaleDateString()}</TableCell>
-                        <TableCell>₹{tender.estimatedValue?.toLocaleString()}</TableCell>
+                        <TableCell>{tender.estimatedValue?.toLocaleString()} QP</TableCell>
                         <TableCell>{tender.bids?.length || 0}</TableCell>
                         <TableCell>
                           <Badge variant={tender.isActive ? 'default' : 'secondary'}>
@@ -1482,7 +1482,7 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="p-4">
                       <div className="text-2xl font-bold text-green-600">
-                        ₹{walletAnalytics.totalDeposits?.toLocaleString('en-IN') || 0}
+                        {walletAnalytics.totalDeposits?.toLocaleString('en-IN') || 0} QP
                       </div>
                       <p className="text-sm text-gray-600">Total Deposits</p>
                     </Card>
@@ -1494,7 +1494,7 @@ export default function AdminDashboard() {
                     </Card>
                     <Card className="p-4">
                       <div className="text-2xl font-bold text-purple-600">
-                        ₹{walletAnalytics.averageBalance?.toLocaleString('en-IN') || 0}
+                        {walletAnalytics.averageBalance?.toLocaleString('en-IN') || 0} QP
                       </div>
                       <p className="text-sm text-gray-600">Average Balance</p>
                     </Card>
@@ -1569,7 +1569,7 @@ export default function AdminDashboard() {
                     </Card>
                     <Card className="p-4">
                       <div className="text-2xl font-bold text-purple-600">
-                        ₹{(referralAnalytics.totalRewards || 0).toLocaleString('en-IN')}
+                        {(referralAnalytics.totalRewards || 0).toLocaleString('en-IN')} QP
                       </div>
                       <p className="text-sm text-gray-600">Total Rewards</p>
                     </Card>
@@ -1800,7 +1800,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="price">Price (₹)</Label>
+                    <Label htmlFor="price">Price (QP)</Label>
                     <Input
                       id="price"
                       type="number"
@@ -1928,7 +1928,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="price">Registration Fee (₹)</Label>
+                    <Label htmlFor="price">Registration Fee (QP)</Label>
                     <Input
                       id="price"
                       type="number"
@@ -1998,7 +1998,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="estimatedValue">Budget (₹)</Label>
+                    <Label htmlFor="estimatedValue">Budget (QP)</Label>
                     <Input
                       id="estimatedValue"
                       type="number"

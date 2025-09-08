@@ -275,7 +275,7 @@ export const emailService = {
       const mailOptions = {
         from: `"Qipad Platform" <${process.env.GMAIL_USER}>`,
         to: toEmail,
-        subject: `Referral Reward Earned - ₹${rewardAmount} added to your wallet!`,
+        subject: `Referral Reward Earned - ${rewardAmount} QP added to your wallet!`,
         html,
         text
       };

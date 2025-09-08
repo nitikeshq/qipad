@@ -820,7 +820,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       activeProjects,
-      totalFunding: `₹${totalFunding.toLocaleString('en-IN')}`,
+      totalFunding: `${totalFunding.toLocaleString('en-IN')}`,
       investorCount: uniqueInvestors.size,
       connectionCount: userConnections.length,
     };
@@ -844,13 +844,13 @@ export class DatabaseStorage implements IStorage {
     }, {} as any);
 
     return {
-      totalInvested: `₹${totalInvested.toLocaleString('en-IN')}`,
+      totalInvested: `${totalInvested.toLocaleString('en-IN')}`,
       activeInvestments,
       uniqueProjects,
       totalStakes: totalStakes.toFixed(1), // Total equity percentage owned
       totalTransactions: userInvestments.length,
       investmentTypes,
-      averageInvestment: userInvestments.length > 0 ? `₹${(totalInvested / userInvestments.length).toLocaleString('en-IN')}` : '₹0',
+      averageInvestment: userInvestments.length > 0 ? `${(totalInvested / userInvestments.length).toLocaleString('en-IN')}` : '0',
       lastInvestment: userInvestments[0]?.createdAt || null
     };
   }

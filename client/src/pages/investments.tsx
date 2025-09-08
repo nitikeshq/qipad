@@ -75,7 +75,7 @@ export function InvestmentsPage() {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{stats.totalInvested || '0'}</div>
+                  <div className="text-2xl font-bold">{stats.totalInvested || '0'}</div>
                   <p className="text-xs text-muted-foreground">
                     +2.5% from last month
                   </p>
@@ -111,7 +111,7 @@ export function InvestmentsPage() {
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{stats.totalInvested || '0'}</div>
+                  <div className="text-2xl font-bold">{stats.totalInvested || '0'}</div>
                   <p className="text-xs text-muted-foreground">
                     Total amount invested
                   </p>
@@ -161,7 +161,7 @@ export function InvestmentsPage() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                               <div>
                                 <p className="text-sm text-muted-foreground">Investment Amount</p>
-                                <p className="font-semibold">₹{parseFloat(investment.amount || '0').toLocaleString()}</p>
+                                <p className="font-semibold">{parseFloat(investment.amount || '0').toLocaleString()}</p>
                               </div>
                               <div>
                                 <p className="text-sm text-muted-foreground">Investment Type</p>
@@ -215,7 +215,7 @@ export function InvestmentsPage() {
                           </div>
                           <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
                             <h4 className="font-semibold text-green-900 dark:text-green-100">Average Investment</h4>
-                            <div className="text-2xl font-bold text-green-600">{stats.averageInvestment || '₹0'}</div>
+                            <div className="text-2xl font-bold text-green-600">{stats.averageInvestment || '0'}</div>
                           </div>
                           <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg">
                             <h4 className="font-semibold text-purple-900 dark:text-purple-100">Projects Invested</h4>
@@ -236,7 +236,7 @@ export function InvestmentsPage() {
                                   </p>
                                 </div>
                                 <div className="text-right">
-                                  <p className="font-semibold">₹{investment.amount}</p>
+                                  <p className="font-semibold">{investment.amount}</p>
                                   <Badge variant={getStatusColor(investment.status)} className="text-xs">
                                     {getStatusText(investment.status)}
                                   </Badge>
@@ -307,7 +307,7 @@ export function InvestmentsPage() {
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-sm">Total Amount:</span>
-                                <span className="font-semibold">₹{stats.totalInvested || '0'}</span>
+                                <span className="font-semibold">{stats.totalInvested || '0'}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-sm">Last Investment:</span>

@@ -569,7 +569,7 @@ export default function Companies() {
                         <FormControl>
                           <Input 
                             {...field} 
-                            placeholder="₹10,000 - ₹50,000"
+                            placeholder="10,000 - 50,000"
                             data-testid="inquiry-budget"
                           />
                         </FormControl>

@@ -94,7 +94,7 @@ export function WalletPage() {
       if (isNaN(amount) || amount < 10) {
         toast({
           title: "Invalid Amount",
-          description: "Minimum deposit amount is ₹10",
+          description: "Minimum deposit amount is 10",
           variant: "destructive",
         });
         return;
@@ -262,10 +262,10 @@ export function WalletPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold" data-testid="text-balance">
-                    {walletLoading ? "..." : `₹${wallet?.balance?.toFixed(2) || '0.00'}`}
+                    {walletLoading ? "..." : `${wallet?.balance?.toFixed(2) || '0.00'}`}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    1 Credit = ₹1
+                    1 Credit = 1
                   </p>
                 </CardContent>
               </Card>
@@ -277,7 +277,7 @@ export function WalletPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600" data-testid="text-total-earned">
-                    ₹{wallet?.totalEarned?.toFixed(2) || '0.00'}
+                    {wallet?.totalEarned?.toFixed(2) || '0.00'}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     From referrals & rewards
@@ -292,7 +292,7 @@ export function WalletPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-blue-600" data-testid="text-total-spent">
-                    ₹{wallet?.totalSpent?.toFixed(2) || '0.00'}
+                    {wallet?.totalSpent?.toFixed(2) || '0.00'}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     On platform features
@@ -319,11 +319,11 @@ export function WalletPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="amount">Deposit Amount (₹)</Label>
+                      <Label htmlFor="amount">Deposit Amount ()</Label>
                       <Input
                         id="amount"
                         type="number"
-                        placeholder="Minimum ₹10"
+                        placeholder="Minimum 10"
                         value={depositAmount}
                         onChange={(e) => setDepositAmount(e.target.value)}
                         min="10"
@@ -341,20 +341,20 @@ export function WalletPage() {
                         <div className="space-y-1 text-sm">
                           <div className="flex justify-between">
                             <span>Deposit Amount:</span>
-                            <span>₹{parseFloat(depositAmount).toFixed(2)}</span>
+                            <span>{parseFloat(depositAmount).toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-muted-foreground">
                             <span>Payment Gateway Fee (2%):</span>
-                            <span>-₹{fees.paymentGatewayFee.toFixed(2)}</span>
+                            <span>-{fees.paymentGatewayFee.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-muted-foreground">
                             <span>Platform Fee (1%):</span>
-                            <span>-₹{fees.platformFee.toFixed(2)}</span>
+                            <span>-{fees.platformFee.toFixed(2)}</span>
                           </div>
                           <hr className="my-2" />
                           <div className="flex justify-between font-medium">
                             <span>Credits to Receive:</span>
-                            <span className="text-green-600">₹{fees.netCredits.toFixed(2)}</span>
+                            <span className="text-green-600">{fees.netCredits.toFixed(2)}</span>
                           </div>
                         </div>
                       </div>
@@ -459,10 +459,10 @@ export function WalletPage() {
                             </div>
                             <div className="text-right">
                               <div className={`font-medium ${getTransactionColor(transaction.type)}`}>
-                                {transaction.type === 'spend' ? '-' : '+'}₹{transaction.amount.toFixed(2)}
+                                {transaction.type === 'spend' ? '-' : '+'}{transaction.amount.toFixed(2)}
                               </div>
                               <div className="text-sm text-muted-foreground">
-                                Balance: ₹{transaction.balanceAfter.toFixed(2)}
+                                Balance: {transaction.balanceAfter.toFixed(2)}
                               </div>
                             </div>
                           </div>
@@ -490,7 +490,7 @@ export function WalletPage() {
                           <h3 className="font-semibold text-lg">Your Referral Details</h3>
                           <div className="text-right text-sm text-muted-foreground">
                             <div>Total Referrals: <span className="font-bold text-blue-600">{personalReferral.totalReferrals}</span></div>
-                            <div>Total Earned: <span className="font-bold text-green-600">₹{personalReferral.totalEarned}</span></div>
+                            <div>Total Earned: <span className="font-bold text-green-600">{personalReferral.totalEarned}</span></div>
                           </div>
                         </div>
                         
@@ -541,7 +541,7 @@ export function WalletPage() {
                     <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-lg">
                       <h3 className="font-medium mb-2">📧 Invite Friends via Email</h3>
                       <p className="text-sm text-muted-foreground">
-                        Send your referral link directly to friends and earn ₹50 credits when they sign up and verify their account! They get ₹10 joining bonus + ₹20 verification bonus.
+                        Send your referral link directly to friends and earn 50 credits when they sign up and verify their account! They get 10 joining bonus + 20 verification bonus.
                       </p>
                     </div>
 
@@ -594,7 +594,7 @@ export function WalletPage() {
                                   </Badge>
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                  ₹{referral.rewardAmount} reward
+                                  {referral.rewardAmount} reward
                                 </div>
                               </div>
                               

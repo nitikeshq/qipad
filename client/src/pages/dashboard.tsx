@@ -54,7 +54,7 @@ export default function Dashboard() {
     },
     {
       title: "Funds Raised",
-      value: userStats?.totalFunding || "₹0",
+      value: userStats?.totalFunding || "0 QP",
       icon: DollarSign,
       change: "+15% this month",
       changeType: "positive" as const,
