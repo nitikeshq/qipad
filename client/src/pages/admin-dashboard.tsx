@@ -2184,12 +2184,25 @@ export default function AdminDashboard() {
                     // Don't advance beyond step 9
                     if (nextStep > 9) return;
                     
+                    // Check if all processes are complete
+                    const allProcessesComplete = editFormationModal.companyCreated && 
+                      editFormationModal.dinGenerated && 
+                      editFormationModal.documentsObtained && 
+                      editFormationModal.trademarkApplied && 
+                      editFormationModal.bankAccountCreated && 
+                      editFormationModal.certificationsObtained && 
+                      editFormationModal.projectPosted && 
+                      editFormationModal.governmentSchemesApplied;
+                    
                     // Update the step and status
                     const updateData: any = { currentStep: nextStep };
                     
-                    // Mark as completed when reaching step 9
-                    if (nextStep === 9) {
+                    // Mark as completed when reaching step 9 OR when all processes are complete
+                    if (nextStep === 9 || allProcessesComplete) {
                       updateData.status = 'completed';
+                      if (allProcessesComplete) {
+                        updateData.currentStep = 9; // Set to final step if all processes done
+                      }
                     }
                     
                     updateFormationMutation.mutate({ 
