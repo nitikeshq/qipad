@@ -986,21 +986,60 @@ export default function AdminDashboard() {
                       <TableHead>Company Name</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Step</TableHead>
+                      <TableHead>Progress</TableHead>
+                      <TableHead>Applicant</TableHead>
+                      <TableHead>Assigned CA/Agent</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {companyFormations.map((formation: any) => (
                       <TableRow key={formation.id}>
-                        <TableCell className="font-medium">{formation.companyName}</TableCell>
-                        <TableCell>{formation.companyType}</TableCell>
+                        <TableCell className="font-medium">{formation.companyName || 'N/A'}</TableCell>
+                        <TableCell>{formation.companyType || 'N/A'}</TableCell>
                         <TableCell>
                           <Badge variant={formation.status === 'completed' ? 'default' : 'secondary'}>
                             {formation.status || 'In Progress'}
                           </Badge>
                         </TableCell>
-                        <TableCell>{formation.currentStep || 1}/9</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm">Step {formation.currentStep || 1}/9</span>
+                            <div className="w-16 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-green-600 h-2 rounded-full" 
+                                style={{ width: `${((formation.currentStep || 1) / 9) * 100}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {formation.user ? (
+                            <div className="text-sm">
+                              <div className="font-medium">{formation.user.firstName} {formation.user.lastName}</div>
+                              <div className="text-gray-500">{formation.user.email}</div>
+                            </div>
+                          ) : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          {formation.assignedConsultant ? (
+                            <div className="text-sm">
+                              <div className="font-medium">Agent Assigned</div>
+                              <div className="text-gray-500">ID: {formation.assignedConsultant}</div>
+                            </div>
+                          ) : (
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="text-blue-600"
+                              onClick={() => {
+                                setEditFormationModal({...formation, assignAgent: true});
+                              }}
+                            >
+                              Assign CA/Agent
+                            </Button>
+                          )}
+                        </TableCell>
                         <TableCell className="space-x-2">
                           <Button 
                             size="sm" 
@@ -1009,7 +1048,11 @@ export default function AdminDashboard() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="destructive">
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => deleteItemMutation.mutate({ type: "company-formations", id: formation.id })}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -1017,7 +1060,7 @@ export default function AdminDashboard() {
                     ))}
                     {companyFormations.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center text-gray-500">
+                        <TableCell colSpan={7} className="text-center text-gray-500">
                           No company formation requests found.
                         </TableCell>
                       </TableRow>
