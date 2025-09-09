@@ -3,7 +3,6 @@ import { ChevronDown, Menu } from "lucide-react";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { 
   DropdownMenu,
   DropdownMenuContent,
