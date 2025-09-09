@@ -206,7 +206,7 @@ function TenderCard({ tender, isEligible = false }: { tender: any; isEligible?: 
             <CardDescription className="mt-1">{tender.department}</CardDescription>
           </div>
           <Badge className={`${getStatusColor(tender.status)} border-0`}>
-            {tender.status.replace('_', ' ').toUpperCase()}
+            {(tender.status || 'open').replace('_', ' ').toUpperCase()}
           </Badge>
         </div>
       </CardHeader>
