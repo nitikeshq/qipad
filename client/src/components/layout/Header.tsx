@@ -22,6 +22,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -101,6 +102,9 @@ export function Header() {
                 </SheetContent>
               </Sheet>
             )}
+            
+            {/* Sidebar Toggle */}
+            {!isMobile && <SidebarTrigger />}
             
             <div className="flex-shrink-0">
               <Link href="/dashboard">
