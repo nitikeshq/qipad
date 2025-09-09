@@ -148,7 +148,7 @@ async function processExistingReferral(newUser: any, referral: any) {
       referral.referrerId,
       50,
       `Referral reward - ${newUser.firstName} joined via your referral`,
-      'referral_reward',
+      'referral_bonus',
       referral.id
     );
     console.log(`Added ₹50 referral reward to referrer ${referral.referrerId}`);
