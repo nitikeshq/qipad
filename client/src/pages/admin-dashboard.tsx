@@ -3146,6 +3146,162 @@ export default function AdminDashboard() {
                   />
                 </div>
               </>
+            ) : modalType === 'company-formation' ? (
+              <>
+                <div>
+                  <Label htmlFor="companyName">Company Name *</Label>
+                  <Input
+                    id="companyName"
+                    value={editingItem.companyName || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, companyName: e.target.value })}
+                    placeholder="ABC Technologies Pvt Ltd"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="companyType">Company Type *</Label>
+                    <Select value={editingItem.companyType || ''} onValueChange={(value) => setEditingItem({ ...editingItem, companyType: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Private Limited">Private Limited Company</SelectItem>
+                        <SelectItem value="LLP">Limited Liability Partnership</SelectItem>
+                        <SelectItem value="Partnership">Partnership Firm</SelectItem>
+                        <SelectItem value="Sole Proprietorship">Sole Proprietorship</SelectItem>
+                        <SelectItem value="OPC">One Person Company</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="stateOfIncorporation">State of Incorporation *</Label>
+                    <Select value={editingItem.stateOfIncorporation || ''} onValueChange={(value) => setEditingItem({ ...editingItem, stateOfIncorporation: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
+                        <SelectItem value="Karnataka">Karnataka</SelectItem>
+                        <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                        <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                        <SelectItem value="West Bengal">West Bengal</SelectItem>
+                        <SelectItem value="Delhi">Delhi</SelectItem>
+                        <SelectItem value="Odisha">Odisha</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="businessActivity">Business Activity/Industry *</Label>
+                  <Textarea
+                    id="businessActivity"
+                    value={editingItem.businessActivity || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, businessActivity: e.target.value })}
+                    placeholder="Describe the main business activities and industry"
+                    rows={2}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="authorizedCapital">Authorized Capital (₹) *</Label>
+                    <Input
+                      id="authorizedCapital"
+                      type="number"
+                      min="100000"
+                      value={editingItem.authorizedCapital || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, authorizedCapital: parseInt(e.target.value) })}
+                      placeholder="100000"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="paidUpCapital">Paid-up Capital (₹) *</Label>
+                    <Input
+                      id="paidUpCapital"
+                      type="number"
+                      min="100000"
+                      value={editingItem.paidUpCapital || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, paidUpCapital: parseInt(e.target.value) })}
+                      placeholder="100000"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="numberOfDirectors">Number of Directors *</Label>
+                    <Input
+                      id="numberOfDirectors"
+                      type="number"
+                      min="1"
+                      max="15"
+                      value={editingItem.numberOfDirectors || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, numberOfDirectors: parseInt(e.target.value) })}
+                      placeholder="2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="numberOfShareholders">Number of Shareholders</Label>
+                    <Input
+                      id="numberOfShareholders"
+                      type="number"
+                      min="1"
+                      max="200"
+                      value={editingItem.numberOfShareholders || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, numberOfShareholders: parseInt(e.target.value) })}
+                      placeholder="2"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="registeredAddress">Registered Office Address *</Label>
+                  <Textarea
+                    id="registeredAddress"
+                    value={editingItem.registeredAddress || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, registeredAddress: e.target.value })}
+                    placeholder="Complete address with pincode"
+                    rows={2}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="contactEmail">Contact Email *</Label>
+                    <Input
+                      id="contactEmail"
+                      type="email"
+                      value={editingItem.contactEmail || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, contactEmail: e.target.value })}
+                      placeholder="contact@company.com"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="contactPhone">Contact Phone *</Label>
+                    <Input
+                      id="contactPhone"
+                      type="tel"
+                      value={editingItem.contactPhone || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, contactPhone: e.target.value })}
+                      placeholder="+91-9876543210"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="additionalRequirements">Additional Requirements</Label>
+                  <Textarea
+                    id="additionalRequirements"
+                    value={editingItem.additionalRequirements || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, additionalRequirements: e.target.value })}
+                    placeholder="Any special requirements, licenses needed, etc."
+                    rows={2}
+                  />
+                </div>
+              </>
             ) : (
               // Default form for categories, departments, etc.
               <>
