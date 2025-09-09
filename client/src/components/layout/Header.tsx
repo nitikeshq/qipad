@@ -121,17 +121,17 @@ export function Header() {
             {!isMobile && (
               <div className="ml-10 flex items-baseline space-x-4">
                 {navigationItems.map((item) => (
-                  <Link key={item.path} href={item.path}>
-                    <a
-                      className={`px-3 py-2 text-sm font-medium transition-colors ${
-                        location === item.path
-                          ? "nav-active"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                      data-testid={`nav-${item.label.toLowerCase()}`}
-                    >
-                      {item.label}
-                    </a>
+                  <Link 
+                    key={item.path} 
+                    href={item.path}
+                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                      location === item.path
+                        ? "nav-active"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    data-testid={`nav-${item.label.toLowerCase()}`}
+                  >
+                    {item.label}
                   </Link>
                 ))}
               </div>

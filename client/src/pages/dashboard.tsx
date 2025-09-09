@@ -63,14 +63,14 @@ export default function Dashboard() {
   const stats = [
     {
       title: "Active Innovations",
-      value: userStats?.activeProjects || 0,
+      value: (userStats as any)?.activeProjects || 0,
       icon: FolderOpen,
       change: "+2 this month",
       changeType: "positive" as const,
     },
     {
       title: "Funds Raised",
-      value: userStats?.totalFunding || "0 QP",
+      value: (userStats as any)?.totalFunding || "0 QP",
       icon: DollarSign,
       change: "+15% this month",
       changeType: "positive" as const,
@@ -78,7 +78,7 @@ export default function Dashboard() {
     },
     {
       title: "Investors",
-      value: userStats?.investorCount || 0,
+      value: (userStats as any)?.investorCount || 0,
       icon: Users,
       change: "+67 new",
       changeType: "positive" as const,
@@ -86,7 +86,7 @@ export default function Dashboard() {
     },
     {
       title: "Connections",
-      value: userStats?.connectionCount || 0,
+      value: (userStats as any)?.connectionCount || 0,
       icon: Handshake,
       change: "+23 this week",
       changeType: "positive" as const,
@@ -138,7 +138,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-2">
-                  {userData?.isVerified ? (
+                  {(userData as any)?.isVerified ? (
                     <>
                       <CheckCircle className="h-5 w-5 text-green-600" />
                       <div>
@@ -150,7 +150,7 @@ export default function Dashboard() {
                         </p>
                       </div>
                     </>
-                  ) : userData?.isKycComplete ? (
+                  ) : (userData as any)?.isKycComplete ? (
                     <>
                       <AlertCircle className="h-5 w-5 text-amber-600" />
                       <div>
@@ -176,10 +176,10 @@ export default function Dashboard() {
                     </>
                   )}
                 </div>
-                {!userData?.isVerified && (
+                {!(userData as any)?.isVerified && (
                   <Link href="/documents">
                     <Button size="sm" className="w-full mt-3">
-                      {userData?.isKycComplete ? 'View Status' : 'Complete KYC'}
+                      {(userData as any)?.isKycComplete ? 'View Status' : 'Complete KYC'}
                     </Button>
                   </Link>
                 )}
@@ -196,7 +196,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-2xl font-bold">
-                      ₹{walletData?.balance || '0'}
+                      ₹{(walletData as any)?.balance || '0'}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Available Credits
@@ -214,12 +214,12 @@ export default function Dashboard() {
                     <div 
                       className="bg-primary h-2 rounded-full transition-all duration-300" 
                       style={{ 
-                        width: `${Math.min((parseFloat(walletData?.balance || '0') / 100) * 100, 100)}%` 
+                        width: `${Math.min((parseFloat((walletData as any)?.balance || '0') / 100) * 100, 100)}%` 
                       }}
                     />
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {walletData?.balance || '0'} credits
+                    {(walletData as any)?.balance || '0'} credits
                   </span>
                 </div>
               </CardContent>
@@ -283,7 +283,7 @@ export default function Dashboard() {
                   <h3 className="text-lg font-semibold text-foreground">Investment Opportunities</h3>
                 </div>
                 <div className="p-4 space-y-4">
-                  {investmentOpportunities.slice(0, 3).map((project: Project) => (
+                  {(investmentOpportunities as any[]).slice(0, 3).map((project: Project) => (
                     <div key={project.id} className="flex items-start space-x-3">
                       <img 
                         src="https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=80" 

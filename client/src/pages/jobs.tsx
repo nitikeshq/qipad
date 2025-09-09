@@ -209,7 +209,7 @@ export default function Jobs() {
                           {job.company || 'Company Name'}
                         </p>
                         <p className="text-xs text-muted-foreground" data-testid={`text-job-poster-${job.id}`}>
-                          Posted by: {job.userFirstName} {job.userLastName}
+                          Posted by: {(job as any).userFirstName || 'Unknown'} {(job as any).userLastName || 'User'}
                         </p>
                       </div>
                       
@@ -300,7 +300,6 @@ export default function Jobs() {
           open={isJobModalOpen} 
           onOpenChange={setIsJobModalOpen} 
         />
-      </div>
     </SidebarProvider>
   );
 }
