@@ -2092,98 +2092,6 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Company Formations Management Tab */}
-          <TabsContent value="formations">
-            <Card data-testid="card-formations-management">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-cyan-600" />
-                  Company Formations
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Search formations..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-64"
-                  />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Company Name</TableHead>
-                      <TableHead>Formation Type</TableHead>
-                      <TableHead>Applicant</TableHead>
-                      <TableHead>Application Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Fee Paid</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredFormations.map((formation: any) => (
-                      <TableRow key={formation.id} data-testid={`row-formation-${formation.id}`}>
-                        <TableCell className="font-medium">{formation.companyName}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{formation.formationType}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {formation.applicant ? `${formation.applicant.firstName} ${formation.applicant.lastName}` : 'Unknown'}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(formation.createdAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={
-                              formation.status === 'completed' ? 'default' : 
-                              formation.status === 'processing' ? 'secondary' : 
-                              'destructive'
-                            }
-                          >
-                            {formation.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-bold text-green-600">
-                          ₹{parseFloat(formation.feePaid || 0).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setViewFormationModal(formation)}
-                          >
-                            View
-                          </Button>
-                          {formation.status === 'submitted' && (
-                            <Button
-                              size="sm"
-                              onClick={() => updateFormationStatusMutation.mutate({ 
-                                formationId: formation.id, 
-                                status: 'processing' 
-                              })}
-                              disabled={updateFormationStatusMutation.isPending}
-                            >
-                              Start Processing
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                {filteredFormations.length === 0 && (
-                  <div className="text-center text-gray-500 py-8">
-                    <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>No company formation applications found.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           {/* Categories Management Tab */}
           <TabsContent value="categories">
             <Card data-testid="card-categories-management">
@@ -3004,9 +2912,9 @@ export default function AdminDashboard() {
                       <SelectValue placeholder="Select company" />
                     </SelectTrigger>
                     <SelectContent>
-                      {users.filter(u => u.userType === 'individual').map((user: any) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.firstName} {user.lastName} ({user.email})
+                      {companies.map((company: any) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name} ({company.industry || 'N/A'})
                         </SelectItem>
                       ))}
                     </SelectContent>
