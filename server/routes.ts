@@ -116,7 +116,7 @@ async function processExistingReferral(newUser: any, referral: any) {
   try {
     
     if (referral.status !== 'pending') {
-      console.log(`Referral already processed: ${referral.status}`);
+      console.log(`Referral already processed: ${referral.status} for ${referral.referredEmail} - but this is for new user ${newUser.email}`);
       return;
     }
 
