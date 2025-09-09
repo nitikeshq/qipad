@@ -7,10 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Header } from "@/components/layout/Header";
-import { Sidebar, SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Calendar, MapPin, Building, Clock, Filter, Search, ExternalLink, Download } from "lucide-react";
 
 export default function Tenders() {
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -36,8 +39,8 @@ export default function Tenders() {
     return (
       <SidebarProvider>
         <div className="flex h-screen bg-background">
-          <Sidebar />
-          <SidebarInset className="flex-1 flex flex-col overflow-hidden">
+          {!isMobile && <Sidebar />}
+          <SidebarInset className={`flex-1 flex flex-col overflow-hidden ${isMobile ? "w-full" : ""}`}>
             <Header />
             <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
@@ -54,8 +57,8 @@ export default function Tenders() {
   return (
     <SidebarProvider>
       <div className="flex h-screen bg-background">
-        <Sidebar />
-        <SidebarInset className="flex-1 flex flex-col overflow-hidden">
+        {!isMobile && <Sidebar />}
+        <SidebarInset className={`flex-1 flex flex-col overflow-hidden ${isMobile ? "w-full" : ""}`}>
           <Header />
           <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-6xl mx-auto">
