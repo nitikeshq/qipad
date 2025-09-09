@@ -3201,6 +3201,144 @@ export default function AdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Email Settings Tab */}
+      <TabsContent value="email-settings">
+        <Card data-testid="card-email-settings">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-pink-600" />
+              Email Settings
+            </CardTitle>
+            <CardDescription>
+              Configure platform-wide email settings and SMTP credentials
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Email Service Status */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-gray-600">Email Service</div>
+                      <div className="text-2xl font-bold text-green-600">Active</div>
+                    </div>
+                    <Badge variant="default" className="bg-green-100 text-green-800">Gmail SMTP</Badge>
+                  </div>
+                </Card>
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-gray-600">Monthly Emails</div>
+                      <div className="text-2xl font-bold text-blue-600">1,247</div>
+                    </div>
+                    <Badge variant="secondary">This Month</Badge>
+                  </div>
+                </Card>
+              </div>
+
+              {/* SMTP Configuration */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">SMTP Configuration</h3>
+                  <Button size="sm" variant="outline">Test Connection</Button>
+                </div>
+                
+                <Card>
+                  <CardContent className="pt-6">
+                    <form className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="smtp-host">SMTP Host</Label>
+                          <Input 
+                            id="smtp-host" 
+                            placeholder="smtp.gmail.com" 
+                            defaultValue="smtp.gmail.com"
+                            data-testid="input-smtp-host"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="smtp-port">SMTP Port</Label>
+                          <Input 
+                            id="smtp-port" 
+                            placeholder="587" 
+                            defaultValue="587"
+                            data-testid="input-smtp-port"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="smtp-username">Username/Email</Label>
+                          <Input 
+                            id="smtp-username" 
+                            placeholder="admin@qipad.co"
+                            data-testid="input-smtp-username"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="smtp-password">App Password</Label>
+                          <Input 
+                            id="smtp-password" 
+                            type="password" 
+                            placeholder="••••••••••••••••"
+                            data-testid="input-smtp-password"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Switch id="enable-smtp" defaultChecked data-testid="switch-enable-smtp" />
+                        <Label htmlFor="enable-smtp">Enable SMTP Service</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Switch id="enable-ssl" defaultChecked data-testid="switch-enable-ssl" />
+                        <Label htmlFor="enable-ssl">Use SSL/TLS</Label>
+                      </div>
+                      
+                      <div className="flex justify-end space-x-2">
+                        <Button type="button" variant="outline" data-testid="button-reset-smtp">Reset</Button>
+                        <Button type="submit" data-testid="button-save-smtp">Save Configuration</Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Email Templates */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Email Templates</h3>
+                  <Button size="sm" variant="outline">Manage Templates</Button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="p-4">
+                    <div className="text-sm font-medium text-gray-600">Welcome Email</div>
+                    <div className="text-xl font-bold">Active</div>
+                    <div className="text-xs text-gray-500 mt-1">Sent to new users</div>
+                  </Card>
+                  <Card className="p-4">
+                    <div className="text-sm font-medium text-gray-600">KYC Notifications</div>
+                    <div className="text-xl font-bold">Active</div>
+                    <div className="text-xs text-gray-500 mt-1">Verification updates</div>
+                  </Card>
+                  <Card className="p-4">
+                    <div className="text-sm font-medium text-gray-600">Investment Alerts</div>
+                    <div className="text-xl font-bold">Active</div>
+                    <div className="text-xs text-gray-500 mt-1">Project notifications</div>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+        </Tabs>
     </div>
   );
 }
