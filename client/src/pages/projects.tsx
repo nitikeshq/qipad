@@ -4,10 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, Filter } from "lucide-react";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { BottomNav } from "@/components/layout/BottomNav";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { ProjectCard } from "@/components/cards/ProjectCard";
 import { ProjectModal } from "@/components/modals/ProjectModal";
 import { InvestmentModal } from "@/components/modals/InvestmentModal";
@@ -48,11 +44,7 @@ export default function Projects() {
   const industries = ['technology', 'healthcare', 'finance', 'education', 'ecommerce', 'clean-energy'];
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        {!isMobile && <Sidebar />}
-        <SidebarInset className="flex-1">
-          <div className={`p-6 ${isMobile ? 'pb-20' : ''}`}>
+    <div>
               {/* Projects Header */}
               <div className="mb-6 md:mb-8">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -147,10 +139,6 @@ export default function Projects() {
               </div>
             )}
               </div>
-          </div>
-        </SidebarInset>
-      </div>
-      {isMobile && <BottomNav />}
 
       <ProjectModal 
         open={isProjectModalOpen} 
@@ -168,7 +156,6 @@ export default function Projects() {
         onOpenChange={setIsSupportModalOpen}
         project={selectedProject}
       />
-      {isMobile && <BottomNav />}
-    </SidebarProvider>
+    </div>
   );
 }

@@ -6,9 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Calendar, MapPin, Building, Clock, Filter, Search, ExternalLink, Download } from "lucide-react";
 
@@ -37,30 +34,17 @@ export default function Tenders() {
 
   if (isLoading) {
     return (
-      <SidebarProvider>
-        <div className="flex min-h-screen bg-background">
-          {!isMobile && <Sidebar />}
-          <SidebarInset className={`flex-1 flex flex-col ${isMobile ? "w-full" : ""}`}>
-            <Header />
-            <main className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">Loading tenders...</p>
-            </div>
-            </main>
-          </SidebarInset>
+      <div className="flex items-center justify-center min-h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading tenders...</p>
         </div>
-      </SidebarProvider>
+      </div>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen bg-background">
-        {!isMobile && <Sidebar />}
-        <SidebarInset className={`flex-1 flex flex-col ${isMobile ? "w-full" : ""}`}>
-          <Header />
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+    <div>
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-foreground mb-2">Government Tenders</h1>
@@ -175,10 +159,7 @@ export default function Tenders() {
           </TabsContent>
         </Tabs>
           </div>
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    </div>
   );
 }
 

@@ -8,10 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Search, Filter, Mail, Phone, MapPin, DollarSign } from "lucide-react";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { BottomNav } from "@/components/layout/BottomNav";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";

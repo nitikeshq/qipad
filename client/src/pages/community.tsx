@@ -6,10 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Search, Users, MessageCircle, Calendar, Eye, ChevronLeft, ChevronRight } from "lucide-react";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { BottomNav } from "@/components/layout/BottomNav";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { apiRequest } from "@/lib/queryClient";
@@ -116,13 +112,7 @@ export default function CommunityPage() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          {!isMobile && <Sidebar />}
-          <SidebarInset>
-            <main className={`flex-1 p-4 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+    <div>
               {/* Community Header */}
               <div className="mb-6 md:mb-8">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -269,16 +259,11 @@ export default function CommunityPage() {
               </Button>
             </div>
           )}
-            </main>
-          </SidebarInset>
-        </div>
-      </div>
 
       <CommunityModal 
         open={isCommunityModalOpen} 
         onOpenChange={setIsCommunityModalOpen} 
       />
-      {isMobile && <BottomNav />}
-    </SidebarProvider>
+    </div>
   );
 }
