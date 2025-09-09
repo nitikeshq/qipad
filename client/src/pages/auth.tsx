@@ -236,22 +236,6 @@ export default function Auth() {
                 <CardTitle>Join Qipad {referralCode && "& Claim Your Bonus!"}</CardTitle>
               </CardHeader>
               <CardContent>
-                {referralCode && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                    <div className="flex items-center">
-                      <Gift className="h-5 w-5 text-green-600 mr-2" />
-                      <div>
-                        <p className="text-green-800 font-medium">Referral Bonus Applied! 🎉</p>
-                        <p className="text-green-600 text-sm">
-                          You'll receive ₹30 total credits (₹10 joining + ₹20 referral bonus)
-                        </p>
-                        <p className="text-green-500 text-xs mt-1">
-                          Referral Code: <span className="font-mono">{referralCode}</span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div>
                     <Label>Account Type</Label>
