@@ -4,9 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, Filter, MapPin, DollarSign, Clock } from "lucide-react";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Job } from "@shared/schema";
 import { JobModal } from "@/components/modals/JobModal";
@@ -116,12 +113,7 @@ export default function Jobs() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen bg-background">
-        {!isMobile && <Sidebar />}
-        <SidebarInset className={`flex-1 flex flex-col ${isMobile ? "w-full" : ""}`}>
-          <Header />
-            <main className="p-6">
+    <div>
           {/* Jobs Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
@@ -292,14 +284,10 @@ export default function Jobs() {
               </div>
             )}
           </div>
-            </main>
-          </SidebarInset>
-        </div>
-
         <JobModal 
           open={isJobModalOpen} 
           onOpenChange={setIsJobModalOpen} 
         />
-    </SidebarProvider>
+    </div>
   );
 }
