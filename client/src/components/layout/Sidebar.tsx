@@ -57,6 +57,22 @@ export function Sidebar() {
     <>
       <SidebarUI variant="inset" data-testid="sidebar-navigation">
         <SidebarHeader>
+          {/* Qipad Logo */}
+          <div className="flex items-center justify-center py-4 border-b border-border/50 mb-4">
+            <Link href="/dashboard">
+              <div className="flex items-center space-x-2 cursor-pointer">
+                <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
+                  <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center">
+                    <span className="text-blue-600 font-bold text-lg">Q</span>
+                  </div>
+                </div>
+                <h1 className="text-xl font-bold text-primary" data-testid="sidebar-logo-qipad">
+                  Qipad
+                </h1>
+              </div>
+            </Link>
+          </div>
+
           {/* User Profile Card */}
           <div className="bg-secondary/50 rounded-lg p-4">
             <div className="flex items-center space-x-3">
