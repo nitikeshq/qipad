@@ -132,12 +132,7 @@ export default function Events() {
   const canCreateEvent = (user as any)?.isVerified === true;
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen bg-background">
-        {!isMobile && <Sidebar />}
-        <SidebarInset className={`flex-1 flex flex-col ${isMobile ? "w-full" : ""}`}>
-          <Header />
-            <main className="p-6">
+    <div>
           <div className="max-w-6xl mx-auto">
             <div className="flex justify-between items-center mb-8">
               <div>
@@ -467,6 +462,7 @@ export default function Events() {
           ))
         )}
         </div>
+          </div>
     </div>
   );
 }
