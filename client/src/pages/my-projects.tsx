@@ -1,9 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { BottomNav } from "@/components/layout/BottomNav";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -91,13 +87,7 @@ export default function MyProjects() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          {!isMobile && <Sidebar />}
-          <SidebarInset>
-            <main className={`flex-1 p-6 ${isMobile ? 'pb-20' : ''}`}>
+    <div>
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
@@ -244,6 +234,6 @@ export default function MyProjects() {
         }}
         project={editingProject}
       />
-    </SidebarProvider>
+    </div>
   );
 }

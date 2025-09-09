@@ -1,8 +1,6 @@
 import { useState } from "react";
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -123,11 +121,7 @@ export function NetworkPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
+    <div>
           <div className="max-w-6xl mx-auto">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-foreground mb-2">Network</h1>
@@ -392,8 +386,6 @@ export function NetworkPage() {
               </DialogContent>
             </Dialog>
           </div>
-        </main>
-      </div>
     </div>
   );
 }

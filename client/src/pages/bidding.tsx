@@ -5,8 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Filter, Clock, DollarSign, Users, FileText } from "lucide-react";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { BiddingProject } from "@shared/schema";
 import { BiddingProjectModal } from "@/components/modals/BiddingProjectModal";
 import { ProjectBidModal } from "@/components/modals/ProjectBidModal";
