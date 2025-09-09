@@ -38,9 +38,9 @@ export default function Tenders() {
   if (isLoading) {
     return (
       <SidebarProvider>
-        <div className="flex h-screen bg-background">
+        <div className="flex min-h-screen bg-background">
           {!isMobile && <Sidebar />}
-          <SidebarInset className={`flex-1 flex flex-col overflow-hidden ${isMobile ? "w-full" : ""}`}>
+          <SidebarInset className={`flex-1 flex flex-col ${isMobile ? "w-full" : ""}`}>
             <Header />
             <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
@@ -56,11 +56,11 @@ export default function Tenders() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-background">
+      <div className="flex min-h-screen bg-background">
         {!isMobile && <Sidebar />}
-        <SidebarInset className={`flex-1 flex flex-col overflow-hidden ${isMobile ? "w-full" : ""}`}>
+        <SidebarInset className={`flex-1 flex flex-col ${isMobile ? "w-full" : ""}`}>
           <Header />
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-foreground mb-2">Government Tenders</h1>
@@ -70,7 +70,7 @@ export default function Tenders() {
         {/* Filters */}
         <Card className="mb-6">
           <CardContent className="p-6">
-            <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-end">
               <div className="flex-1 min-w-[250px]">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -83,7 +83,7 @@ export default function Tenders() {
                   />
                 </div>
               </div>
-              <div className="min-w-[150px]">
+              <div className="w-full sm:min-w-[150px] sm:w-auto">
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger data-testid="select-category">
                     <SelectValue placeholder="Category" />
@@ -96,7 +96,7 @@ export default function Tenders() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="min-w-[150px]">
+              <div className="w-full sm:min-w-[150px] sm:w-auto">
                 <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                   <SelectTrigger data-testid="select-location">
                     <SelectValue placeholder="Location" />
@@ -200,6 +200,21 @@ function TenderCard({ tender, isEligible = false }: { tender: any; isEligible?: 
     });
   };
 
+  const handleApply = () => {
+    // Open tender application process
+    window.open(tender.applicationUrl || `/tenders/${tender.id}/apply`, '_blank');
+  };
+
+  const handleViewDetails = () => {
+    window.open(tender.detailsUrl || `/tenders/${tender.id}`, '_blank');
+  };
+
+  const handleDownload = () => {
+    if (tender.documentUrl) {
+      window.open(tender.documentUrl, '_blank');
+    }
+  };
+
   return (
     <Card className={`${isEligible ? 'ring-2 ring-green-200 bg-green-50' : ''}`}>
       <CardHeader>
@@ -217,7 +232,7 @@ function TenderCard({ tender, isEligible = false }: { tender: any; isEligible?: 
         <div className="space-y-4">
           <p className="text-gray-700 text-sm">{tender.description}</p>
           
-          <div className="grid md:grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-gray-500" />
               <span>{tender.location}</span>
@@ -243,21 +258,23 @@ function TenderCard({ tender, isEligible = false }: { tender: any; isEligible?: 
             </div>
           )}
 
-          <div className="flex justify-between items-center pt-4 border-t">
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" data-testid={`button-view-tender-${tender.id}`}>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pt-4 border-t">
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={handleViewDetails} data-testid={`button-view-tender-${tender.id}`}>
                 <ExternalLink className="h-4 w-4 mr-1" />
                 View Details
               </Button>
-              <Button variant="outline" size="sm" data-testid={`button-download-tender-${tender.id}`}>
+              <Button variant="outline" size="sm" onClick={handleDownload} data-testid={`button-download-tender-${tender.id}`}>
                 <Download className="h-4 w-4 mr-1" />
                 Download
               </Button>
             </div>
             <Button 
               size="sm" 
+              onClick={handleApply}
               disabled={tender.status === 'closed'}
               data-testid={`button-apply-tender-${tender.id}`}
+              className="w-full sm:w-auto"
             >
               {tender.status === 'closed' ? 'Closed' : 'Apply Now'}
             </Button>
