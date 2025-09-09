@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/Header";
-import { Sidebar, SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +35,7 @@ const createEventSchema = z.object({
 type CreateEventForm = z.infer<typeof createEventSchema>;
 
 export default function Events() {
+  const isMobile = useIsMobile();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -133,11 +136,10 @@ export default function Events() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <SidebarInset className="flex-1">
+      <div className="flex min-h-screen bg-background">
+        {!isMobile && <Sidebar />}
+        <SidebarInset className={`flex-1 flex flex-col ${isMobile ? "w-full" : ""}`}>
+          <Header />
             <main className="p-6">
           <div className="max-w-6xl mx-auto">
             <div className="flex justify-between items-center mb-8">

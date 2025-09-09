@@ -5,13 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, Filter, MapPin, DollarSign, Clock } from "lucide-react";
 import { Header } from "@/components/layout/Header";
-import { Sidebar, SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Job } from "@shared/schema";
 import { JobModal } from "@/components/modals/JobModal";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Jobs() {
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
@@ -114,11 +117,10 @@ export default function Jobs() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <SidebarInset className="flex-1">
+      <div className="flex min-h-screen bg-background">
+        {!isMobile && <Sidebar />}
+        <SidebarInset className={`flex-1 flex flex-col ${isMobile ? "w-full" : ""}`}>
+          <Header />
             <main className="p-6">
           {/* Jobs Header */}
           <div className="mb-8">
