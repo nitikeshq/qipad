@@ -30,6 +30,30 @@ export function Header() {
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const getUserDisplayName = () => {
+    if (!user) return "User";
+    return `${user.firstName || ""} ${user.lastName || ""}`.trim() || "User";
+  };
+
+  const getUserDesignation = () => {
+    if (!user?.userType) return "";
+    switch (user.userType) {
+      case 'business_owner': return "Business Owner";
+      case 'investor': return "Investor";
+      case 'individual': return "Individual";
+      case 'agent': return "Agent";
+      case 'admin': return "Administrator";
+      default: return "";
+    }
+  };
+
+  const getUserInitials = () => {
+    if (!user) return "U";
+    const firstName = user.firstName || "";
+    const lastName = user.lastName || "";
+    return `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase() || "U";
+  };
+
   const navigationItems = [
     { path: "/dashboard", label: "Dashboard" },
     { path: "/innovations", label: "Innovations" },
@@ -124,17 +148,26 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center space-x-3" data-testid="button-profile-menu">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.profileImage} alt={`${user?.firstName} ${user?.lastName}`} />
+                      <AvatarImage src={user?.profileImage || ""} alt={getUserDisplayName()} />
                       <AvatarFallback>
-                        {user?.firstName?.[0]}{user?.lastName?.[0]}
+                        {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="font-medium">{user?.firstName} {user?.lastName}</span>
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium text-sm">{getUserDisplayName()}</span>
+                      <span className="text-xs text-muted-foreground">{getUserDesignation()}</span>
+                    </div>
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{getUserDisplayName()}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{getUserDesignation()}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={() => navigate("/profile-settings")} 
@@ -172,15 +205,21 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.profileImage} alt={`${user?.firstName} ${user?.lastName}`} />
+                      <AvatarImage src={user?.profileImage || ""} alt={getUserDisplayName()} />
                       <AvatarFallback>
-                        {user?.firstName?.[0]}{user?.lastName?.[0]}
+                        {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>{user?.firstName} {user?.lastName}</DropdownMenuLabel>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{getUserDisplayName()}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{getUserDesignation()}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={() => navigate("/profile-settings")}
