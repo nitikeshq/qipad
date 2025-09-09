@@ -1,4 +1,18 @@
 import { useState, useEffect } from "react";
+
+// TypeScript definitions for Google Identity Services
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,9 +128,73 @@ export default function Auth() {
     }
   };
 
-  const handleGoogleAuth = async () => {
-    // Mock Google OAuth for now
-    toast({ title: "Google OAuth not implemented yet", variant: "destructive" });
+  const handleGoogleAuth = async (userType?: 'business_owner' | 'investor' | 'individual') => {
+    try {
+      setIsLoading(true);
+      
+      // Load Google Identity Services library if not already loaded
+      if (!window.google) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://accounts.google.com/gsi/client';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      // Get Google Client ID from backend
+      const response = await fetch('/api/auth/google-client-id');
+      const { clientId: googleClientId } = await response.json();
+      if (!googleClientId) {
+        throw new Error('Google Client ID not configured');
+      }
+
+      // Initialize Google OAuth
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: async (response: any) => {
+          try {
+            // Decode the JWT token to get user info
+            const decoded = JSON.parse(atob(response.credential.split('.')[1]));
+            
+            const googleAuthData = {
+              googleId: decoded.sub,
+              email: decoded.email,
+              firstName: decoded.given_name || '',
+              lastName: decoded.family_name || '',
+              userType: userType || 'individual'
+            };
+
+            const authResponse = await authAPI.googleAuth(googleAuthData);
+            login(authResponse.user, authResponse.token);
+            toast({ title: "Google authentication successful!" });
+            setLocation('/dashboard');
+          } catch (error) {
+            console.error('Google auth error:', error);
+            toast({ 
+              title: "Authentication failed", 
+              description: "Please try again", 
+              variant: "destructive" 
+            });
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      });
+
+      // Prompt Google sign-in
+      window.google.accounts.id.prompt();
+      
+    } catch (error) {
+      console.error('Error initializing Google OAuth:', error);
+      toast({ 
+        title: "Google authentication unavailable", 
+        description: "Please try again later", 
+        variant: "destructive" 
+      });
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -194,7 +272,7 @@ export default function Auth() {
                     </div>
                   </div>
                   
-                  <Button type="button" variant="outline" className="w-full" onClick={handleGoogleAuth} data-testid="button-google-login">
+                  <Button type="button" variant="outline" className="w-full" onClick={() => handleGoogleAuth('individual')} disabled={isLoading} data-testid="button-google-login">
                     <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5 mr-3" />
                     Sign in with Google
                   </Button>
@@ -369,7 +447,7 @@ export default function Auth() {
                     </div>
                   </div>
                   
-                  <Button type="button" variant="outline" className="w-full" onClick={handleGoogleAuth} data-testid="button-google-register">
+                  <Button type="button" variant="outline" className="w-full" onClick={() => handleGoogleAuth(registerForm.userType)} disabled={isLoading} data-testid="button-google-register">
                     <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5 mr-3" />
                     Sign up with Google
                   </Button>

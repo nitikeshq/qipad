@@ -273,6 +273,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(401).json({ message: "Invalid admin credentials" });
   });
 
+  // Get Google Client ID for frontend
+  app.get("/api/auth/google-client-id", (req, res) => {
+    res.json({ clientId: process.env.GOOGLE_CLIENT_ID });
+  });
+
   // Auth routes
   app.post("/api/auth/register", async (req, res) => {
     try {
