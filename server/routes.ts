@@ -56,61 +56,55 @@ async function processReferralRegistration(newUser: any, referralCode: string) {
   try {
     console.log(`Processing referral registration for ${newUser.email} with code ${referralCode}`);
     
-    // 0. Check if user has already been referred by ANY referrer to prevent cross-referrer duplicates
+    // 0. Check if THIS user has already been referred by ANY referrer
     const allReferrals = await storage.getAllReferrals();
     const alreadyReferredByAnyone = allReferrals.some(r => 
-      r.referredEmail === newUser.email && r.status === 'completed'
+      r.referredEmail === newUser.email && (r.status === 'completed' || r.status === 'credited')
     );
     
     if (alreadyReferredByAnyone) {
-      console.log(`User ${newUser.email} has already been referred by someone else - preventing cross-referrer duplicate referral`);
+      console.log(`User ${newUser.email} has already been referred by someone else - preventing duplicate referral`);
       return;
     }
     
-    // 1. Find pending referral record by code
-    const referral = await storage.getReferralByCode(referralCode);
-    if (!referral) {
-      console.log(`No referral found for code: ${referralCode}`);
-      
-      // Try to find the referrer by reconstructing the user ID from the referral code
-      // Referral code format: QIP{userId.substring(0, 6).toUpperCase()}
-      if (referralCode.startsWith('QIP')) {
-        const userIdPrefix = referralCode.substring(3).toLowerCase();
-        
-        // Find users whose ID starts with this prefix
-        const allUsers = await storage.getAllUsers();
-        const potentialReferrer = allUsers.find(u => u.id.toLowerCase().startsWith(userIdPrefix));
-        
-        if (potentialReferrer) {
-          console.log(`Found potential referrer: ${potentialReferrer.email} for code ${referralCode}`);
-          
-          // Prevent self-referral at creation time
-          if (potentialReferrer.id === newUser.id) {
-            console.log(`Self-referral attempt blocked during retroactive creation: ${newUser.email} tried to use their own referral code`);
-            return;
-          }
-          
-          // Create a retroactive referral record
-          const retroReferral = await storage.createReferral({
-            referrerId: potentialReferrer.id,
-            referredEmail: newUser.email,
-            referralCode: referralCode,
-            status: 'pending',
-            rewardAmount: '50'
-          });
-          
-          console.log(`Created retroactive referral record: ${retroReferral.id}`);
-          
-          // Now continue with the found referral
-          return processExistingReferral(newUser, retroReferral);
-        }
-      }
-      
-      console.log(`Could not find or create referral for code: ${referralCode}`);
+    // 1. Find the referrer by referral code (not looking for existing referral records)
+    if (!referralCode.startsWith('QIP')) {
+      console.log(`Invalid referral code format: ${referralCode}`);
+      return;
+    }
+
+    const userIdPrefix = referralCode.substring(3).toLowerCase();
+    
+    // Find users whose ID starts with this prefix
+    const allUsers = await storage.getAllUsers();
+    const potentialReferrer = allUsers.find(u => u.id.toLowerCase().startsWith(userIdPrefix));
+    
+    if (!potentialReferrer) {
+      console.log(`No referrer found for code: ${referralCode}`);
       return;
     }
     
-    return processExistingReferral(newUser, referral);
+    console.log(`Found referrer: ${potentialReferrer.email} for code ${referralCode}`);
+    
+    // 2. Prevent self-referral
+    if (potentialReferrer.id === newUser.id) {
+      console.log(`Self-referral attempt blocked: ${newUser.email} tried to use their own referral code`);
+      return;
+    }
+    
+    // 3. Create a new referral record for this specific user-referrer pair
+    const newReferral = await storage.createReferral({
+      referrerId: potentialReferrer.id,
+      referredEmail: newUser.email,
+      referralCode: referralCode,
+      status: 'pending',
+      rewardAmount: '50'
+    });
+    
+    console.log(`Created new referral record: ${newReferral.id}`);
+    
+    // 4. Process the referral immediately
+    return processExistingReferral(newUser, newReferral);
   } catch (error) {
     console.error('Error in processReferralRegistration:', error);
     throw error; // Re-throw to be caught by caller
@@ -141,7 +135,7 @@ async function processExistingReferral(newUser: any, referral: any) {
     // 4. Check for existing referral for this user to prevent duplicates
     const existingReferrals = await storage.getReferralsByUser(referral.referrerId);
     const alreadyReferred = existingReferrals.some(r => 
-      r.referredEmail === newUser.email && r.status === 'completed'
+      r.referredEmail === newUser.email && (r.status === 'completed' || r.status === 'credited')
     );
     
     if (alreadyReferred) {
