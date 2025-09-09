@@ -218,11 +218,6 @@ export default function MyProjects() {
               </div>
             )}
           </div>
-        </main>
-          </SidebarInset>
-        </div>
-      </div>
-      {isMobile && <BottomNav />}
 
       <ProjectModal 
         open={isProjectModalOpen} 
