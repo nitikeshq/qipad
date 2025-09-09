@@ -163,7 +163,8 @@ export default function Auth() {
               email: decoded.email,
               firstName: decoded.given_name || '',
               lastName: decoded.family_name || '',
-              userType: userType || 'individual'
+              userType: userType || 'individual',
+              referralCode: referralCode || undefined
             };
 
             const authResponse = await authAPI.googleAuth(googleAuthData);

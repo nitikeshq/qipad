@@ -403,7 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/google", async (req, res) => {
     try {
-      const { googleId, email, firstName, lastName, userType } = req.body;
+      const { googleId, email, firstName, lastName, userType, referralCode } = req.body;
       
       let user = await storage.getUserByGoogleId(googleId);
       if (!user) {
@@ -435,12 +435,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Don't fail registration if credit bonus fails
           }
 
+          // Process referral bonus if referral code was used
+          if (referralCode) {
+            try {
+              await processReferralRegistration(user, referralCode);
+            } catch (referralError) {
+              console.error('Failed to process referral bonus for Google user:', referralError);
+              // Don't fail registration if referral processing fails
+            }
+          }
+
           // Send welcome email for new Google users
           try {
+            const welcomeBonus = referralCode ? '30' : '10'; // Show total bonus if referred
             await emailService.sendWelcomeEmail({
               toEmail: user.email,
               firstName: user.firstName,
-              welcomeBonus: '10',
+              welcomeBonus,
               dashboardUrl: `${process.env.BASE_URL || 'https://qipad.co'}/dashboard`
             });
           } catch (emailError) {
