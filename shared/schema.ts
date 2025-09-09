@@ -582,7 +582,7 @@ export const referrals = pgTable("referrals", {
   referrerId: varchar("referrer_id").notNull().references(() => users.id),
   referredUserId: varchar("referred_user_id").references(() => users.id),
   referredEmail: text("referred_email").notNull(),
-  referralCode: text("referral_code").notNull().unique(),
+  referralCode: text("referral_code").notNull(),
   status: referralStatusEnum("status").default("pending"),
   rewardAmount: decimal("reward_amount", { precision: 10, scale: 2 }).default("50"),
   creditedAt: timestamp("credited_at"),
