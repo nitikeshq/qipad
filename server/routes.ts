@@ -1473,7 +1473,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user's KYC status
       const user = await storage.updateUser(userId, { 
         kycStatus: kycStatus,
-        isKycComplete: kycStatus === 'verified' 
+        isKycComplete: kycStatus === 'verified',
+        isVerified: kycStatus === 'verified'
       });
       
       // Update all user documents to approved if KYC is verified
