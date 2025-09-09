@@ -6,9 +6,6 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Bell, Shield, Globe, Moon, Sun, Monitor, ArrowLeft, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
@@ -142,13 +139,7 @@ export default function GeneralSettingsPage() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <SidebarInset>
-            <main className="flex-1 p-6 max-w-4xl mx-auto">
+    <div>
               {/* Header */}
               <div className="mb-8">
                 <Button
@@ -459,10 +450,6 @@ export default function GeneralSettingsPage() {
               </CardContent>
             </Card>
           </div>
-            </main>
-          </SidebarInset>
-        </div>
-      </div>
-    </SidebarProvider>
+    </div>
   );
 }

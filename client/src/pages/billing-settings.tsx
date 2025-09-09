@@ -4,9 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { CreditCard, Download, ArrowLeft, DollarSign, Calendar, Receipt } from "lucide-react";
 import { useLocation } from "wouter";
 import type { User } from "@/lib/auth";
@@ -37,13 +34,7 @@ export default function BillingSettingsPage() {
     .reduce((sum: number, inv: any) => sum + (parseFloat(inv.amount || '0') * 0.02), 0);
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <SidebarInset>
-            <main className="flex-1 p-6 max-w-4xl mx-auto">
+    <div>
           {/* Header */}
           <div className="mb-8">
             <Button
@@ -249,10 +240,6 @@ export default function BillingSettingsPage() {
               </Card>
             )}
               </div>
-            </main>
-          </SidebarInset>
-        </div>
-      </div>
-    </SidebarProvider>
+    </div>
   );
 }
