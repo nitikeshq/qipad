@@ -833,7 +833,7 @@ export default function AdminDashboard() {
                                 description: service.description,
                                 price: service.price,
                                 category: service.category,
-                                providerId: service.providerId
+                                companyId: service.companyId
                               });
                               setModalType("service");
                               setIsCreateModalOpen(true);
@@ -1511,6 +1511,35 @@ export default function AdminDashboard() {
                               </Button>
                             </>
                           )}
+                          {(project.status === 'approved' || project.status === 'active') && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => updateProjectStatusMutation.mutate({ 
+                                projectId: project.id, 
+                                status: 'rejected' 
+                              })}
+                              disabled={updateProjectStatusMutation.isPending}
+                            >
+                              Reject
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              // Edit project functionality could be added here
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => deleteItemMutation.mutate({ type: "projects", id: project.id })}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -1685,6 +1714,44 @@ export default function AdminDashboard() {
                               </Button>
                             </>
                           )}
+                          {(company.status === 'approved') && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => updateCompanyStatusMutation.mutate({ 
+                                companyId: company.id, 
+                                status: 'rejected' 
+                              })}
+                              disabled={updateCompanyStatusMutation.isPending}
+                            >
+                              Reject
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingItem({
+                                id: company.id,
+                                name: company.name,
+                                description: company.description,
+                                industry: company.industry,
+                                registrationNumber: company.registrationNumber,
+                                ownerId: company.ownerId
+                              });
+                              setModalType("company");
+                              setIsCreateModalOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => deleteItemMutation.mutate({ type: "companies", id: company.id })}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -1858,17 +1925,68 @@ export default function AdminDashboard() {
                             View
                           </Button>
                           {event.status === 'pending' && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => updateEventStatusMutation.mutate({ 
+                                  eventId: event.id, 
+                                  status: 'active' 
+                                })}
+                                disabled={updateEventStatusMutation.isPending}
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => updateEventStatusMutation.mutate({ 
+                                  eventId: event.id, 
+                                  status: 'rejected' 
+                                })}
+                                disabled={updateEventStatusMutation.isPending}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                          {(event.status === 'active') && (
                             <Button
                               size="sm"
+                              variant="destructive"
                               onClick={() => updateEventStatusMutation.mutate({ 
                                 eventId: event.id, 
-                                status: 'active' 
+                                status: 'rejected' 
                               })}
                               disabled={updateEventStatusMutation.isPending}
                             >
-                              Approve
+                              Reject
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingItem({
+                                id: event.id,
+                                title: event.title,
+                                description: event.description,
+                                eventDate: event.eventDate,
+                                venue: event.venue,
+                                capacity: event.capacity
+                              });
+                              setModalType("event");
+                              setIsCreateModalOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => deleteItemMutation.mutate({ type: "events", id: event.id })}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -2880,10 +2998,10 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="providerId">Service Provider</Label>
-                  <Select value={editingItem.providerId || ''} onValueChange={(value) => setEditingItem({ ...editingItem, providerId: value })}>
+                  <Label htmlFor="companyId">Company</Label>
+                  <Select value={editingItem.companyId || ''} onValueChange={(value) => setEditingItem({ ...editingItem, companyId: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select provider" />
+                      <SelectValue placeholder="Select company" />
                     </SelectTrigger>
                     <SelectContent>
                       {users.filter(u => u.userType === 'individual').map((user: any) => (
