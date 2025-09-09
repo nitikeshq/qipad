@@ -2665,6 +2665,7 @@ export default function AdminDashboard() {
 
         </Tabs>
       </div>
+    </div>
 
       {/* Create/Edit Item Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
@@ -3270,11 +3271,6 @@ export default function AdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
-
-          </div>
-        </Tabs>
-      </div>
-    </div>
     </>
   );
 }
