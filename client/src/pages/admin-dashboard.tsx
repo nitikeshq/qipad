@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, adminApiRequest } from "@/lib/queryClient";
-import { Shield, Users, FileText, DollarSign, Settings, LogOut, Plus, Edit, Trash2, Search, Filter, Building, Building2, Calendar, Tag, MessageSquare, Briefcase, Target, Home, BarChart3 } from "lucide-react";
+import { Shield, Users, FileText, DollarSign, Settings, LogOut, Plus, Edit, Trash2, Search, Filter, Building, Building2, Calendar, Tag, MessageSquare, Briefcase, Target, Home, BarChart3, Mail } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function AdminDashboard() {
