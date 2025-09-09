@@ -92,9 +92,22 @@ async function processReferralRegistration(newUser: any, referralCode: string) {
       return;
     }
     
-    // 3. Create a new referral record for this specific user-referrer pair
+    // 3. Process the referral immediately
+    return processNewReferral(newUser, potentialReferrer.id, referralCode);
+  } catch (error) {
+    console.error('Error in processReferralRegistration:', error);
+    throw error; // Re-throw to be caught by caller
+  }
+}
+
+// Helper function to process a new referral record
+async function processNewReferral(newUser: any, referrerId: string, referralCode: string) {
+  try {
+    console.log(`Processing new referral for ${newUser.email} with referrer ${referrerId}`);
+
+    // 1. Create a new referral record
     const newReferral = await storage.createReferral({
-      referrerId: potentialReferrer.id,
+      referrerId: referrerId,
       referredEmail: newUser.email,
       referralCode: referralCode,
       status: 'pending',
@@ -102,75 +115,35 @@ async function processReferralRegistration(newUser: any, referralCode: string) {
     });
     
     console.log(`Created new referral record: ${newReferral.id}`);
-    
-    // 4. Process the referral immediately
-    return processExistingReferral(newUser, newReferral);
-  } catch (error) {
-    console.error('Error in processReferralRegistration:', error);
-    throw error; // Re-throw to be caught by caller
-  }
-}
 
-// Helper function to process an existing referral record
-async function processExistingReferral(newUser: any, referral: any) {
-  try {
-    
-    if (referral.status !== 'pending') {
-      console.log(`Referral already processed: ${referral.status} for ${referral.referredEmail} - but this is for new user ${newUser.email}`);
-      return;
-    }
-
-    // 2. Prevent self-referrals - user cannot refer themselves
-    if (referral.referrerId === newUser.id) {
-      console.log(`Self-referral attempt blocked: ${newUser.email} tried to use their own referral code`);
-      return;
-    }
-
-    // 3. Check if email matches the referred email
-    if (referral.referredEmail !== newUser.email) {
-      console.log(`Email mismatch: ${referral.referredEmail} vs ${newUser.email}`);
-      return;
-    }
-
-    // 4. Check for existing referral for this user to prevent duplicates
-    const existingReferrals = await storage.getReferralsByUser(referral.referrerId);
-    const alreadyReferred = existingReferrals.some(r => 
-      r.referredEmail === newUser.email && (r.status === 'completed' || r.status === 'credited')
-    );
-    
-    if (alreadyReferred) {
-      console.log(`User ${newUser.email} has already been referred - preventing duplicate referral`);
-      return;
-    }
-
-    // 5. Add reward to referrer ONLY (₹50) - referred user gets no referral bonus
+    // 2. Add reward to referrer ONLY (₹50) - referred user gets no referral bonus
     await storage.addCredits(
-      referral.referrerId,
+      referrerId,
       50,
       `Referral reward - ${newUser.firstName} joined via your referral`,
       'referral_bonus',
-      referral.id
+      newReferral.id
     );
-    console.log(`Added ₹50 referral reward to referrer ${referral.referrerId}`);
+    console.log(`Added ₹50 referral reward to referrer ${referrerId}`);
 
-    // 6. Update referral status to completed
-    await storage.updateReferral(referral.id, {
+    // 3. Update referral status to completed
+    await storage.updateReferral(newReferral.id, {
       status: 'completed',
       referredUserId: newUser.id,
       creditedAt: new Date()
     });
     console.log(`Updated referral status to completed`);
 
-    // 7. Send reward email to referrer
-    const referrer = await storage.getUser(referral.referrerId);
+    // 4. Send reward email to referrer
+    const referrer = await storage.getUser(referrerId);
     if (referrer) {
       // Get updated referral stats
-      const allReferrals = await storage.getReferralsByUser(referral.referrerId);
+      const allReferrals = await storage.getReferralsByUser(referrerId);
       const completedReferrals = allReferrals.filter(r => r.status === 'completed');
       const totalEarned = completedReferrals.reduce((sum, r) => sum + parseFloat(r.rewardAmount || '0'), 0);
       
       // Get referrer's current wallet balance
-      const wallet = await storage.getWalletByUserId(referral.referrerId);
+      const wallet = await storage.getWalletByUserId(referrerId);
       
       await emailService.sendReferralRewardEmail({
         toEmail: referrer.email,
@@ -182,14 +155,14 @@ async function processExistingReferral(newUser: any, referral: any) {
         totalReferrals: completedReferrals.length.toString(),
         totalEarned: totalEarned.toString(),
         walletUrl: `${process.env.BASE_URL || 'https://qipad.co'}/wallet`,
-        referralUrl: `${process.env.BASE_URL || 'https://qipad.co'}/auth?ref=${referral.referralCode}`
+        referralUrl: `${process.env.BASE_URL || 'https://qipad.co'}/auth?ref=${referralCode}`
       });
       console.log(`Sent referral reward email to ${referrer.email}`);
     }
     
     console.log(`Successfully processed referral for ${newUser.email} - referrer gets ₹50, new user gets ₹0 referral bonus`);
   } catch (error) {
-    console.error('Error in processExistingReferral:', error);
+    console.error('Error in processNewReferral:', error);
     throw error; // Re-throw to be caught by caller
   }
 }
