@@ -56,6 +56,17 @@ async function processReferralRegistration(newUser: any, referralCode: string) {
   try {
     console.log(`Processing referral registration for ${newUser.email} with code ${referralCode}`);
     
+    // 0. Check if user has already been referred by ANY referrer to prevent cross-referrer duplicates
+    const allReferrals = await storage.getAllReferrals();
+    const alreadyReferredByAnyone = allReferrals.some(r => 
+      r.referredEmail === newUser.email && r.status === 'completed'
+    );
+    
+    if (alreadyReferredByAnyone) {
+      console.log(`User ${newUser.email} has already been referred by someone else - preventing cross-referrer duplicate referral`);
+      return;
+    }
+    
     // 1. Find pending referral record by code
     const referral = await storage.getReferralByCode(referralCode);
     if (!referral) {
@@ -72,6 +83,12 @@ async function processReferralRegistration(newUser: any, referralCode: string) {
         
         if (potentialReferrer) {
           console.log(`Found potential referrer: ${potentialReferrer.email} for code ${referralCode}`);
+          
+          // Prevent self-referral at creation time
+          if (potentialReferrer.id === newUser.id) {
+            console.log(`Self-referral attempt blocked during retroactive creation: ${newUser.email} tried to use their own referral code`);
+            return;
+          }
           
           // Create a retroactive referral record
           const retroReferral = await storage.createReferral({
@@ -375,13 +392,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { googleId, email, firstName, lastName, userType, referralCode } = req.body;
       
       let user = await storage.getUserByGoogleId(googleId);
+      let isNewUser = false;
+      
       if (!user) {
         user = await storage.getUserByEmail(email);
         if (user) {
-          // Link Google account to existing user
+          // Link Google account to existing user - NOT a new user
           user = await storage.updateUser(user.id, { googleId });
+          console.log(`Linked Google account to existing user: ${user.email} - no referral bonus for existing user`);
         } else {
-          // Create new user
+          // Create new user - THIS is a new user
+          isNewUser = true;
           user = await storage.createUser({
             googleId,
             email,
@@ -390,7 +411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userType,
           });
 
-          // Give 10 credits joining bonus
+          // Give 10 credits joining bonus ONLY to new users
           try {
             await storage.addCredits(
               user.id,
@@ -404,7 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Don't fail registration if credit bonus fails
           }
 
-          // Process referral bonus if referral code was used
+          // Process referral bonus ONLY for new users
           if (referralCode) {
             try {
               await processReferralRegistration(user, referralCode);
@@ -414,9 +435,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
 
-          // Send welcome email for new Google users
+          // Send welcome email ONLY for new Google users
           try {
-            const welcomeBonus = referralCode ? '30' : '10'; // Show total bonus if referred
+            const welcomeBonus = '10'; // New users always get ₹10 joining bonus only (referrer gets bonus, not new user)
             await emailService.sendWelcomeEmail({
               toEmail: user.email,
               firstName: user.firstName,
@@ -428,6 +449,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Don't fail registration if email fails
           }
         }
+      } else {
+        // User already exists with Google ID - NOT a new user
+        console.log(`Existing Google user login: ${user.email} - no referral processing for existing user`);
       }
 
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
