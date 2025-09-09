@@ -32,13 +32,13 @@ export default function GeneralSettingsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('light');
   const [language, setLanguage] = useState('en');
   const [timezone, setTimezone] = useState('Asia/Kolkata');
 
   // Load theme from localStorage on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' || 'system';
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' || 'light';
     const savedLanguage = localStorage.getItem('language') || 'en';
     const savedTimezone = localStorage.getItem('timezone') || 'Asia/Kolkata';
     
