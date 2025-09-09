@@ -1868,6 +1868,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin route to get all referral records
+  app.get("/api/admin/referrals", authenticateAdmin, async (req, res) => {
+    try {
+      const referrals = await storage.getAllReferrals();
+      const users = await storage.getAllUsers();
+      
+      const referralsWithUsers = referrals.map(referral => {
+        const referrer = users.find(user => user.id === referral.referrerId);
+        const referred = users.find(user => user.id === referral.referredUserId);
+        return {
+          ...referral,
+          referrerName: referrer ? `${referrer.firstName} ${referrer.lastName}` : 'Unknown',
+          referrerEmail: referrer?.email || 'Unknown',
+          referredName: referred ? `${referred.firstName} ${referred.lastName}` : 'Unknown',
+          referredEmail: referred?.email || 'Unknown',
+          rewardAmount: parseFloat(referral.rewardAmount || '0')
+        };
+      });
+      
+      res.json(referralsWithUsers);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get referral records", error: error.message });
+    }
+  });
+
+  // Admin route to get all wallet transactions
+  app.get("/api/admin/wallet-transactions", authenticateAdmin, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      const transactions = await storage.getAllWalletTransactions(limit, offset);
+      const users = await storage.getAllUsers();
+      
+      const transactionsWithUsers = transactions.map(transaction => {
+        const user = users.find(u => u.id === transaction.userId);
+        return {
+          ...transaction,
+          userName: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
+          userEmail: user?.email || 'Unknown',
+          amount: parseFloat(transaction.amount),
+          balanceBefore: parseFloat(transaction.balanceBefore),
+          balanceAfter: parseFloat(transaction.balanceAfter)
+        };
+      });
+      
+      res.json(transactionsWithUsers);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get wallet transactions", error: error.message });
+    }
+  });
+
   // Credit Configuration Management  
   app.get("/api/admin/credit-configs", authenticateAdmin, async (req, res) => {
     try {

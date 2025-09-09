@@ -153,6 +153,26 @@ export default function AdminDashboard() {
     queryKey: ['/api/admin/analytics/referrals'],
   });
 
+  // Fetch wallet transactions
+  const { data: walletTransactions = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/wallet-transactions'],
+    queryFn: async () => {
+      const response = await adminApiRequest('GET', '/api/admin/wallet-transactions?limit=100');
+      if (!response.ok) throw new Error('Failed to fetch wallet transactions');
+      return response.json();
+    }
+  });
+
+  // Fetch referral records
+  const { data: referralRecords = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/referrals'],
+    queryFn: async () => {
+      const response = await adminApiRequest('GET', '/api/admin/referrals');
+      if (!response.ok) throw new Error('Failed to fetch referral records');
+      return response.json();
+    }
+  });
+
   const { data: mediaContent = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/media-content'],
     queryFn: async () => {
@@ -2427,11 +2447,37 @@ export default function AdminDashboard() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            <TableRow>
-                              <TableCell colSpan={6} className="text-center text-gray-500">
-                                Wallet transactions will be loaded here
-                              </TableCell>
-                            </TableRow>
+                            {walletTransactions.length > 0 ? (
+                              walletTransactions.map((transaction: any) => (
+                                <TableRow key={transaction.id}>
+                                  <TableCell>
+                                    <div className="font-medium">{transaction.userName}</div>
+                                    <div className="text-sm text-gray-500">{transaction.userEmail}</div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant={
+                                      transaction.type === 'deposit' ? 'default' :
+                                      transaction.type === 'referral_bonus' ? 'secondary' :
+                                      transaction.type === 'earn' ? 'default' : 'destructive'
+                                    }>
+                                      {transaction.type.replace('_', ' ')}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className={transaction.amount > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                                    {transaction.amount > 0 ? '+' : ''}{transaction.amount} QP
+                                  </TableCell>
+                                  <TableCell>{transaction.description}</TableCell>
+                                  <TableCell>{new Date(transaction.createdAt).toLocaleDateString()}</TableCell>
+                                  <TableCell className="font-medium">{transaction.balanceAfter} QP</TableCell>
+                                </TableRow>
+                              ))
+                            ) : (
+                              <TableRow>
+                                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                  No wallet transactions found
+                                </TableCell>
+                              </TableRow>
+                            )}
                           </TableBody>
                         </Table>
                       </CardContent>
@@ -2505,11 +2551,39 @@ export default function AdminDashboard() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            <TableRow>
-                              <TableCell colSpan={6} className="text-center text-gray-500">
-                                Referral data will be loaded here
-                              </TableCell>
-                            </TableRow>
+                            {referralRecords.length > 0 ? (
+                              referralRecords.map((referral: any) => (
+                                <TableRow key={referral.id}>
+                                  <TableCell>
+                                    <div className="font-medium">{referral.referrerName}</div>
+                                    <div className="text-sm text-gray-500">{referral.referrerEmail}</div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="font-medium">{referral.referredName}</div>
+                                    <div className="text-sm text-gray-500">{referral.referredEmail}</div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant={
+                                      referral.status === 'credited' ? 'default' : 
+                                      referral.status === 'pending' ? 'secondary' : 'destructive'
+                                    }>
+                                      {referral.status}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="font-medium text-green-600">
+                                    {referral.rewardAmount} QP
+                                  </TableCell>
+                                  <TableCell>{new Date(referral.createdAt).toLocaleDateString()}</TableCell>
+                                  <TableCell>{referral.referralCode}</TableCell>
+                                </TableRow>
+                              ))
+                            ) : (
+                              <TableRow>
+                                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                  No referral records found
+                                </TableCell>
+                              </TableRow>
+                            )}
                           </TableBody>
                         </Table>
                       </CardContent>

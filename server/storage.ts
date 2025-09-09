@@ -1422,6 +1422,13 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
+  async getAllWalletTransactions(limit: number = 100, offset: number = 0): Promise<WalletTransaction[]> {
+    return await db.select().from(walletTransactions)
+      .orderBy(desc(walletTransactions.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
   async createWalletTransaction(transaction: InsertWalletTransaction): Promise<WalletTransaction> {
     const [newTransaction] = await db.insert(walletTransactions).values(transaction).returning();
     return newTransaction;
