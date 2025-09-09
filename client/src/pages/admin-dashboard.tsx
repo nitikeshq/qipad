@@ -279,8 +279,8 @@ export default function AdminDashboard() {
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
       const response = await adminApiRequest("PUT", `/api/admin/users/${userId}/kyc`, { 
         kycStatus: status, 
-        isVerified: status === 'approved',
-        isKycComplete: status === 'approved'
+        isVerified: status === 'verified',
+        isKycComplete: status === 'verified'
       });
       return response.json();
     },

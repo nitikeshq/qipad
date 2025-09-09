@@ -1480,7 +1480,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (kycStatus === 'verified') {
         const userDocs = await storage.getDocumentsByUser(userId);
         for (const doc of userDocs) {
-          await storage.updateDocument(doc.id, { status: 'approved' });
+          await storage.updateDocument(doc.id, { 
+            status: 'approved',
+            isVerified: true 
+          });
         }
         
         // Give 20 credits verification bonus
