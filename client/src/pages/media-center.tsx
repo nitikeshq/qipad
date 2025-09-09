@@ -127,12 +127,12 @@ export default function MediaCenter() {
           {content.description}
         </CardDescription>
         <div className="flex flex-wrap gap-1 mb-3">
-          {content.tags.slice(0, 3).map((tag) => (
+          {content.tags?.slice(0, 3).map((tag) => (
             <Badge key={tag} variant="outline" className="text-xs">
               {tag}
             </Badge>
           ))}
-          {content.tags.length > 3 && (
+          {content.tags && content.tags.length > 3 && (
             <Badge variant="outline" className="text-xs">
               +{content.tags.length - 3} more
             </Badge>
