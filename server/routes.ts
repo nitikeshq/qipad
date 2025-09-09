@@ -1373,9 +1373,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const usersWithKyc = users.map(user => {
         const userDocs = documents.filter(doc => doc.userId === user.id);
-        const kycStatus = userDocs.length > 0 ? 
-          (userDocs.every(doc => doc.status === 'approved') ? 'verified' : 
-           userDocs.some(doc => doc.status === 'rejected') ? 'rejected' : 'pending') : 'not_submitted';
+        
+        // Calculate KYC status based on documents if they exist, otherwise use user's isKycComplete
+        let kycStatus;
+        if (userDocs.length > 0) {
+          kycStatus = userDocs.every(doc => doc.status === 'approved') ? 'verified' : 
+                     userDocs.some(doc => doc.status === 'rejected') ? 'rejected' : 'pending';
+        } else {
+          // No documents - check user's KYC completion status
+          kycStatus = user.isKycComplete ? 'verified' : 'not_submitted';
+        }
         
         return { 
           ...user, 

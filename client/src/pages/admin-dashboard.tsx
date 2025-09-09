@@ -277,7 +277,6 @@ export default function AdminDashboard() {
 
   const approveKycMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      console.log('approveKycMutation called with userId:', userId, 'status:', status);
       const response = await adminApiRequest("PUT", `/api/admin/users/${userId}/kyc`, { 
         kycStatus: status, 
         isVerified: status === 'verified',
@@ -1363,10 +1362,7 @@ export default function AdminDashboard() {
                           {user.kycStatus !== 'verified' && (
                             <Button
                               size="sm"
-                              onClick={() => {
-                                console.log('KYC Approval clicked for user:', user.id, user.email);
-                                approveKycMutation.mutate({ userId: user.id, status: 'verified' });
-                              }}
+                              onClick={() => approveKycMutation.mutate({ userId: user.id, status: 'verified' })}
                               disabled={approveKycMutation.isPending}
                               data-testid={`button-approve-kyc-${user.id}`}
                             >
