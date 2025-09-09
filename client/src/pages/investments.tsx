@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,13 +56,7 @@ export function InvestmentsPage() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          {!isMobile && <Sidebar />}
-          <SidebarInset className={isMobile ? "w-full" : ""}>
-            <main className="flex-1 p-6">
+    <div>
               <div className="max-w-6xl mx-auto">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-foreground mb-2">Investments</h1>
@@ -336,10 +327,6 @@ export function InvestmentsPage() {
               </TabsContent>
             </Tabs>
               </div>
-            </main>
-          </SidebarInset>
-        </div>
-      </div>
-    </SidebarProvider>
+    </div>
   );
 }
