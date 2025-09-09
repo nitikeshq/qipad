@@ -126,9 +126,9 @@ async function processNewReferral(newUser: any, referrerId: string, referralCode
     );
     console.log(`Added ₹50 referral reward to referrer ${referrerId}`);
 
-    // 3. Update referral status to completed
+    // 3. Update referral status to credited
     await storage.updateReferral(newReferral.id, {
-      status: 'completed',
+      status: 'credited',
       referredUserId: newUser.id,
       creditedAt: new Date()
     });
