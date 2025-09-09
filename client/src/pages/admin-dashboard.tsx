@@ -260,8 +260,7 @@ export default function AdminDashboard() {
 
   const deleteItemMutation = useMutation({
     mutationFn: async ({ type, id }: { type: string; id: string }) => {
-      const response = await fetch(`/api/admin/${type}/${id}`, { method: 'DELETE' });
-      if (!response.ok) throw new Error('Failed to delete item');
+      const response = await adminApiRequest('DELETE', `/api/admin/${type}/${id}`);
       return response.json();
     },
     onSuccess: (_, { type }) => {
@@ -336,12 +335,7 @@ export default function AdminDashboard() {
 
   const updateCompanyStatusMutation = useMutation({
     mutationFn: async ({ companyId, status }: { companyId: string; status: string }) => {
-      const response = await fetch(`/api/admin/companies/${companyId}/status`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      });
-      if (!response.ok) throw new Error('Failed to update company status');
+      const response = await adminApiRequest('PUT', `/api/admin/companies/${companyId}/status`, { status });
       return response.json();
     },
     onSuccess: () => {
@@ -742,9 +736,53 @@ export default function AdminDashboard() {
                           ) : 'N/A'}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="default">Active</Badge>
+                          <Badge variant={
+                            company.status === 'approved' ? 'default' : 
+                            company.status === 'pending' ? 'secondary' : 
+                            company.status === 'rejected' ? 'destructive' : 'default'
+                          }>
+                            {company.status || 'pending'}
+                          </Badge>
                         </TableCell>
                         <TableCell className="space-x-2">
+                          {company.status === 'pending' && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => updateCompanyStatusMutation.mutate({ 
+                                  companyId: company.id, 
+                                  status: 'approved' 
+                                })}
+                                disabled={updateCompanyStatusMutation.isPending}
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => updateCompanyStatusMutation.mutate({ 
+                                  companyId: company.id, 
+                                  status: 'rejected' 
+                                })}
+                                disabled={updateCompanyStatusMutation.isPending}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                          {(company.status === 'approved' || company.status === 'rejected') && (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => updateCompanyStatusMutation.mutate({ 
+                                companyId: company.id, 
+                                status: 'pending' 
+                              })}
+                              disabled={updateCompanyStatusMutation.isPending}
+                            >
+                              Reset to Pending
+                            </Button>
+                          )}
                           <Button 
                             size="sm" 
                             variant="outline"
