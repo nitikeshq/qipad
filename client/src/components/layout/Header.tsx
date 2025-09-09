@@ -106,21 +106,6 @@ export function Header() {
             {/* Sidebar Toggle */}
             {!isMobile && <SidebarTrigger />}
             
-            <div className="flex-shrink-0">
-              <Link href="/dashboard">
-                <div className="flex items-center space-x-2 cursor-pointer">
-                  <div className="p-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
-                    <div className="w-6 h-6 bg-white rounded-sm flex items-center justify-center">
-                      <span className="text-blue-600 font-bold text-sm">Q</span>
-                    </div>
-                  </div>
-                  <h1 className="text-xl md:text-2xl font-bold text-primary" data-testid="logo-qipad">
-                    Qipad
-                  </h1>
-                </div>
-              </Link>
-            </div>
-            
             {/* Desktop Navigation */}
             {!isMobile && (
               <div className="ml-10 flex items-baseline space-x-4">
