@@ -125,13 +125,7 @@ export default function Investors() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          {!isMobile && <Sidebar />}
-          <SidebarInset>
-            <main className={`flex-1 p-4 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+    <div>
               {/* Investors Header */}
               <div className="mb-6 md:mb-8">
                 <div className="flex items-center justify-between mb-6">
@@ -277,12 +271,7 @@ export default function Investors() {
               </div>
             )}
           </div>
-        </main>
-          </SidebarInset>
-        </div>
-      </div>
-      {isMobile && <BottomNav />}
-
+        
       {/* Investor Profile Modal */}
       <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
         <DialogContent className="sm:max-w-2xl" data-testid="dialog-investor-profile">
@@ -361,6 +350,6 @@ export default function Investors() {
           )}
         </DialogContent>
       </Dialog>
-    </SidebarProvider>
+    </div>
   );
 }

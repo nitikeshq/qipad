@@ -85,30 +85,14 @@ export default function ProfileSettingsPage() {
 
   if (isLoading) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="flex">
-            <Sidebar />
-            <SidebarInset>
-              <main className="flex-1 p-6">
-                <div className="text-center">Loading...</div>
-              </main>
-            </SidebarInset>
-          </div>
-        </div>
-      </SidebarProvider>
+      <div className="flex items-center justify-center min-h-64">
+        <div className="text-center">Loading...</div>
+      </div>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <SidebarInset>
-            <main className="flex-1 p-6 max-w-4xl mx-auto">
+    <div>
               {/* Header */}
           <div className="mb-8">
             <Button
@@ -307,10 +291,6 @@ export default function ProfileSettingsPage() {
               </CardContent>
             </Card>
           </div>
-            </main>
-          </SidebarInset>
-        </div>
-      </div>
-    </SidebarProvider>
+    </div>
   );
 }
