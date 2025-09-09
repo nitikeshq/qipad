@@ -2,10 +2,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Download, Plus, FolderOpen, DollarSign, Users, Handshake, Wallet, Shield, CheckCircle, AlertCircle, XCircle } from "lucide-react";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { BottomNav } from "@/components/layout/BottomNav";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { ProjectCard } from "@/components/cards/ProjectCard";
 import { StatsCard } from "@/components/cards/StatsCard";
 import { ProjectModal } from "@/components/modals/ProjectModal";
@@ -97,12 +93,7 @@ export default function Dashboard() {
 
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen bg-background">
-        {!isMobile && <Sidebar />}
-        <SidebarInset className={`flex-1 flex flex-col ${isMobile ? "w-full" : ""}`}>
-          <Header />
-          <main className={`flex-1 p-4 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+    <div>
               {/* Dashboard Header */}
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -333,11 +324,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          </main>
-        </SidebarInset>
-      </div>
-      
-      {isMobile && <BottomNav />}
 
       <ProjectModal 
         open={isProjectModalOpen} 
@@ -355,6 +341,6 @@ export default function Dashboard() {
         onOpenChange={setIsSupportModalOpen}
         project={selectedProject}
       />
-    </SidebarProvider>
+    </div>
   );
 }
