@@ -527,6 +527,7 @@ export default function AdminDashboard() {
   );
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
@@ -3270,8 +3271,10 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
+          </div>
         </Tabs>
       </div>
     </div>
+    </>
   );
 }

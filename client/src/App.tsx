@@ -25,7 +25,7 @@ import ProfileSettings from "@/pages/profile-settings";
 import BillingSettings from "@/pages/billing-settings";
 import GeneralSettings from "@/pages/general-settings";
 import AdminLogin from "@/pages/admin-login";
-import AdminDashboard from "@/pages/admin-dashboard-simple";
+import AdminDashboard from "@/pages/admin-dashboard";
 import Events from "@/pages/events";
 import EventPayment from "@/pages/event-payment";
 import MyProjects from "@/pages/my-projects";
