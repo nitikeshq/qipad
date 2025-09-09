@@ -56,9 +56,9 @@ export function Sidebar() {
   return (
     <>
       <SidebarUI variant="sidebar" data-testid="sidebar-navigation">
-        <SidebarHeader>
+        <SidebarHeader className="pt-0">
           {/* Qipad Logo */}
-          <div className="flex items-center justify-center pt-0 pb-2 border-b border-border/50 mb-3">
+          <div className="flex items-center justify-center py-0 pb-2 border-b border-border/50 mb-3">
             <Link href="/dashboard">
               <div className="flex items-center space-x-2 cursor-pointer">
                 <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
