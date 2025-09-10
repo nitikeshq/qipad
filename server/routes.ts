@@ -826,10 +826,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Deduct credits for investor connection (10 credits)
+      // Deduct credits for investor connection (configurable amount)
+      const investorConnectionCost = await storage.getCreditRequirement('investor_connection');
       const creditResult = await storage.deductCredits(
         userId,
-        10,
+        investorConnectionCost,
         'Connect with investor (Per connection)',
         'investor_connection',
         investorId
@@ -838,7 +839,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!creditResult.success) {
         return res.status(400).json({ 
           message: creditResult.error || "Insufficient credits to connect with investor",
-          requiredCredits: 10,
+          requiredCredits: investorConnectionCost,
           currentBalance: creditResult.newBalance
         });
       }
@@ -1181,10 +1182,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Deduct credits for premium community access (10 credits)
+        // Deduct credits for premium community access (configurable amount)
+        const joinCommunityCost = await storage.getCreditRequirement('join_community');
         const creditResult = await storage.deductCredits(
           userId,
-          10,
+          joinCommunityCost,
           'Join Premium Community (Access fee)',
           'community_join',
           communityId
@@ -1193,7 +1195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!creditResult.success) {
           return res.status(400).json({ 
             message: creditResult.error || "Insufficient credits to join premium community",
-            requiredCredits: 10,
+            requiredCredits: joinCommunityCost,
             currentBalance: creditResult.newBalance
           });
         }
@@ -1201,7 +1203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.joinCommunity(communityId, userId);
         res.json({ 
           message: "Joined premium community successfully",
-          creditsDeducted: 10,
+          creditsDeducted: joinCommunityCost,
           newBalance: creditResult.newBalance
         });
       } else {
@@ -4141,17 +4143,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.userId;
       const { action, amount } = req.body;
 
-      // Get platform settings for credit costs
-      const creditCosts = {
-        'innovation': 100,
-        'job': 50,
-        'investor_connection': 10,
-        'community_create': 100,
-        'community_join': 10,
-        'event': 50
+      // Get configurable credit costs from database
+      const actionMapping: { [key: string]: string } = {
+        'innovation': 'innovation',
+        'job': 'job',
+        'investor_connection': 'investor_connection',
+        'community_create': 'community',
+        'community_join': 'join_community',
+        'event': 'event'
       };
 
-      const requiredCredits = amount || creditCosts[action as keyof typeof creditCosts] || 0;
+      const featureType = actionMapping[action] || action;
+      const requiredCredits = amount || await storage.getCreditRequirement(featureType);
       
       // Get wallet balance
       let wallet = await storage.getWalletByUserId(userId);
@@ -4180,17 +4183,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.userId;
       const { action, amount, description, referenceType, referenceId } = req.body;
 
-      // Get platform settings for credit costs
-      const creditCosts = {
-        'innovation': 100,
-        'job': 50,
-        'investor_connection': 10,
-        'community_create': 100,
-        'community_join': 10,
-        'event': 50
+      // Get configurable credit costs from database
+      const actionMapping: { [key: string]: string } = {
+        'innovation': 'innovation',
+        'job': 'job',
+        'investor_connection': 'investor_connection',
+        'community_create': 'community',
+        'community_join': 'join_community',
+        'event': 'event'
       };
 
-      const creditsToDeduct = amount || creditCosts[action as keyof typeof creditCosts] || 0;
+      const featureType = actionMapping[action] || action;
+      const creditsToDeduct = amount || await storage.getCreditRequirement(featureType);
       
       if (creditsToDeduct <= 0) {
         return res.status(400).json({ error: 'Invalid credit amount' });

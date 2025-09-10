@@ -1066,6 +1066,33 @@ export class DatabaseStorage implements IStorage {
       .where(eq(creditConfigurations.id, id));
   }
 
+  async getCreditRequirement(featureType: string): Promise<number> {
+    const { creditConfigurations } = await import("@shared/schema");
+    const [config] = await db
+      .select()
+      .from(creditConfigurations)
+      .where(eq(creditConfigurations.featureType, featureType))
+      .where(eq(creditConfigurations.isActive, true))
+      .limit(1);
+    
+    // Return the configured credit requirement, or default fallback values
+    if (config) {
+      return config.creditsRequired;
+    }
+    
+    // Fallback default values if no configuration exists
+    const defaults: { [key: string]: number } = {
+      'innovation': 100,
+      'job': 50,
+      'event': 50,
+      'community': 100,
+      'join_community': 10,
+      'investor_connection': 10
+    };
+    
+    return defaults[featureType] || 1;
+  }
+
   async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {
     const [company] = await db
       .update(companies)
