@@ -6,8 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Users, MessageCircle, Hash, Settings } from "lucide-react";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { LinkedInStylePostCreator } from "@/components/community/LinkedInStylePostCreator";
@@ -19,7 +17,7 @@ export default function CommunityDetailPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: community = {}, isLoading: communityLoading } = useQuery({
+  const { data: community, isLoading: communityLoading } = useQuery<any>({
     queryKey: ['/api/communities', params?.id],
     enabled: !!params?.id,
   });
@@ -74,48 +72,49 @@ export default function CommunityDetailPage() {
       setLocation("/communities");
       toast({
         title: "Success",
-        description: "Left the community",
+        description: "Successfully left the community!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to leave community",
+        variant: "destructive",
       });
     },
   });
 
-  if (communityLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 p-6">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center py-12">
-                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-                <p className="mt-4 text-muted-foreground">Loading community...</p>
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
+  const createPostMutation = useMutation({
+    mutationFn: async (postData: { content: string; images?: string[]; videos?: string[] }) => {
+      const response = await apiRequest("POST", `/api/communities/${params?.id}/posts`, postData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/communities', params?.id, 'posts'] });
+      toast({
+        title: "Success",
+        description: "Post created successfully!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create post",
+        variant: "destructive",
+      });
+    },
+  });
 
-  if (!community?.id) {
+  if (!community) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 p-6">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center py-12">
-                <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold mb-2">Community Not Found</h2>
-                <p className="text-muted-foreground mb-4">The community you're looking for doesn't exist.</p>
-                <Button onClick={() => setLocation('/communities')}>
-                  Back to Communities
-                </Button>
-              </div>
-            </div>
-          </main>
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center py-12">
+          <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold mb-2">Community Not Found</h2>
+          <p className="text-muted-foreground mb-4">The community you're looking for doesn't exist.</p>
+          <Button onClick={() => setLocation('/community')}>
+            Back to Communities
+          </Button>
         </div>
       </div>
     );
@@ -125,200 +124,178 @@ export default function CommunityDetailPage() {
                        (Array.isArray(userCommunities) && userCommunities.some((membership: any) => membership.communityId === params?.id));
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setLocation('/communities')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Communities
-              </Button>
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Back Navigation */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setLocation('/community')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Communities
+        </Button>
+      </div>
+
+      {/* Community Header */}
+      <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 rounded-lg bg-white/20 flex items-center justify-center">
+                <Hash className="h-8 w-8" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">{community.name}</h1>
+                <p className="text-blue-100 mt-1">{community.description}</p>
+                <div className="flex items-center space-x-4 mt-2 text-sm text-blue-100">
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    {Array.isArray(members) ? members.length : 0} members
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MessageCircle className="h-4 w-4" />
+                    {Array.isArray(posts) ? posts.length : 0} posts
+                  </div>
+                </div>
+              </div>
             </div>
-
-            {/* Community Header */}
-            <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 rounded-lg bg-white/20 flex items-center justify-center">
-                      <Hash className="h-8 w-8" />
-                    </div>
-                    <div>
-                      <h1 className="text-2xl font-bold">{community.name}</h1>
-                      <p className="text-blue-100 mt-1">{community.description}</p>
-                      <div className="flex items-center space-x-4 mt-2 text-sm text-blue-100">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {members.length} members
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MessageCircle className="h-4 w-4" />
-                          {posts.length} posts
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {!isUserMember ? (
-                      <Button
-                        onClick={() => joinMutation.mutate()}
-                        disabled={joinMutation.isPending}
-                        className="bg-white text-blue-600 hover:bg-blue-50"
-                        data-testid="button-join-community"
-                      >
-                        {joinMutation.isPending ? "Joining..." : "Join Community"}
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        onClick={() => leaveMutation.mutate()}
-                        disabled={leaveMutation.isPending}
-                        className="border-white text-white hover:bg-white/10"
-                        data-testid="button-leave-community"
-                      >
-                        {leaveMutation.isPending ? "Leaving..." : "Leave"}
-                      </Button>
-                    )}
-                    <Button variant="outline" size="sm" className="border-white text-white hover:bg-white/10">
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Main Content Area */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Main Feed */}
-              <div className="lg:col-span-3 space-y-4">
-                {/* Post Creator - Only show if user is a member */}
-                {isUserMember && user && (
-                  <LinkedInStylePostCreator
-                    communityId={params?.id || ""}
-                    user={user}
-                    onPostCreated={() => {
-                      queryClient.invalidateQueries({ queryKey: ['/api/communities', params?.id, 'posts'] });
-                    }}
-                  />
-                )}
-
-                {/* Posts Feed */}
-                <div className="space-y-4">
-                  {postsLoading ? (
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <Card key={i} className="animate-pulse">
-                          <CardContent className="p-4">
-                            <div className="flex space-x-3">
-                              <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
-                              <div className="flex-1 space-y-2">
-                                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : posts.length === 0 ? (
-                    <Card>
-                      <CardContent className="p-8 text-center">
-                        <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                          No posts yet
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
-                          Be the first to start a conversation in this community!
-                        </p>
-                        {isUserMember && (
-                          <Button onClick={() => document.querySelector('[data-testid="textarea-post-content"]')?.focus()}>
-                            Create First Post
-                          </Button>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    posts.map((post: any) => (
-                      <LinkedInStyleCommunityPost
-                        key={post.id}
-                        post={post}
-                        communityId={params?.id || ""}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-4">
-                {/* Community Stats */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Community Stats</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">Members</span>
-                        <Badge variant="secondary">{members.length}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">Posts</span>
-                        <Badge variant="secondary">{posts.length}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">Category</span>
-                        <Badge>{community.category || "General"}</Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Recent Members */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Recent Members</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {members.slice(0, 5).map((member: any) => (
-                        <div key={member.userId} className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                              {member.userFirstName?.[0]}{member.userLastName?.[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                              {member.userFirstName} {member.userLastName}
-                            </p>
-                            <p className="text-xs text-gray-500 truncate">
-                              {member.role}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                      {members.length > 5 && (
-                        <Button variant="outline" size="sm" className="w-full">
-                          View All Members
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+            <div className="flex items-center space-x-2">
+              {isUserMember ? (
+                <>
+                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                    Member
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => leaveMutation.mutate()}
+                    disabled={leaveMutation.isPending}
+                    className="border-white/30 text-white hover:bg-white/10"
+                  >
+                    {leaveMutation.isPending ? "Leaving..." : "Leave"}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => joinMutation.mutate()}
+                  disabled={joinMutation.isPending}
+                  className="border-white/30 text-white hover:bg-white/10"
+                >
+                  {joinMutation.isPending ? "Joining..." : "Join Community"}
+                </Button>
+              )}
             </div>
           </div>
-        </main>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Post Creator - Only for members */}
+          {isUserMember && (
+            <LinkedInStylePostCreator
+              user={user}
+              onCreatePost={(postData) => createPostMutation.mutate(postData)}
+              isCreating={createPostMutation.isPending}
+            />
+          )}
+
+          {/* Posts Feed */}
+          <div className="space-y-4">
+            {Array.isArray(posts) && posts.length > 0 ? (
+              posts.map((post: any) => (
+                <LinkedInStyleCommunityPost
+                  key={post.id}
+                  post={post}
+                />
+              ))
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No posts yet</h3>
+                  <p className="text-muted-foreground">
+                    {Array.isArray(posts) && posts.length === 0 ? "Be the first to share something!" : "Loading posts..."}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Community Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Community Info
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <span className="text-sm font-medium">Members:</span>
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {Array.isArray(members) ? members.length : 0}
+                </span>
+              </div>
+              <div>
+                <span className="text-sm font-medium">Posts:</span>
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {Array.isArray(posts) ? posts.length : 0}
+                </span>
+              </div>
+              <div>
+                <span className="text-sm font-medium">Category:</span>
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {community.category || 'General'}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Members */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Recent Members
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {Array.isArray(members) && members.slice(0, 5).map((member: any, index: number) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={member.userProfileImage} />
+                      <AvatarFallback>
+                        {member.userFirstName?.[0]}{member.userLastName?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                        {member.userFirstName} {member.userLastName}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {member.role}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {Array.isArray(members) && members.length > 5 && (
+                  <Button variant="outline" size="sm" className="w-full">
+                    View All Members
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -80,37 +80,10 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if user has enough credits
-    if (!creditCheck?.hasEnoughCredits) {
-      toast({
-        title: "Insufficient Credits",
-        description: `You need 50 credits to post a job. Your current balance: ${creditCheck?.currentBalance || 0} credits`,
-        variant: "destructive",
-      });
-      return;
-    }
+    // Job will be posted for admin review - no immediate credit check needed
 
     try {
-      // Deduct credits first
-      const deductResponse = await apiRequest('POST', '/api/credits/deduct', {
-        action: 'job',
-        amount: 50,
-        description: 'Job posting',
-        referenceType: 'job_creation'
-      });
-
-      const deductResult = await deductResponse.json();
-      
-      if (!deductResult.success) {
-        toast({
-          title: "Credit Deduction Failed",
-          description: deductResult.error || "Unable to deduct credits",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Proceed with job creation
+      // Create job directly - credits will be deducted after admin approval
       createJobMutation.mutate({
         title: formData.title,
         description: formData.description,
@@ -126,10 +99,10 @@ export function JobModal({ open, onOpenChange }: JobModalProps) {
         applicationDeadline: null
       });
     } catch (error) {
-      console.error('Credit deduction error:', error);
+      console.error('Job creation error:', error);
       toast({
         title: "Error",
-        description: "Failed to process credit payment",
+        description: "Failed to create job",
         variant: "destructive",
       });
     }
