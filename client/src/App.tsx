@@ -74,6 +74,8 @@ function Router() {
       <Route path="/community" component={() => <ProtectedRoute component={Community} />} />
       <Route path="/communities" component={() => <ProtectedRoute component={Community} />} />
       <Route path="/jobs" component={() => <ProtectedRoute component={Jobs} />} />
+      <Route path="/my-jobs" component={() => <ProtectedRoute component={Jobs} />} />
+      <Route path="/my-communities" component={() => <ProtectedRoute component={Community} />} />
       <Route path="/bidding" component={() => <ProtectedRoute component={Bidding} />} />
       <Route path="/tenders" component={() => <ProtectedRoute component={Tenders} />} />
       <Route path="/company-formation" component={() => <ProtectedRoute component={CompanyFormation} />} />
