@@ -205,6 +205,11 @@ export default function AdminDashboard() {
 
   const { data: creditConfigs = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/credit-configs'],
+    queryFn: async () => {
+      const response = await adminApiRequest('GET', '/api/admin/credit-configs');
+      if (!response.ok) throw new Error('Failed to fetch credit configs');
+      return response.json();
+    }
   });
 
   // Mutations

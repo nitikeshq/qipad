@@ -2754,6 +2754,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin - Credit Configurations Management
+  app.get("/api/admin/credit-configs", authenticateAdmin, async (req, res) => {
+    try {
+      const configs = await storage.getAllCreditConfigurations();
+      res.json(configs);
+    } catch (error: any) {
+      console.error("Admin credit configs route error:", error);
+      res.status(500).json({ message: "Failed to get credit configurations", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/credit-configs", authenticateAdmin, async (req, res) => {
+    try {
+      const { featureType, featureName, creditsRequired, description } = req.body;
+      
+      if (!featureType || !featureName || creditsRequired === undefined) {
+        return res.status(400).json({ message: "Feature type, name, and credits required are required" });
+      }
+
+      const configData = {
+        featureType,
+        featureName,
+        creditsRequired: parseInt(creditsRequired),
+        description: description || '',
+        isActive: true
+      };
+
+      const config = await storage.createCreditConfiguration(configData);
+      res.status(201).json(config);
+    } catch (error: any) {
+      console.error("Create credit config error:", error);
+      res.status(400).json({ message: "Failed to create credit configuration", error: error.message });
+    }
+  });
+
+  app.put("/api/admin/credit-configs/:id", authenticateAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { creditsRequired, description, isActive } = req.body;
+      
+      const updateData: any = {};
+      if (creditsRequired !== undefined) updateData.creditsRequired = parseInt(creditsRequired);
+      if (description !== undefined) updateData.description = description;
+      if (isActive !== undefined) updateData.isActive = isActive;
+
+      const config = await storage.updateCreditConfiguration(id, updateData);
+      res.json(config);
+    } catch (error: any) {
+      console.error("Update credit config error:", error);
+      res.status(400).json({ message: "Failed to update credit configuration", error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/credit-configs/:id", authenticateAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteCreditConfiguration(id);
+      res.json({ message: "Credit configuration deleted successfully" });
+    } catch (error: any) {
+      console.error("Delete credit config error:", error);
+      res.status(400).json({ message: "Failed to delete credit configuration", error: error.message });
+    }
+  });
+
   // Company Services Routes
   app.get('/api/companies/:id/services', async (req, res) => {
     try {
