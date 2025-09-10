@@ -227,7 +227,6 @@ export default function MyProjects() {
             setEditingProject(null);
           }
         }}
-        project={editingProject}
       />
     </div>
   );
