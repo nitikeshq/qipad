@@ -2757,7 +2757,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin - Credit Configurations Management
   app.get("/api/admin/credit-configs", authenticateAdmin, async (req, res) => {
     try {
-      const configs = await storage.getAllCreditConfigurations();
+      const configs = await storage.getAllCreditConfigs();
       res.json(configs);
     } catch (error: any) {
       console.error("Admin credit configs route error:", error);
@@ -2781,7 +2781,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: true
       };
 
-      const config = await storage.createCreditConfiguration(configData);
+      const config = await storage.createCreditConfig(configData);
       res.status(201).json(config);
     } catch (error: any) {
       console.error("Create credit config error:", error);
@@ -2799,7 +2799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (description !== undefined) updateData.description = description;
       if (isActive !== undefined) updateData.isActive = isActive;
 
-      const config = await storage.updateCreditConfiguration(id, updateData);
+      const config = await storage.updateCreditConfig(id, updateData);
       res.json(config);
     } catch (error: any) {
       console.error("Update credit config error:", error);
@@ -2810,7 +2810,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/credit-configs/:id", authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      await storage.deleteCreditConfiguration(id);
+      await storage.deleteCreditConfig(id);
       res.json({ message: "Credit configuration deleted successfully" });
     } catch (error: any) {
       console.error("Delete credit config error:", error);
