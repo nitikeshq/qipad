@@ -44,11 +44,11 @@ import { payumoneyService } from "./payumoney";
 import { PlatformSettingsService } from "./platformSettingsService";
 import { emailService } from "./emailService";
 import fs from "fs";
+import path from "path";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import multer from "multer";
-import path from "path";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -780,8 +780,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const path = require('path');
-      const fs = require('fs');
       
       // Check if file exists
       if (!fs.existsSync(document.filePath)) {
