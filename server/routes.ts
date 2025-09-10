@@ -799,9 +799,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check KYC verification first
-      const user = await storage.getUserById(userId);
-      const documents = await storage.getUserDocuments(userId);
-      const isKycComplete = user && documents.some(doc => doc.type === 'kyc' && doc.verified);
+      const user = await storage.getUser(userId);
+      const documents = await storage.getDocumentsByUser(userId);
+      const isKycComplete = user && documents.some((doc: any) => doc.type === 'kyc' && doc.verified);
       
       if (!isKycComplete) {
         return res.status(400).json({ 
@@ -1154,9 +1154,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (isPremium) {
         // Check KYC verification for premium communities
-        const user = await storage.getUserById(userId);
-        const documents = await storage.getUserDocuments(userId);
-        const isKycComplete = user && documents.some(doc => doc.type === 'kyc' && doc.verified);
+        const user = await storage.getUser(userId);
+        const documents = await storage.getDocumentsByUser(userId);
+        const isKycComplete = user && documents.some((doc: any) => doc.type === 'kyc' && doc.verified);
         
         if (!isKycComplete) {
           return res.status(400).json({ 
