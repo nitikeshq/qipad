@@ -45,10 +45,13 @@ export function LinkedInStyleCommunityPost({ post, communityId }: CommunityPostP
   const queryClient = useQueryClient();
 
   const likePostMutation = useMutation({
-    mutationFn: () => apiRequest("POST", `/api/community-posts/${post.id}/like`),
-    onSuccess: (response) => {
-      setIsLiked(response.liked);
-      setLikesCount(prev => response.liked ? prev + 1 : prev - 1);
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/community-posts/${post.id}/like`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setIsLiked(data.liked);
+      setLikesCount(prev => data.liked ? prev + 1 : prev - 1);
       queryClient.invalidateQueries({ queryKey: ['/api/communities', communityId, 'posts'] });
     },
     onError: () => {
