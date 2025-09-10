@@ -13,15 +13,37 @@ export function MainLayout({ children }: MainLayoutProps) {
   const isMobile = useIsMobile();
 
   return (
-    <SidebarProvider>
-      <Sidebar />
-      <SidebarInset>
-        <Header />
-        <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-          {children}
-        </main>
-      </SidebarInset>
-      {isMobile && <BottomNav />}
-    </SidebarProvider>
+    <div className="min-h-screen flex flex-col">
+      <SidebarProvider>
+        <Sidebar />
+        <SidebarInset className="flex flex-col flex-1">
+          <Header />
+          <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+            {children}
+          </main>
+          
+          {/* Footer */}
+          <footer className="mt-auto bg-secondary/50 border-t border-border py-6">
+            <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+              <p className="mb-2">
+                © 2025 Qipad. Energized startup space for entrepreneurs and investors.
+              </p>
+              <p>
+                Powered by{" "}
+                <a 
+                  href="https://www.qwegle.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-primary hover:text-primary/80 transition-colors font-medium"
+                >
+                  Qwegle
+                </a>
+              </p>
+            </div>
+          </footer>
+        </SidebarInset>
+        {isMobile && <BottomNav />}
+      </SidebarProvider>
+    </div>
   );
 }

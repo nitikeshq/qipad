@@ -3753,11 +3753,13 @@ export default function AdminDashboard() {
                     }
                     
                     try {
-                      await adminApiRequest('POST', '/api/admin/credits/manage', {
-                        userId: creditManagementModal.id,
-                        action,
+                      const endpoint = action === 'add' 
+                        ? `/api/admin/users/${creditManagementModal.id}/credits/add`
+                        : `/api/admin/users/${creditManagementModal.id}/credits/deduct`;
+                      
+                      await adminApiRequest('POST', endpoint, {
                         amount,
-                        reason: reason.trim()
+                        description: reason.trim()
                       });
                       
                       toast({ title: `Credits ${action === 'add' ? 'added' : 'deducted'} successfully!` });

@@ -16,11 +16,13 @@ import {
   CheckCircle,
   Users,
   Wallet,
-  Star
+  Star,
+  ArrowLeft
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 export default function HowToPage() {
+  const [, navigate] = useLocation();
   const workflows = [
     {
       title: "Registration & Account Setup",
@@ -146,6 +148,19 @@ export default function HowToPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
       <div className="container mx-auto px-4 max-w-6xl">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/dashboard")}
+            className="mb-4"
+            data-testid="button-back-to-dashboard"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </div>
+        
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">How to Use Qipad</h1>
@@ -317,26 +332,6 @@ export default function HowToPage() {
           </CardContent>
         </Card>
 
-        {/* Footer */}
-        <footer className="text-center mt-12 py-8 text-gray-600 border-t border-gray-200">
-          <p className="mb-4">
-            Need help? Contact our support team or check our{" "}
-            <Link href="/documents" className="text-blue-600 hover:underline">
-              documentation section
-            </Link>
-          </p>
-          <p className="text-sm">
-            Powered by{" "}
-            <a 
-              href="https://www.qwegle.com" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-blue-600 hover:underline font-medium"
-            >
-              Qwegle
-            </a>
-          </p>
-        </footer>
       </div>
     </div>
   );
