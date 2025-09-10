@@ -11,8 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Shield, Upload, AlertCircle, Wallet, Image } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
-import { ObjectUploader } from "@/components/ObjectUploader";
-import type { UploadResult } from "@uppy/core";
+import { SimpleImageUploader } from "@/components/SimpleImageUploader";
 
 interface ProjectModalProps {
   open: boolean;
@@ -75,35 +74,9 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
     }
   });
 
-  // Image upload handlers
-  const handleGetUploadParameters = async () => {
-    try {
-      const response = await apiRequest('POST', '/api/projects/images/upload');
-      const data = await response.json();
-      return {
-        method: 'PUT' as const,
-        url: data.uploadURL,
-      };
-    } catch (error) {
-      console.error('Error getting upload URL:', error);
-      toast({ title: "Failed to get upload URL", variant: "destructive" });
-      throw error;
-    }
-  };
-
-  const handleImageUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    try {
-      if (result.successful && result.successful.length > 0) {
-        const uploadedFile = result.successful[0];
-        const imageURL = uploadedFile.uploadURL;
-        
-        setUploadedImages(prev => [...prev, imageURL]);
-        toast({ title: "Image uploaded successfully!" });
-      }
-    } catch (error) {
-      console.error('Error processing uploaded image:', error);
-      toast({ title: "Error processing uploaded image", variant: "destructive" });
-    }
+  // Simple image upload handler
+  const handleImageUploadComplete = (imageUrl: string) => {
+    setUploadedImages(prev => [...prev, imageUrl]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -219,18 +192,10 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
             <p className="text-sm text-muted-foreground mb-4">Upload images to showcase your project. These will be displayed in the Investment Opportunities.</p>
             
             <div className="space-y-4">
-              <ObjectUploader
-                maxNumberOfFiles={1}
-                maxFileSize={10485760} // 10MB
-                onGetUploadParameters={handleGetUploadParameters}
-                onComplete={handleImageUploadComplete}
+              <SimpleImageUploader
+                onUploadComplete={handleImageUploadComplete}
                 buttonClassName="w-full"
-              >
-                <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg hover:border-primary transition-colors">
-                  <Image className="h-5 w-5" />
-                  <span>Upload Project Image</span>
-                </div>
-              </ObjectUploader>
+              />
 
               {uploadedImages.length > 0 && (
                 <div className="space-y-2">
