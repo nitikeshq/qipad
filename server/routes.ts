@@ -1853,6 +1853,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/companies", authenticateAdmin, async (req, res) => {
+    try {
+      const { name, description, industry, founded, ownerId } = req.body;
+      
+      if (!name || !ownerId) {
+        return res.status(400).json({ message: "Name and owner are required" });
+      }
+
+      const companyData = {
+        name,
+        description: description || '',
+        industry: industry || '',
+        founded: founded || null,
+        ownerId,
+        status: 'pending'
+      };
+
+      const company = await storage.createCompany(companyData);
+      res.status(201).json(company);
+    } catch (error: any) {
+      console.error("Create company error:", error);
+      res.status(400).json({ message: "Failed to create company", error: error.message });
+    }
+  });
+
   // Admin - Update Company Status
   app.put("/api/admin/companies/:id/status", authenticateAdmin, async (req, res) => {
     try {

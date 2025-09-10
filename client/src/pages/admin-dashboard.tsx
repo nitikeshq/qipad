@@ -2764,7 +2764,7 @@ export default function AdminDashboard() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingItem.id ? 'Edit' : 'Create'} {modalType === 'media-content' ? 'Media Content' : modalType?.charAt(0).toUpperCase() + modalType?.slice(1)}
+              {editingItem.id ? 'Edit' : 'Create'} {modalType === 'media-content' ? 'Media Content' : modalType?.charAt(0)?.toUpperCase() + modalType?.slice(1)}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
