@@ -54,15 +54,16 @@ export function Header() {
     return `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase() || "U";
   };
 
+  // Global/Platform-wide navigation - for discovery and exploration
   const navigationItems = [
-    { path: "/dashboard", label: "Dashboard" },
-    { path: "/innovations", label: "Innovations" },
+    { path: "/innovations", label: "Find Innovations" },
     { path: "/investors", label: "Investors" },
     { path: "/companies", label: "Companies" },
     { path: "/tenders", label: "Tenders" },
     { path: "/community", label: "Community" },
     { path: "/jobs", label: "Jobs" },
     { path: "/events", label: "Events" },
+    { path: "/media-center", label: "Media Center" },
     { path: "/how-to", label: "How To" },
   ];
 

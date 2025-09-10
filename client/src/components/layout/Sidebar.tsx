@@ -42,15 +42,13 @@ export function Sidebar() {
     },
   ];
 
+  // User-specific/Personal navigation - for account management
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/my-innovations", label: "My Innovations", icon: FolderOpen },
-    { path: "/investments", label: "Investments", icon: TrendingUp },
-    { path: "/companies", label: "Companies", icon: Building2 },
-    { path: "/jobs", label: "Jobs", icon: Briefcase },
-    { path: "/community", label: "Communities", icon: MessageSquare },
-    { path: "/media-center", label: "Media Center", icon: PlayCircle },
-    { path: "/how-to", label: "How To", icon: HelpCircle },
+    { path: "/investments", label: "My Investments", icon: TrendingUp },
+    { path: "/my-jobs", label: "My Jobs", icon: Briefcase },
+    { path: "/my-communities", label: "My Communities", icon: MessageSquare },
     { path: "/documents", label: "Documents", icon: Scroll },
   ];
 
