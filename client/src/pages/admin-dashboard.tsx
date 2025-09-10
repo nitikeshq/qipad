@@ -3781,6 +3781,164 @@ export default function AdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Production Data Cleanup Section */}
+      {activeTab === "settings" && (
+        <div className="mt-8 p-6 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-red-100 rounded-full">
+              <Target className="h-6 w-6 text-red-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-red-800">🚨 Production Data Cleanup</h3>
+              <p className="text-sm text-red-600">Permanently delete all user data for production launch</p>
+            </div>
+          </div>
+          
+          <div className="bg-white p-4 rounded-lg border border-red-200 mb-4">
+            <h4 className="font-medium text-red-800 mb-2">⚠️ WARNING: This action is IRREVERSIBLE!</h4>
+            <p className="text-sm text-red-700 mb-3">
+              This will permanently delete ALL user-generated data including:
+            </p>
+            <ul className="text-sm text-red-700 list-disc list-inside space-y-1 mb-4">
+              <li>All user accounts (except admin accounts)</li>
+              <li>All projects and innovations</li>
+              <li>All investments and financial data</li>
+              <li>All communities and posts</li>
+              <li>All jobs and applications</li>
+              <li>All events and participants</li>
+              <li>All wallet transactions and referrals</li>
+            </ul>
+            <p className="text-sm text-red-700 font-medium">
+              System defaults (categories, departments, etc.) will be preserved.
+            </p>
+          </div>
+
+          <ProductionCleanupForm />
+        </div>
+      )}
     </>
+  );
+}
+
+// Production Data Cleanup Form Component
+function ProductionCleanupForm() {
+  const [passcode, setPasscode] = useState("");
+  const [confirmText, setConfirmText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleCleanup = async () => {
+    if (passcode !== "876345") {
+      toast({
+        title: "Invalid Passcode",
+        description: "Please enter the correct passcode to proceed.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (confirmText !== "DELETE ALL DATA") {
+      toast({
+        title: "Confirmation Required",
+        description: "Please type 'DELETE ALL DATA' to confirm.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!confirm("Are you absolutely sure? This will permanently delete ALL user data and cannot be undone!")) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await adminApiRequest('POST', '/api/admin/cleanup-production-data', {
+        passcode
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        toast({
+          title: "✅ Production Cleanup Completed!",
+          description: "All user data has been cleared. Platform is ready for production launch.",
+          duration: 10000,
+        });
+        setPasscode("");
+        setConfirmText("");
+      } else {
+        throw new Error(result.message || "Cleanup failed");
+      }
+    } catch (error: any) {
+      console.error("Production cleanup error:", error);
+      toast({
+        title: "❌ Cleanup Failed",
+        description: error.message || "Failed to cleanup production data",
+        variant: "destructive",
+        duration: 10000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="passcode" className="text-red-800 font-medium">
+          Admin Passcode <span className="text-red-600">*</span>
+        </Label>
+        <Input
+          id="passcode"
+          type="password"
+          placeholder="Enter admin passcode"
+          value={passcode}
+          onChange={(e) => setPasscode(e.target.value)}
+          className="border-red-300 focus:border-red-500"
+          data-testid="input-admin-passcode"
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="confirmText" className="text-red-800 font-medium">
+          Type "DELETE ALL DATA" to confirm <span className="text-red-600">*</span>
+        </Label>
+        <Input
+          id="confirmText"
+          placeholder="DELETE ALL DATA"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          className="border-red-300 focus:border-red-500"
+          data-testid="input-confirm-text"
+        />
+      </div>
+
+      <div className="pt-4">
+        <Button
+          onClick={handleCleanup}
+          disabled={isLoading || !passcode || confirmText !== "DELETE ALL DATA"}
+          className="bg-red-600 hover:bg-red-700 text-white font-medium"
+          data-testid="button-cleanup-production-data"
+        >
+          {isLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Cleaning Up...
+            </>
+          ) : (
+            <>
+              <Target className="h-4 w-4 mr-2" />
+              🚨 CLEANUP PRODUCTION DATA
+            </>
+          )}
+        </Button>
+      </div>
+      
+      <div className="text-xs text-red-600 bg-red-100 p-3 rounded">
+        <strong>Note:</strong> This operation typically takes 30-60 seconds to complete. 
+        Do not refresh the page during cleanup.
+      </div>
+    </div>
   );
 }

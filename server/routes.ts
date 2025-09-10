@@ -4325,6 +4325,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Production Data Cleanup Endpoint with Passcode Protection
+  app.post("/api/admin/cleanup-production-data", authenticateAdmin, async (req, res) => {
+    try {
+      const { passcode } = req.body;
+      
+      // Verify passcode
+      if (passcode !== "876345") {
+        return res.status(403).json({ 
+          message: "Invalid passcode. Access denied.", 
+          success: false 
+        });
+      }
+
+      console.log("🚨 PRODUCTION DATA CLEANUP INITIATED by admin");
+      
+      // Disable foreign key constraints temporarily
+      await db.execute(sql`SET session_replication_role = replica`);
+
+      // Clear in dependency order to avoid foreign key conflicts
+      await db.execute(sql`DELETE FROM notifications`);
+      await db.execute(sql`DELETE FROM post_comments`);
+      await db.execute(sql`DELETE FROM post_likes`);
+      await db.execute(sql`DELETE FROM service_purchases`);
+      await db.execute(sql`DELETE FROM service_inquiries`);
+      await db.execute(sql`DELETE FROM company_products`);
+      await db.execute(sql`DELETE FROM company_services`);
+      await db.execute(sql`DELETE FROM wallet_transactions`);
+      await db.execute(sql`DELETE FROM wallets`);
+      await db.execute(sql`DELETE FROM referrals`);
+      await db.execute(sql`DELETE FROM user_connections`);
+      await db.execute(sql`DELETE FROM connections`);
+      await db.execute(sql`DELETE FROM saved_jobs`);
+      await db.execute(sql`DELETE FROM job_applications`);
+      await db.execute(sql`DELETE FROM jobs`);
+      await db.execute(sql`DELETE FROM project_bids`);
+      await db.execute(sql`DELETE FROM bidding_projects`);
+      await db.execute(sql`DELETE FROM tender_eligibility`);
+      await db.execute(sql`DELETE FROM tenders`);
+      await db.execute(sql`DELETE FROM community_posts`);
+      await db.execute(sql`DELETE FROM community_members`);
+      await db.execute(sql`DELETE FROM communities`);
+      await db.execute(sql`DELETE FROM event_tickets`);
+      await db.execute(sql`DELETE FROM event_participants`);
+      await db.execute(sql`DELETE FROM events`);
+      await db.execute(sql`DELETE FROM user_interests`);
+      await db.execute(sql`DELETE FROM payments`);
+      await db.execute(sql`DELETE FROM subscriptions`);
+      await db.execute(sql`DELETE FROM investments`);
+      await db.execute(sql`DELETE FROM documents`);
+      await db.execute(sql`DELETE FROM projects`);
+      await db.execute(sql`DELETE FROM company_formations`);
+      await db.execute(sql`DELETE FROM companies`);
+      
+      // Clear users except admin accounts
+      await db.execute(sql`DELETE FROM users WHERE user_type != 'admin'`);
+
+      // Re-enable foreign key constraints
+      await db.execute(sql`SET session_replication_role = DEFAULT`);
+
+      console.log("✅ PRODUCTION DATA CLEANUP COMPLETED");
+
+      res.json({
+        success: true,
+        message: "Production data cleanup completed successfully. Platform is ready for production launch.",
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error: any) {
+      console.error("❌ Production cleanup error:", error);
+      
+      // Try to re-enable foreign key constraints even if cleanup failed
+      try {
+        await db.execute(sql`SET session_replication_role = DEFAULT`);
+      } catch (constraintError) {
+        console.error("❌ Failed to re-enable foreign key constraints:", constraintError);
+      }
+      
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to cleanup production data", 
+        error: error.message 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
