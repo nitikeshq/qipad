@@ -43,6 +43,7 @@ import { insertUserSchema, insertProjectSchema, insertDocumentSchema, insertInve
 import { payumoneyService } from "./payumoney";
 import { PlatformSettingsService } from "./platformSettingsService";
 import { emailService } from "./emailService";
+import fs from "fs";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -191,7 +192,6 @@ const upload = multer({
       const userId = req.user?.userId || 'anonymous';
       const uploadPath = `uploads/${userId}`;
       // Create directory if it doesn't exist - synchronously
-      const fs = require('fs');
       if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
       }
@@ -222,7 +222,6 @@ const projectImageUpload = multer({
       const uploadPath = 'uploads/innovations';
       
       // Create directory if it doesn't exist - synchronously
-      const fs = require('fs');
       if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
       }
