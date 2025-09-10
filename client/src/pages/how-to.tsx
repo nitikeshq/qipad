@@ -54,7 +54,7 @@ export default function HowToPage() {
         "Access your wallet from the main navigation",
         "Monitor your QP (Qipad Points) balance",
         "Add credits for platform activities (100 QP = ₹100)",
-        "View transaction history and referral earnings",
+        "View transaction history and referral earnings (earned only after referrals complete KYC + deposit)",
         "Track spending on innovations and job postings"
       ]
     },
@@ -126,8 +126,12 @@ export default function HowToPage() {
       content: "All investments are subject to risks. Qipad facilitates connections but does not guarantee returns. Users must conduct due diligence before investing."
     },
     {
-      title: "Refund Policy",
-      content: "Credits spent on successful submissions (innovations, jobs) are non-refundable. However, if submission fails due to platform issues, credits will be restored."
+      title: "Refund & Withdrawal Policy",
+      content: "Credits spent on successful submissions (innovations, jobs) are non-refundable. Withdrawal of deposited funds is not available as all deposits are used for platform application fees, processing, and service costs. However, if submission fails due to platform issues, credits will be restored."
+    },
+    {
+      title: "Referral Bonus Requirements",
+      content: "Referral bonuses of 50 QP are awarded only after the referred user completes both KYC verification AND makes their first deposit. This policy prevents fake account creation and ensures genuine platform participation."
     },
     {
       title: "Content Guidelines",

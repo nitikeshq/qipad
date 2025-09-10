@@ -460,8 +460,8 @@ export default function Auth() {
       </div>
       
       {/* Powered by Qwegle Footer */}
-      <footer className="w-full mt-12 py-6 text-center text-sm text-muted-foreground border-t border-border">
-        Powered by <a href="https://www.qwegle.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Qwegle</a>
+      <footer className="w-full mt-8 py-4 text-center text-xs text-muted-foreground/70">
+        Powered by <a href="https://www.qwegle.com" target="_blank" rel="noopener noreferrer" className="text-primary/80 hover:text-primary hover:underline font-medium">Qwegle</a>
       </footer>
     </div>
   );

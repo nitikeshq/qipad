@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText, Gavel, Building, Building2, Scroll, PlayCircle, Wallet } from "lucide-react";
+import { CheckCircle, Plus, Search, Briefcase, BarChart3, FolderOpen, TrendingUp, Users, MessageSquare, FileText, Gavel, Building, Building2, Scroll, PlayCircle, Wallet, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -50,6 +50,7 @@ export function Sidebar() {
     { path: "/jobs", label: "Jobs", icon: Briefcase },
     { path: "/community", label: "Communities", icon: MessageSquare },
     { path: "/media-center", label: "Media Center", icon: PlayCircle },
+    { path: "/how-to", label: "How To", icon: HelpCircle },
     { path: "/documents", label: "Documents", icon: Scroll },
   ];
 

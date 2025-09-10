@@ -63,6 +63,7 @@ export function Header() {
     { path: "/community", label: "Community" },
     { path: "/jobs", label: "Jobs" },
     { path: "/events", label: "Events" },
+    { path: "/how-to", label: "How To" },
   ];
 
   return (
