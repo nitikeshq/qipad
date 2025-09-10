@@ -315,7 +315,7 @@ export function WalletPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="amount">Deposit Amount ()</Label>
+                      <Label htmlFor="amount">Deposit Amount (QP)</Label>
                       <Input
                         id="amount"
                         type="number"
