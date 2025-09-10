@@ -3503,6 +3503,103 @@ export default function AdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Credit Management Modal */}
+      <Dialog open={!!creditManagementModal} onOpenChange={() => setCreditManagementModal(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manage Credits</DialogTitle>
+          </DialogHeader>
+          {creditManagementModal && (
+            <div className="space-y-4">
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">User</p>
+                <p className="font-semibold">{creditManagementModal.firstName} {creditManagementModal.lastName}</p>
+                <p className="text-sm text-gray-500">{creditManagementModal.email}</p>
+                <p className="text-lg font-bold text-green-600 mt-2">{creditManagementModal.credits || 0} QP</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="creditAction">Action</Label>
+                  <Select defaultValue="add">
+                    <SelectTrigger id="creditAction">
+                      <SelectValue placeholder="Select action" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="add">Add Credits</SelectItem>
+                      <SelectItem value="deduct">Deduct Credits</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="creditAmount">Amount</Label>
+                  <Input 
+                    id="creditAmount" 
+                    type="number" 
+                    placeholder="Enter amount" 
+                    min="1"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="creditReason">Reason</Label>
+                  <Textarea 
+                    id="creditReason" 
+                    placeholder="Enter reason for credit adjustment" 
+                    rows={3}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setCreditManagementModal(null)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={async () => {
+                    const action = (document.getElementById('creditAction') as any)?.value || 'add';
+                    const amount = parseInt((document.getElementById('creditAmount') as HTMLInputElement)?.value || '0');
+                    const reason = (document.getElementById('creditReason') as HTMLTextAreaElement)?.value || '';
+                    
+                    if (!amount || amount <= 0) {
+                      toast({ title: "Please enter a valid amount", variant: "destructive" });
+                      return;
+                    }
+                    
+                    if (!reason.trim()) {
+                      toast({ title: "Please provide a reason", variant: "destructive" });
+                      return;
+                    }
+                    
+                    try {
+                      await adminApiRequest('POST', '/api/admin/credits/manage', {
+                        userId: creditManagementModal.id,
+                        action,
+                        amount,
+                        reason: reason.trim()
+                      });
+                      
+                      toast({ title: `Credits ${action === 'add' ? 'added' : 'deducted'} successfully!` });
+                      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+                      setCreditManagementModal(null);
+                    } catch (error: any) {
+                      toast({ 
+                        title: "Failed to update credits", 
+                        description: error.message, 
+                        variant: "destructive" 
+                      });
+                    }
+                  }}
+                >
+                  Update Credits
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
