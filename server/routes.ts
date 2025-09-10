@@ -173,12 +173,11 @@ const upload = multer({
     destination: (req: any, file: any, cb: any) => {
       const userId = req.user?.userId || 'anonymous';
       const uploadPath = `uploads/${userId}`;
-      // Create directory if it doesn't exist
-      import('fs').then(fs => {
-        if (!fs.existsSync(uploadPath)) {
-          fs.mkdirSync(uploadPath, { recursive: true });
-        }
-      });
+      // Create directory if it doesn't exist - synchronously
+      const fs = require('fs');
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
       cb(null, uploadPath);
     },
     filename: (req: any, file: any, cb: any) => {
@@ -205,12 +204,11 @@ const projectImageUpload = multer({
     destination: (req: any, file: any, cb: any) => {
       const uploadPath = 'uploads/innovations';
       
-      // Create directory if it doesn't exist
-      import('fs').then(fs => {
-        if (!fs.existsSync(uploadPath)) {
-          fs.mkdirSync(uploadPath, { recursive: true });
-        }
-      });
+      // Create directory if it doesn't exist - synchronously
+      const fs = require('fs');
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
       cb(null, uploadPath);
     },
     filename: (req: any, file: any, cb: any) => {
