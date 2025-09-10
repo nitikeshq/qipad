@@ -426,7 +426,10 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("isAdmin");
-    navigate("/admin/login");
+    // Clear any other admin-related data
+    localStorage.removeItem("token");
+    // Redirect to the secure admin login route
+    navigate("/locked-admin/login");
   };
 
   const stats = [
