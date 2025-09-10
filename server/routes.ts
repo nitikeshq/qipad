@@ -116,23 +116,40 @@ async function processNewReferral(newUser: any, referrerId: string, referralCode
     
     console.log(`Created new referral record: ${newReferral.id}`);
 
-    // 2. Add reward to referrer ONLY (₹50) - referred user gets no referral bonus
-    await storage.addCredits(
-      referrerId,
-      50,
-      `Referral reward - ${newUser.firstName} joined via your referral`,
-      'referral_bonus',
-      newReferral.id
-    );
-    console.log(`Added ₹50 referral reward to referrer ${referrerId}`);
-
-    // 3. Update referral status to credited
-    await storage.updateReferral(newReferral.id, {
-      status: 'credited',
-      referredUserId: newUser.id,
-      creditedAt: new Date()
-    });
-    console.log(`Updated referral status to completed`);
+    // 2. Check if referred user has completed KYC and made a deposit before giving referral bonus
+    const referredUser = await storage.getUser(newUser.id);
+    const referredDocuments = await storage.getDocumentsByUser(newUser.id);
+    const isKycComplete = referredUser && referredDocuments.some((doc: any) => doc.type === 'kyc' && doc.verified);
+    
+    // Check if user has made any deposits
+    const userTransactions = await storage.getWalletTransactions(newUser.id);
+    const hasDeposit = userTransactions.some((tx: any) => tx.type === 'deposit' && tx.status === 'completed');
+    
+    // Only give referral bonus if referred user has completed KYC AND made a deposit
+    if (isKycComplete && hasDeposit) {
+      await storage.addCredits(
+        referrerId,
+        50,
+        `Referral reward - ${newUser.firstName} completed KYC and deposit via your referral`,
+        'referral_bonus',
+        newReferral.id
+      );
+      console.log(`Added ₹50 referral reward to referrer ${referrerId} (KYC and deposit verified)`);
+      
+      // Update status to credited
+      await storage.updateReferral(newReferral.id, {
+        status: 'credited',
+        referredUserId: newUser.id,
+        creditedAt: new Date()
+      });
+    } else {
+      console.log(`Referral bonus pending for ${referrerId} - waiting for ${newUser.email} to complete KYC and deposit`);
+      // Keep status as pending until KYC and deposit are completed
+      await storage.updateReferral(newReferral.id, {
+        status: 'pending',
+        referredUserId: newUser.id
+      });
+    }
 
     // 4. Send reward email to referrer
     const referrer = await storage.getUser(referrerId);
@@ -3916,6 +3933,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error sending referral:', error);
       res.status(500).json({ message: 'Failed to send referral invitation' });
+    }
+  });
+
+  // ========================================
+  // ADMIN CREDIT MANAGEMENT ROUTES
+  // ========================================
+
+  // Admin route to add credits to a user
+  app.post("/api/admin/users/:userId/credits/add", authenticateAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { amount, description } = req.body;
+
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Valid amount is required" });
+      }
+
+      const result = await storage.addCredits(
+        userId,
+        parseInt(amount),
+        description || 'Credits added by admin',
+        'admin_bonus',
+        `admin-add-${Date.now()}`
+      );
+
+      if (result.success) {
+        res.json({
+          success: true,
+          message: `Successfully added ${amount} credits`,
+          newBalance: result.newBalance
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: result.error || "Failed to add credits"
+        });
+      }
+    } catch (error: any) {
+      console.error('Admin add credits error:', error);
+      res.status(500).json({ message: 'Failed to add credits', error: error.message });
+    }
+  });
+
+  // Admin route to deduct credits from a user
+  app.post("/api/admin/users/:userId/credits/deduct", authenticateAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { amount, description } = req.body;
+
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Valid amount is required" });
+      }
+
+      const result = await storage.deductCredits(
+        userId,
+        parseInt(amount),
+        description || 'Credits deducted by admin',
+        'admin_deduction',
+        `admin-deduct-${Date.now()}`
+      );
+
+      if (result.success) {
+        res.json({
+          success: true,
+          message: `Successfully deducted ${amount} credits`,
+          newBalance: result.newBalance
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: result.error || "Failed to deduct credits",
+          currentBalance: result.newBalance
+        });
+      }
+    } catch (error: any) {
+      console.error('Admin deduct credits error:', error);
+      res.status(500).json({ message: 'Failed to deduct credits', error: error.message });
+    }
+  });
+
+  // Admin route to get user's credit balance and transaction history
+  app.get("/api/admin/users/:userId/credits", authenticateAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Get wallet balance
+      const wallet = await storage.getWalletByUserId(userId);
+      if (!wallet) {
+        return res.json({
+          balance: "0.00",
+          transactions: []
+        });
+      }
+
+      // Get transaction history
+      const transactions = await storage.getWalletTransactions(userId);
+
+      res.json({
+        balance: wallet.balance,
+        totalEarned: wallet.totalEarned || "0.00",
+        totalSpent: wallet.totalSpent || "0.00",
+        transactions: transactions.slice(0, 50) // Limit to recent 50 transactions
+      });
+    } catch (error: any) {
+      console.error('Admin get user credits error:', error);
+      res.status(500).json({ message: 'Failed to get user credits', error: error.message });
     }
   });
 

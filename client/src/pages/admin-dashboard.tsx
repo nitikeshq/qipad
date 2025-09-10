@@ -32,6 +32,7 @@ export default function AdminDashboard() {
   const [viewEventModal, setViewEventModal] = useState<any>(null);
   const [viewTenderModal, setViewTenderModal] = useState<any>(null);
   const [viewFormationModal, setViewFormationModal] = useState<any>(null);
+  const [creditManagementModal, setCreditManagementModal] = useState<any>(null);
 
   // Data queries
   const { data: users = [] } = useQuery<any[]>({
@@ -1421,6 +1422,13 @@ export default function AdminDashboard() {
                             onClick={() => setViewUserModal(user)}
                           >
                             View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => setCreditManagementModal(user)}
+                          >
+                            Credits
                           </Button>
                           {user.kycStatus !== 'verified' && (
                             <Button
