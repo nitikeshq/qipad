@@ -541,6 +541,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user KYC status
+  app.get("/api/users/kyc-status", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ 
+        isKycComplete: user.isKycComplete || false,
+        kycStatus: user.isKycComplete ? 'completed' : 'pending'
+      });
+    } catch (error: any) {
+      console.error('Error getting KYC status:', error);
+      res.status(500).json({ message: "Failed to get KYC status", error: error.message });
+    }
+  });
+
   app.get("/api/users/all", async (req, res) => {
     try {
       const users = await storage.getAllUsers();

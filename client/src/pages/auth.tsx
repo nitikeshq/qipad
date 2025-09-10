@@ -459,10 +459,10 @@ export default function Auth() {
         </Tabs>
       </div>
       
-      {/* Powered by Qwegle */}
-      <div className="text-center mt-8 text-sm text-muted-foreground">
+      {/* Powered by Qwegle Footer */}
+      <footer className="w-full mt-12 py-6 text-center text-sm text-muted-foreground border-t border-border">
         Powered by <a href="https://www.qwegle.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Qwegle</a>
-      </div>
+      </footer>
     </div>
   );
 }
