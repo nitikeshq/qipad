@@ -797,6 +797,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: existingConnection.status 
         });
       }
+
+      // Check KYC verification first
+      const user = await storage.getUserById(userId);
+      const documents = await storage.getUserDocuments(userId);
+      const isKycComplete = user && documents.some(doc => doc.type === 'kyc' && doc.verified);
+      
+      if (!isKycComplete) {
+        return res.status(400).json({ 
+          message: "KYC verification required before connecting with investors" 
+        });
+      }
+
+      // Deduct credits for investor connection (10 credits)
+      const creditResult = await storage.deductCredits(
+        userId,
+        10,
+        'Connect with investor (Per connection)',
+        'investor_connection',
+        investorId
+      );
+
+      if (!creditResult.success) {
+        return res.status(400).json({ 
+          message: creditResult.error || "Insufficient credits to connect with investor",
+          requiredCredits: 10,
+          currentBalance: creditResult.newBalance
+        });
+      }
       
       // Create connection request
       const connection = await storage.createConnection(userId, investorId);
@@ -804,7 +832,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         message: "Connection request sent successfully",
         connection,
-        status: "pending"
+        status: "pending",
+        creditsDeducted: 10,
+        newBalance: creditResult.newBalance
       });
     } catch (error: any) {
       console.error("Connect investor error:", error);
@@ -1109,9 +1139,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isMember) {
         return res.status(400).json({ message: "Already a member of this community" });
       }
+
+      const userId = req.user.userId;
+      const communityId = req.params.id;
+
+      // Get community details to check if it's premium
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+
+      // Check if it's a premium community (requires credits)
+      const isPremium = community.isPrivate; // Using isPrivate as premium indicator
       
-      await storage.joinCommunity(req.params.id, req.user.userId);
-      res.json({ message: "Joined community successfully" });
+      if (isPremium) {
+        // Check KYC verification for premium communities
+        const user = await storage.getUserById(userId);
+        const documents = await storage.getUserDocuments(userId);
+        const isKycComplete = user && documents.some(doc => doc.type === 'kyc' && doc.verified);
+        
+        if (!isKycComplete) {
+          return res.status(400).json({ 
+            message: "KYC verification required before joining premium communities" 
+          });
+        }
+
+        // Deduct credits for premium community access (10 credits)
+        const creditResult = await storage.deductCredits(
+          userId,
+          10,
+          'Join Premium Community (Access fee)',
+          'community_join',
+          communityId
+        );
+
+        if (!creditResult.success) {
+          return res.status(400).json({ 
+            message: creditResult.error || "Insufficient credits to join premium community",
+            requiredCredits: 10,
+            currentBalance: creditResult.newBalance
+          });
+        }
+
+        await storage.joinCommunity(communityId, userId);
+        res.json({ 
+          message: "Joined premium community successfully",
+          creditsDeducted: 10,
+          newBalance: creditResult.newBalance
+        });
+      } else {
+        // Free community - no credits required
+        await storage.joinCommunity(communityId, userId);
+        res.json({ message: "Joined community successfully" });
+      }
     } catch (error: any) {
       res.status(400).json({ message: "Failed to join community", error: error.message });
     }
