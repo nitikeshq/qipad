@@ -50,6 +50,7 @@ export function Sidebar() {
     { path: "/my-jobs", label: "My Jobs", icon: Briefcase },
     { path: "/my-communities", label: "My Communities", icon: MessageSquare },
     { path: "/documents", label: "Documents", icon: Scroll },
+    { path: "/how-to", label: "How To", icon: HelpCircle },
   ];
 
   return (

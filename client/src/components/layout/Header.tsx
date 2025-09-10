@@ -56,15 +56,14 @@ export function Header() {
 
   // Global/Platform-wide navigation - for discovery and exploration
   const navigationItems = [
-    { path: "/innovations", label: "Find Innovations" },
+    { path: "/innovations", label: "Innovations" },
     { path: "/investors", label: "Investors" },
     { path: "/companies", label: "Companies" },
     { path: "/tenders", label: "Tenders" },
     { path: "/community", label: "Community" },
     { path: "/jobs", label: "Jobs" },
     { path: "/events", label: "Events" },
-    { path: "/media-center", label: "Media Center" },
-    { path: "/how-to", label: "How To" },
+    { path: "/media-center", label: "Media" },
   ];
 
   return (
