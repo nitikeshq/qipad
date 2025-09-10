@@ -199,6 +199,37 @@ const upload = multer({
   }
 });
 
+// Project image upload configuration
+const projectImageUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req: any, file: any, cb: any) => {
+      const uploadPath = 'uploads/innovations';
+      
+      // Create directory if it doesn't exist
+      import('fs').then(fs => {
+        if (!fs.existsSync(uploadPath)) {
+          fs.mkdirSync(uploadPath, { recursive: true });
+        }
+      });
+      cb(null, uploadPath);
+    },
+    filename: (req: any, file: any, cb: any) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const extension = file.originalname.split('.').pop();
+      cb(null, `project-${uniqueSuffix}.${extension}`);
+    }
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req: any, file: any, cb: any) => {
+    // Only allow image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
 // Middleware for JWT authentication
 const authenticateToken = (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
@@ -3921,15 +3952,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get upload URL for project images
-  app.post("/api/projects/images/upload", authenticateToken, async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
+  // Simple project image upload
+  app.post("/api/projects/images/upload", authenticateToken, projectImageUpload.single('image'), (req: any, res) => {
     try {
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
+      if (!req.file) {
+        return res.status(400).json({ error: "No image file provided" });
+      }
+
+      const imageUrl = `/uploads/innovations/${req.file.filename}`;
+      res.json({ 
+        success: true, 
+        imageUrl: imageUrl,
+        filename: req.file.filename 
+      });
     } catch (error) {
-      console.error("Error generating upload URL:", error);
-      res.status(500).json({ error: "Failed to generate upload URL" });
+      console.error('Error uploading project image:', error);
+      res.status(500).json({ error: "Failed to upload image" });
     }
   });
 
