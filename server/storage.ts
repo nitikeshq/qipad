@@ -1059,6 +1059,13 @@ export class DatabaseStorage implements IStorage {
     return config;
   }
 
+  async deleteCreditConfig(id: string): Promise<void> {
+    const { creditConfigurations } = await import("@shared/schema");
+    await db
+      .delete(creditConfigurations)
+      .where(eq(creditConfigurations.id, id));
+  }
+
   async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {
     const [company] = await db
       .update(companies)

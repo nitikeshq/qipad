@@ -262,7 +262,8 @@ export default function AdminDashboard() {
         "service": "services",
         "event": "events",
         "investment": "investments",
-        "company-formation": "company-formations"
+        "company-formation": "company-formations",
+        "credit-config": "credit-configs"
       };
       const queryKey = queryKeyMap[modalType as keyof typeof queryKeyMap] || "tenders";
       queryClient.invalidateQueries({ queryKey: [`/api/admin/${queryKey}`] });
@@ -2486,6 +2487,163 @@ export default function AdminDashboard() {
                       <p>No platform settings found. Configure your first setting!</p>
                     </div>
                   )}
+
+                  {/* Credit Configuration Management Section */}
+                  <Card className="mt-6">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Coins className="h-5 w-5 text-yellow-600" />
+                        Credit Pricing Configuration
+                      </CardTitle>
+                      <CardDescription>
+                        Configure the credit costs for different platform features
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        {/* Credit Configuration Table */}
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full border-collapse">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left p-3 font-semibold">Feature</th>
+                                <th className="text-left p-3 font-semibold">Description</th>
+                                <th className="text-left p-3 font-semibold">Credits Required</th>
+                                <th className="text-left p-3 font-semibold">Status</th>
+                                <th className="text-left p-3 font-semibold">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {creditConfigs.map((config: any) => (
+                                <tr key={config.id} className="border-b hover:bg-gray-50">
+                                  <td className="p-3">
+                                    <div>
+                                      <div className="font-medium">{config.featureName}</div>
+                                      <div className="text-sm text-gray-500">{config.featureType}</div>
+                                    </div>
+                                  </td>
+                                  <td className="p-3 text-sm text-gray-600">
+                                    {config.description || "No description"}
+                                  </td>
+                                  <td className="p-3">
+                                    <div className="flex items-center gap-2">
+                                      <Coins className="h-4 w-4 text-yellow-500" />
+                                      <span className="font-semibold">{config.creditsRequired}</span>
+                                    </div>
+                                  </td>
+                                  <td className="p-3">
+                                    <Badge variant={config.isActive ? "default" : "secondary"}>
+                                      {config.isActive ? "Active" : "Inactive"}
+                                    </Badge>
+                                  </td>
+                                  <td className="p-3">
+                                    <div className="flex gap-2">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          setEditingItem(config);
+                                          setModalType('credit-config');
+                                          setIsCreateModalOpen(true);
+                                        }}
+                                        data-testid={`button-edit-credit-${config.featureType}`}
+                                      >
+                                        <Edit2 className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-red-600 hover:text-red-700"
+                                        onClick={() => deleteItemMutation.mutate({ type: 'credit-config', id: config.id })}
+                                        data-testid={`button-delete-credit-${config.featureType}`}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Quick Setup for Default Credit Configurations */}
+                        <Card>
+                          <CardContent className="pt-6">
+                            <h3 className="text-lg font-semibold mb-4">Quick Setup - Default Credit Costs</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {[
+                                { type: 'innovation', name: 'Create Innovation', defaultCredits: 100, desc: 'Cost to create new innovation project' },
+                                { type: 'job', name: 'Post Job', defaultCredits: 50, desc: 'Cost to post job listing' },
+                                { type: 'event', name: 'Create Event', defaultCredits: 50, desc: 'Cost to create new event' },
+                                { type: 'community', name: 'Create Community', defaultCredits: 100, desc: 'Cost to create new community' },
+                                { type: 'join_community', name: 'Join Premium Community', defaultCredits: 10, desc: 'Cost to join premium communities' },
+                                { type: 'investor_connection', name: 'Connect with Investor', defaultCredits: 10, desc: 'Cost to view investor contact details' }
+                              ].map((item) => {
+                                const existingConfig = creditConfigs.find((c: any) => c.featureType === item.type);
+                                return (
+                                  <Card key={item.type} className="p-4">
+                                    <div className="space-y-2">
+                                      <div className="font-medium">{item.name}</div>
+                                      <div className="text-sm text-gray-600">{item.desc}</div>
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1">
+                                          <Coins className="h-4 w-4 text-yellow-500" />
+                                          <span className="font-semibold">
+                                            {existingConfig ? existingConfig.creditsRequired : item.defaultCredits}
+                                          </span>
+                                        </div>
+                                        {!existingConfig && (
+                                          <Button
+                                            size="sm"
+                                            onClick={() => {
+                                              createItemMutation.mutate({
+                                                featureType: item.type,
+                                                featureName: item.name,
+                                                creditsRequired: item.defaultCredits,
+                                                description: item.desc,
+                                                isActive: true
+                                              });
+                                            }}
+                                            data-testid={`button-setup-${item.type}`}
+                                          >
+                                            Setup
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </Card>
+                                );
+                              })}
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Add New Credit Configuration */}
+                        <Card>
+                          <CardContent className="pt-6">
+                            <div className="flex justify-between items-center mb-4">
+                              <h3 className="text-lg font-semibold">Custom Credit Configuration</h3>
+                              <Button
+                                onClick={() => {
+                                  setEditingItem({ featureType: '', featureName: '', creditsRequired: 1, description: '' });
+                                  setModalType('credit-config');
+                                  setIsCreateModalOpen(true);
+                                }}
+                                data-testid="button-add-credit-config"
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Custom Feature
+                              </Button>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                              Create custom credit configurations for additional platform features not covered by the default setup.
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </CardContent>
             </Card>
