@@ -27,6 +27,7 @@ import BillingSettings from "@/pages/billing-settings";
 import GeneralSettings from "@/pages/general-settings";
 import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
+import Landing from "@/pages/landing";
 import Events from "@/pages/events";
 import EventPayment from "@/pages/event-payment";
 import MyProjects from "@/pages/my-projects";
@@ -85,8 +86,9 @@ function Router() {
       <Route path="/profile-settings" component={() => <ProtectedRoute component={ProfileSettings} />} />
       <Route path="/billing-settings" component={() => <ProtectedRoute component={BillingSettings} />} />
       <Route path="/general-settings" component={() => <ProtectedRoute component={GeneralSettings} />} />
-      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/locked-admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/en" component={Landing} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route component={NotFound} />
     </Switch>
