@@ -572,8 +572,7 @@ export default function Landing() {
               </Button>
               <Button 
                 size="lg" 
-                variant="outline"
-                className="text-xl px-12 py-6 border-2 border-white text-white hover:bg-white hover:text-blue-600 transform hover:scale-105 transition-all duration-300 font-bold"
+                className="text-xl px-12 py-6 bg-transparent border-2 border-white text-white hover:bg-white hover:text-blue-600 transform hover:scale-105 transition-all duration-300 font-bold"
                 onClick={() => navigate("/auth")}
                 data-testid="button-invest-now"
               >
