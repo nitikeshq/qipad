@@ -149,10 +149,20 @@ export default function AdminDashboard() {
 
   const { data: walletAnalytics = {} } = useQuery<any>({
     queryKey: ['/api/admin/analytics/wallet-deposits'],
+    queryFn: async () => {
+      const response = await adminApiRequest('GET', '/api/admin/analytics/wallet-deposits');
+      if (!response.ok) throw new Error('Failed to fetch wallet analytics');
+      return response.json();
+    }
   });
 
   const { data: referralAnalytics = {} } = useQuery<any>({
     queryKey: ['/api/admin/analytics/referrals'],
+    queryFn: async () => {
+      const response = await adminApiRequest('GET', '/api/admin/analytics/referrals');
+      if (!response.ok) throw new Error('Failed to fetch referral analytics');
+      return response.json();
+    }
   });
 
   // Fetch wallet transactions
@@ -1380,6 +1390,7 @@ export default function AdminDashboard() {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>User Type</TableHead>
+                      <TableHead>Credits</TableHead>
                       <TableHead>KYC Status</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Joined</TableHead>
@@ -1395,6 +1406,11 @@ export default function AdminDashboard() {
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{user.userType}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="font-medium">
+                            {user.credits || 0} QP
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge 
