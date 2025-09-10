@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,18 +10,30 @@ import { Job } from "@shared/schema";
 import { JobModal } from "@/components/modals/JobModal";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Jobs() {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [location] = useLocation();
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  
+  // Check if we're on the "My Jobs" page
+  const isMyJobsPage = location === '/my-jobs';
 
   const { data: jobs = [], isLoading } = useQuery<Job[]>({
     queryKey: ['/api/jobs'],
+  });
+  
+  // Get user's job applications for filtering
+  const { data: userApplications = [] } = useQuery<any[]>({
+    queryKey: ['/api/user/job-applications'],
+    enabled: isMyJobsPage && !!user?.id,
   });
 
   // Enhance jobs with user information for displaying poster name
@@ -31,6 +44,15 @@ export default function Jobs() {
   }));
 
   const filteredJobs = jobsWithUserInfo.filter((job: any) => {
+    // If on My Jobs page, only show user's posted jobs or applied jobs
+    if (isMyJobsPage) {
+      const isUserJob = job.userId === user?.id;
+      const hasApplied = userApplications.some((app: any) => app.jobId === job.id);
+      if (!isUserJob && !hasApplied) {
+        return false;
+      }
+    }
+    
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (job.company && job.company.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -119,16 +141,21 @@ export default function Jobs() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-foreground" data-testid="text-jobs-title">
-                  Job Opportunities
+                  {isMyJobsPage ? 'My Jobs' : 'Job Opportunities'}
                 </h1>
                 <p className="text-muted-foreground mt-1">
-                  Find exciting career opportunities or post job openings
+                  {isMyJobsPage 
+                    ? 'Manage your posted jobs and track your applications'
+                    : 'Find exciting career opportunities or post job openings'
+                  }
                 </p>
               </div>
-              <Button onClick={() => setIsJobModalOpen(true)} data-testid="button-post-job">
-                <Plus className="h-4 w-4 mr-2" />
-                Post Job
-              </Button>
+              {!isMyJobsPage && (
+                <Button onClick={() => setIsJobModalOpen(true)} data-testid="button-post-job">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Post Job
+                </Button>
+              )}
             </div>
 
             {/* Filters */}

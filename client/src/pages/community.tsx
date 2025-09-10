@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Community } from "@shared/schema";
 import { CommunityModal } from "@/components/modals/CommunityModal";
 import type { User } from "@shared/schema";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function CommunityPage() {
   const isMobile = useIsMobile();
@@ -19,15 +20,19 @@ export default function CommunityPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(9); // 3x3 grid
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // Check if we're on the "My Communities" page
+  const isMyCommunityPage = location === '/my-communities';
 
   const { data: communities = [], isLoading } = useQuery<Community[]>({
     queryKey: ['/api/communities'],
   });
 
-  const { data: user } = useQuery<any>({
+  const { data: userData } = useQuery<any>({
     queryKey: ['/api/user'],
   });
 
@@ -37,6 +42,14 @@ export default function CommunityPage() {
   });
 
   const filteredCommunities = communities.filter((community: any) => {
+    // If on My Communities page, only show communities user has joined
+    if (isMyCommunityPage) {
+      const isUserMember = Array.isArray(userMemberships) && userMemberships.some((membership: any) => membership.communityId === community.id);
+      if (!isUserMember) {
+        return false;
+      }
+    }
+    
     const matchesSearch = community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (community.description && community.description.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesSearch;
@@ -118,16 +131,21 @@ export default function CommunityPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                   <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-foreground" data-testid="text-communities-title">
-                      Business Communities
+                      {isMyCommunityPage ? 'My Communities' : 'Business Communities'}
                     </h1>
                     <p className="text-muted-foreground mt-1">
-                      Connect, collaborate, and grow with like-minded entrepreneurs
+                      {isMyCommunityPage 
+                        ? 'Manage your joined communities and stay connected'
+                        : 'Connect, collaborate, and grow with like-minded entrepreneurs'
+                      }
                     </p>
                   </div>
-                  <Button onClick={() => setIsCommunityModalOpen(true)} size="sm" className="sm:size-default" data-testid="button-create-community">
-                    <Plus className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Create Community</span>
-                  </Button>
+                  {!isMyCommunityPage && (
+                    <Button onClick={() => setIsCommunityModalOpen(true)} size="sm" className="sm:size-default" data-testid="button-create-community">
+                      <Plus className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Create Community</span>
+                    </Button>
+                  )}
                 </div>
 
                 {/* Search */}
