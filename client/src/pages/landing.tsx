@@ -398,46 +398,65 @@ export default function Landing() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-24 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              How Qipad Works
+          <div className="text-center mb-20">
+            <h2 className="text-5xl md:text-6xl font-bold mb-6 text-gray-800">
+              Get Funded in <span className="text-blue-600">3 Simple Steps</span>
             </h2>
-            <p className="text-xl text-gray-600">
-              Simple steps to get started on your entrepreneurial journey
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Stop waiting months for meetings. Our streamlined process gets you connected 
+              with investors and funding opportunities faster than ever.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-12">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">1</span>
+          <div className="grid md:grid-cols-3 gap-12 relative">
+            {/* Connecting lines */}
+            <div className="hidden md:block absolute top-24 left-1/3 right-1/3 h-0.5 bg-gradient-to-r from-blue-300 to-purple-300"></div>
+            
+            <div className="text-center relative">
+              <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl relative z-10">
+                <span className="text-3xl font-bold text-white">1</span>
               </div>
-              <h3 className="text-2xl font-semibold mb-4">Sign Up & Verify</h3>
-              <p className="text-gray-600">
-                Create your account and complete KYC verification to access all platform features
+              <h3 className="text-3xl font-bold mb-4 text-gray-800">Sign Up & Verify</h3>
+              <p className="text-gray-600 text-lg leading-relaxed">
+                Create your account in 2 minutes and complete our secure KYC verification. 
+                Join a trusted network of verified entrepreneurs and investors.
               </p>
+              <div className="mt-6 inline-flex items-center text-sm text-green-600 font-semibold">
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Takes only 5 minutes
+              </div>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">2</span>
+            <div className="text-center relative">
+              <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl relative z-10">
+                <span className="text-3xl font-bold text-white">2</span>
               </div>
-              <h3 className="text-2xl font-semibold mb-4">Create or Invest</h3>
-              <p className="text-gray-600">
-                Entrepreneurs create projects, investors browse opportunities and connect
+              <h3 className="text-3xl font-bold mb-4 text-gray-800">Create or Invest</h3>
+              <p className="text-gray-600 text-lg leading-relaxed">
+                Entrepreneurs: Showcase your project with our smart templates. 
+                Investors: Browse AI-matched opportunities in your preferred sectors.
               </p>
+              <div className="mt-6 inline-flex items-center text-sm text-blue-600 font-semibold">
+                <Zap className="w-4 h-4 mr-2" />
+                AI-powered matching
+              </div>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">3</span>
+            <div className="text-center relative">
+              <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl relative z-10">
+                <span className="text-3xl font-bold text-white">3</span>
               </div>
-              <h3 className="text-2xl font-semibold mb-4">Grow Together</h3>
-              <p className="text-gray-600">
-                Access community support, job opportunities, and grow your network
+              <h3 className="text-3xl font-bold mb-4 text-gray-800">Get Funded & Grow</h3>
+              <p className="text-gray-600 text-lg leading-relaxed">
+                Connect directly with interested investors, negotiate terms, and access 
+                our growth resources including government schemes and community support.
               </p>
+              <div className="mt-6 inline-flex items-center text-sm text-purple-600 font-semibold">
+                <Rocket className="w-4 h-4 mr-2" />
+                Average 30 days to funding
+              </div>
             </div>
           </div>
         </div>
@@ -520,23 +539,64 @@ export default function Landing() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Ready to Start Your Journey?
-          </h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Join thousands of entrepreneurs and investors who are already 
-            building the future together on Qipad.
-          </p>
-          <Button 
-            size="lg" 
-            className="text-lg px-8 py-4 bg-white text-blue-600 hover:bg-gray-100"
-            onClick={() => navigate("/auth")}
-            data-testid="button-join-now"
-          >
-            Join Qipad Now
-          </Button>
+      <section className="relative py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-purple-900/30"></div>
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-20 left-20 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+          <div className="absolute bottom-20 right-20 w-40 h-40 bg-white/10 rounded-full blur-xl"></div>
+          <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-yellow-400/20 rounded-full blur-lg"></div>
+        </div>
+        <div className="container mx-auto px-4 text-center relative z-10 text-white">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl md:text-7xl font-bold mb-8 leading-tight">
+              Your Success Story<br />
+              <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                Starts Today
+              </span>
+            </h2>
+            <p className="text-xl md:text-2xl mb-12 opacity-90 leading-relaxed">
+              Stop dreaming about funding your startup. Join <strong>10,000+ entrepreneurs</strong> and 
+              <strong> 1,000+ investors</strong> who are already building the future together on Qipad.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
+              <Button 
+                size="lg" 
+                className="text-xl px-12 py-6 bg-white text-blue-600 hover:bg-gray-100 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 font-bold"
+                onClick={() => navigate("/auth")}
+                data-testid="button-join-now"
+              >
+                <Rocket className="w-6 h-6 mr-3" />
+                Launch Your Startup
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="text-xl px-12 py-6 border-2 border-white text-white hover:bg-white hover:text-blue-600 transform hover:scale-105 transition-all duration-300 font-bold"
+                onClick={() => navigate("/auth")}
+                data-testid="button-invest-now"
+              >
+                <DollarSign className="w-6 h-6 mr-3" />
+                Start Investing
+              </Button>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 text-center">
+              <div className="space-y-2">
+                <div className="text-3xl md:text-4xl font-bold text-yellow-400">₹50Cr+</div>
+                <div className="text-white/80">Total Funding Raised</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-3xl md:text-4xl font-bold text-green-400">85%</div>
+                <div className="text-white/80">Success Rate</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-3xl md:text-4xl font-bold text-blue-400">30 Days</div>
+                <div className="text-white/80">Average Time to Funding</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
