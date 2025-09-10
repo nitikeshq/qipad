@@ -634,9 +634,6 @@ export default function CompanyDetail() {
             </Form>
           </DialogContent>
         </Dialog>
-          </div>
-        </main>
-      </div>
       
       {/* Add Service Modal */}
       {companyId && (

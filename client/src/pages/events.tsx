@@ -45,6 +45,16 @@ export default function Events() {
     queryKey: ["/api/user"],
   });
 
+  // Check wallet balance and credit requirements for event creation
+  const { data: creditCheck, isLoading: creditCheckLoading } = useQuery({
+    queryKey: ['/api/credits/check', { action: 'event', amount: 50 }],
+    queryFn: async () => {
+      const response = await apiRequest('POST', '/api/credits/check', { action: 'event', amount: 50 });
+      return response.json();
+    },
+    enabled: showCreateDialog
+  });
+
   const form = useForm<CreateEventForm>({
     resolver: zodResolver(createEventSchema),
     defaultValues: {
@@ -107,8 +117,60 @@ export default function Events() {
     },
   });
 
-  const onSubmit = (data: CreateEventForm) => {
-    createEventMutation.mutate(data);
+  const onSubmit = async (data: CreateEventForm) => {
+    // Check if user has enough credits
+    if (!creditCheck?.hasEnoughCredits) {
+      toast({
+        title: "Insufficient Credits",
+        description: `You need 50 credits to host an event. Your current balance: ${creditCheck?.currentBalance || 0} credits`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // First check KYC verification before deducting any credits
+      const kycCheckResponse = await apiRequest('GET', '/api/users/kyc-status');
+      const kycData = await kycCheckResponse.json();
+      
+      if (!kycData.isKycComplete) {
+        toast({
+          title: "KYC Verification Required",
+          description: "You must complete KYC verification before hosting events. Please complete your verification in the Documents section.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Only deduct credits after KYC verification passes
+      const deductResponse = await apiRequest('POST', '/api/credits/deduct', {
+        action: 'event',
+        amount: 50,
+        description: 'Event hosting (60-day promotion)',
+        referenceType: 'event_creation'
+      });
+
+      const deductResult = await deductResponse.json();
+      
+      if (!deductResult.success) {
+        toast({
+          title: "Credit Deduction Failed",
+          description: deductResult.error || "Unable to deduct credits",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Proceed with event creation
+      createEventMutation.mutate(data);
+    } catch (error) {
+      console.error('Event creation error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process event creation",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleJoinEvent = (eventId: string, isPaid: boolean, price: number) => {
