@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 interface CommunityModalProps {
@@ -24,6 +24,16 @@ export function CommunityModal({ open, onOpenChange }: CommunityModalProps) {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Check wallet balance and credit requirements for community creation
+  const { data: creditCheck, isLoading: creditCheckLoading } = useQuery({
+    queryKey: ['/api/credits/check', { action: 'community_create', amount: 100 }],
+    queryFn: async () => {
+      const response = await apiRequest('POST', '/api/credits/check', { action: 'community_create', amount: 100 });
+      return response.json();
+    },
+    enabled: open
+  });
 
   const createCommunityMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -50,9 +60,62 @@ export function CommunityModal({ open, onOpenChange }: CommunityModalProps) {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    createCommunityMutation.mutate(formData);
+    
+    // Check if user has enough credits
+    if (!creditCheck?.hasEnoughCredits) {
+      toast({
+        title: "Insufficient Credits",
+        description: `You need 100 credits to create a community. Your current balance: ${creditCheck?.currentBalance || 0} credits`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // First check KYC verification before deducting any credits
+      const kycCheckResponse = await apiRequest('GET', '/api/users/kyc-status');
+      const kycData = await kycCheckResponse.json();
+      
+      if (!kycData.isKycComplete) {
+        toast({
+          title: "KYC Verification Required",
+          description: "You must complete KYC verification before creating communities. Please complete your verification in the Documents section.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Only deduct credits after KYC verification passes
+      const deductResponse = await apiRequest('POST', '/api/credits/deduct', {
+        action: 'community_create',
+        amount: 100,
+        description: 'Community creation (Permanent)',
+        referenceType: 'community_creation'
+      });
+
+      const deductResult = await deductResponse.json();
+      
+      if (!deductResult.success) {
+        toast({
+          title: "Credit Deduction Failed",
+          description: deductResult.error || "Unable to deduct credits",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Proceed with community creation
+      createCommunityMutation.mutate(formData);
+    } catch (error) {
+      console.error('Community creation error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process community creation",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
