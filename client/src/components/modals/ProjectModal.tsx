@@ -93,7 +93,20 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
     }
 
     try {
-      // Deduct credits first
+      // First check KYC verification before deducting any credits
+      const kycCheckResponse = await apiRequest('GET', '/api/users/kyc-status');
+      const kycData = await kycCheckResponse.json();
+      
+      if (!kycData.isKycComplete) {
+        toast({
+          title: "KYC Verification Required",
+          description: "You must complete KYC verification before creating innovations. Please complete your verification in the Documents section.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Only deduct credits after KYC verification passes
       const deductResponse = await apiRequest('POST', '/api/credits/deduct', {
         action: 'innovation',
         amount: 100,
@@ -121,10 +134,10 @@ export function ProjectModal({ open, onOpenChange }: ProjectModalProps) {
         campaignDuration: parseInt(formData.campaignDuration)
       });
     } catch (error) {
-      console.error('Credit deduction error:', error);
+      console.error('Project creation error:', error);
       toast({
         title: "Error",
-        description: "Failed to process credit payment",
+        description: "Failed to process innovation creation",
         variant: "destructive",
       });
     }
