@@ -102,55 +102,104 @@ async function processReferralRegistration(newUser: any, referralCode: string) {
 }
 
 // Helper function to process a new referral record
+// Function to check and process pending referrals when conditions are met
+async function checkAndProcessPendingReferrals(userId: string, eventType: 'deposit' | 'kyc_complete') {
+  try {
+    console.log(`Checking pending referrals for user ${userId} due to ${eventType}`);
+    
+    // Find any pending referrals for this user
+    const allReferrals = await storage.getAllReferrals();
+    const pendingReferrals = allReferrals.filter(r => 
+      r.referredUserId === userId && r.status === 'pending'
+    );
+    
+    if (pendingReferrals.length === 0) {
+      console.log(`No pending referrals found for user ${userId}`);
+      return;
+    }
+    
+    // Check if user now meets both requirements
+    const user = await storage.getUser(userId);
+    const documents = await storage.getDocumentsByUser(userId);
+    const isKycComplete = user && documents.some((doc: any) => doc.type === 'kyc' && doc.verified);
+    
+    const userTransactions = await storage.getWalletTransactions(userId);
+    const hasDeposit = userTransactions.some((tx: any) => tx.type === 'deposit' && tx.status === 'completed');
+    
+    console.log(`User ${userId} - KYC: ${isKycComplete}, HasDeposit: ${hasDeposit}`);
+    
+    // Process each pending referral if both conditions are now met
+    for (const referral of pendingReferrals) {
+      if (isKycComplete && hasDeposit) {
+        // Award the referral bonus
+        await storage.addCredits(
+          referral.referrerId,
+          50,
+          `Referral reward - ${user.firstName} completed KYC and first deposit via your referral`,
+          'referral_bonus',
+          referral.id
+        );
+        
+        console.log(`Added ₹50 referral reward to referrer ${referral.referrerId} (both KYC and first deposit completed)`);
+        
+        // Update referral status to credited
+        await storage.updateReferral(referral.id, {
+          status: 'credited',
+          creditedAt: new Date()
+        });
+        
+        // Send reward email to referrer
+        const referrer = await storage.getUser(referral.referrerId);
+        if (referrer) {
+          try {
+            const referrerReferrals = await storage.getReferralsByUser(referral.referrerId);
+            const creditedReferrals = referrerReferrals.filter(r => r.status === 'credited');
+            const totalEarned = creditedReferrals.reduce((sum, r) => sum + parseFloat(r.rewardAmount || '0'), 0);
+            
+            const wallet = await storage.getWalletByUserId(referral.referrerId);
+            await emailService.sendReferralRewardEmail({
+              toEmail: referrer.email,
+              firstName: referrer.firstName,
+              referredEmail: user.email,
+              rewardAmount: '50',
+              rewardDate: new Date().toLocaleDateString(),
+              newBalance: wallet?.balance || '0',
+              totalReferrals: creditedReferrals.length.toString(),
+              totalEarned: totalEarned.toString(),
+              walletUrl: `${process.env.BASE_URL || 'https://qipad.co'}/wallet`,
+              referralUrl: `${process.env.BASE_URL || 'https://qipad.co'}/referrals`
+            });
+          } catch (emailError) {
+            console.error('Failed to send referral reward email:', emailError);
+          }
+        }
+      } else {
+        console.log(`Referral ${referral.id} still pending - KYC: ${isKycComplete}, Deposit: ${hasDeposit}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error checking pending referrals:', error);
+  }
+}
+
 async function processNewReferral(newUser: any, referrerId: string, referralCode: string) {
   try {
     console.log(`Processing new referral for ${newUser.email} with referrer ${referrerId}`);
 
-    // 1. Create a new referral record
+    // 1. Create a new referral record - always start as pending
     const newReferral = await storage.createReferral({
       referrerId: referrerId,
       referredEmail: newUser.email,
       referralCode: referralCode,
       status: 'pending',
-      rewardAmount: '50'
+      rewardAmount: '50',
+      referredUserId: newUser.id
     });
     
-    console.log(`Created new referral record: ${newReferral.id}`);
-
-    // 2. Check if referred user has completed KYC and made a deposit before giving referral bonus
-    const referredUser = await storage.getUser(newUser.id);
-    const referredDocuments = await storage.getDocumentsByUser(newUser.id);
-    const isKycComplete = referredUser && referredDocuments.some((doc: any) => doc.type === 'kyc' && doc.verified);
+    console.log(`Created new referral record: ${newReferral.id} - status: pending`);
     
-    // Check if user has made any deposits
-    const userTransactions = await storage.getWalletTransactions(newUser.id);
-    const hasDeposit = userTransactions.some((tx: any) => tx.type === 'deposit' && tx.status === 'completed');
-    
-    // Only give referral bonus if referred user has completed KYC AND made a deposit
-    if (isKycComplete && hasDeposit) {
-      await storage.addCredits(
-        referrerId,
-        50,
-        `Referral reward - ${newUser.firstName} completed KYC and deposit via your referral`,
-        'referral_bonus',
-        newReferral.id
-      );
-      console.log(`Added ₹50 referral reward to referrer ${referrerId} (KYC and deposit verified)`);
-      
-      // Update status to credited
-      await storage.updateReferral(newReferral.id, {
-        status: 'credited',
-        referredUserId: newUser.id,
-        creditedAt: new Date()
-      });
-    } else {
-      console.log(`Referral bonus pending for ${referrerId} - waiting for ${newUser.email} to complete KYC and deposit`);
-      // Keep status as pending until KYC and deposit are completed
-      await storage.updateReferral(newReferral.id, {
-        status: 'pending',
-        referredUserId: newUser.id
-      });
-    }
+    // 2. Check if conditions are already met (rare case)
+    await checkAndProcessPendingReferrals(newUser.id, 'kyc_complete');
 
     // 4. Send reward email to referrer
     const referrer = await storage.getUser(referrerId);
@@ -1576,6 +1625,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isVerified: allApproved,
         isKycComplete: userDocs.length > 0 && !hasRejected
       });
+      
+      // Check for pending referrals when KYC is completed
+      if (status === 'approved' && allApproved) {
+        try {
+          await checkAndProcessPendingReferrals(document.userId, 'kyc_complete');
+        } catch (referralError) {
+          console.error('Failed to process pending referrals after KYC completion:', referralError);
+          // Don't fail the KYC verification if referral processing fails
+        }
+      }
       
       res.json({ 
         message: "Document verification updated and user status synchronized", 
@@ -3883,6 +3942,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } catch (emailError) {
               console.error('Failed to send deposit success email:', emailError);
               // Don't fail the deposit if email fails
+            }
+            
+            // Check for pending referrals that can now be processed (first deposit made)
+            try {
+              await checkAndProcessPendingReferrals(userId, 'deposit');
+            } catch (referralError) {
+              console.error('Failed to process pending referrals after deposit:', referralError);
+              // Don't fail the deposit if referral processing fails
             }
             
             res.redirect(`${process.env.FRONTEND_URL || 'https://qipad.co'}/wallet?success=true&amount=${netCredits}`);
