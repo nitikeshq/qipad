@@ -458,6 +458,11 @@ export default function Auth() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Powered by Qwegle */}
+      <div className="text-center mt-8 text-sm text-muted-foreground">
+        Powered by <a href="https://www.qwegle.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Qwegle</a>
+      </div>
     </div>
   );
 }

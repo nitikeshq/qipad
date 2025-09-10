@@ -263,10 +263,10 @@ export default function Landing() {
               <div key={index} className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-xl transform group-hover:scale-105 transition-transform duration-300"></div>
                 <div className="relative p-6 space-y-3">
-                  <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                     {stat.number}
                   </div>
-                  <div className="text-gray-700 font-semibold text-lg">{stat.label}</div>
+                  <div className="text-gray-700 font-semibold text-base">{stat.label}</div>
                 </div>
               </div>
             ))}
@@ -583,15 +583,15 @@ export default function Landing() {
 
             <div className="grid md:grid-cols-3 gap-8 text-center">
               <div className="space-y-2">
-                <div className="text-3xl md:text-4xl font-bold text-yellow-400">₹50Cr+</div>
+                <div className="text-2xl md:text-3xl font-bold text-yellow-400">₹50Cr+</div>
                 <div className="text-white/80">Total Funding Raised</div>
               </div>
               <div className="space-y-2">
-                <div className="text-3xl md:text-4xl font-bold text-green-400">85%</div>
+                <div className="text-2xl md:text-3xl font-bold text-green-400">85%</div>
                 <div className="text-white/80">Success Rate</div>
               </div>
               <div className="space-y-2">
-                <div className="text-3xl md:text-4xl font-bold text-blue-400">30 Days</div>
+                <div className="text-2xl md:text-3xl font-bold text-blue-400">30 Days</div>
                 <div className="text-white/80">Average Time to Funding</div>
               </div>
             </div>
@@ -611,6 +611,7 @@ export default function Landing() {
             </div>
             <div className="text-center text-gray-400">
               <p>&copy; 2024 Qipad. Energized startup space for entrepreneurs and investors.</p>
+              <p className="mt-2">Powered by <a href="https://www.qwegle.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">Qwegle</a></p>
             </div>
           </div>
         </div>
