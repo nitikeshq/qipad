@@ -3,9 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreHorizontal, Edit, Eye, User, Calendar, MapPin } from "lucide-react";
+import { MoreHorizontal, Edit, Eye, User, Calendar, MapPin, Trash2 } from "lucide-react";
 import { Project } from "@shared/schema";
 import { Link } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface ProjectCardProps {
   project: Project & {
@@ -15,13 +18,51 @@ interface ProjectCardProps {
       lastName?: string;
       profileImage?: string;
     };
+    userId?: string;
   };
   showActions?: boolean;
   onInvest?: (project: Project) => void;
   onSupport?: (project: Project) => void;
+  onEdit?: (project: Project) => void;
+  onDelete?: (projectId: string) => void;
 }
 
-export function ProjectCard({ project, showActions = false, onInvest, onSupport }: ProjectCardProps) {
+export function ProjectCard({ project, showActions = false, onInvest, onSupport, onEdit, onDelete }: ProjectCardProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const isOwner = user && (project.userId === user.id || project.owner?.id === user.id);
+  
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+      return;
+    }
+    
+    if (onDelete) {
+      onDelete(project.id);
+    } else {
+      try {
+        await apiRequest("DELETE", `/api/projects/${project.id}`);
+        toast({
+          title: "Success",
+          description: "Project deleted successfully",
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to delete project",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(project);
+    }
+  };
   const fundingPercentage = project.currentFunding && project.fundingGoal 
     ? (parseFloat(project.currentFunding) / parseFloat(project.fundingGoal)) * 100 
     : 0;
@@ -129,7 +170,8 @@ export function ProjectCard({ project, showActions = false, onInvest, onSupport 
             </Button>
           </Link>
           
-          {(onInvest || onSupport) && project.status === 'approved' && (
+          {/* Investment buttons for non-owners */}
+          {!isOwner && (onInvest || onSupport) && project.status === 'approved' && (
             <>
               {onInvest && (
                 <Button size="sm" onClick={() => onInvest(project)} data-testid={`button-invest-${project.id}`}>
@@ -141,6 +183,29 @@ export function ProjectCard({ project, showActions = false, onInvest, onSupport 
                   Support
                 </Button>
               )}
+            </>
+          )}
+          
+          {/* Edit/Delete buttons for owners */}
+          {isOwner && (
+            <>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleEdit}
+                data-testid={`button-edit-${project.id}`}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDelete}
+                className="text-destructive hover:text-destructive"
+                data-testid={`button-delete-${project.id}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </>
           )}
         </div>

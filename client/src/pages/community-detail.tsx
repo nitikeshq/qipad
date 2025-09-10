@@ -196,11 +196,13 @@ export default function CommunityDetailPage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Post Creator - Only for members */}
-          {isUserMember && (
+          {isUserMember && user && (
             <LinkedInStylePostCreator
+              communityId={params?.id || ''}
               user={user}
-              onCreatePost={(postData) => createPostMutation.mutate(postData)}
-              isCreating={createPostMutation.isPending}
+              onPostCreated={() => {
+                queryClient.invalidateQueries({ queryKey: ['/api/communities', params?.id, 'posts'] });
+              }}
             />
           )}
 
