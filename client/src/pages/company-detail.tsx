@@ -15,8 +15,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, MapPin, Globe, Phone, Mail, Building2, Package, Briefcase, MessageCircle, ExternalLink, Calendar, Users, Check, Plus, Edit } from "lucide-react";
 import { z } from "zod";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { AddServiceModal } from "@/components/modals/AddServiceModal";
 import { AddProductModal } from "@/components/modals/AddProductModal";
 import { EditCompanyModal } from "@/components/modals/EditCompanyModal";
@@ -189,12 +187,7 @@ export default function CompanyDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
               <Button 
