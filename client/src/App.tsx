@@ -34,6 +34,7 @@ import MyProjects from "@/pages/my-projects";
 import MediaCenter from "@/pages/media-center";
 import PaymentSuccess from "@/pages/payment-success";
 import { WalletPage } from "@/pages/wallet";
+import HowTo from "@/pages/how-to";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
@@ -88,6 +89,7 @@ function Router() {
       <Route path="/general-settings" component={() => <ProtectedRoute component={GeneralSettings} />} />
       <Route path="/locked-admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/how-to" component={HowTo} />
       <Route path="/en" component={Landing} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route component={NotFound} />
