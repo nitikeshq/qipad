@@ -4042,8 +4042,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         parseInt(amount),
         description || 'Credits added by admin',
-        'admin_bonus',
-        `admin-add-${Date.now()}`
+        'deposit',
+        `admin-deposit-${Date.now()}`
       );
 
       if (result.success) {
@@ -4078,8 +4078,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         parseInt(amount),
         description || 'Credits deducted by admin',
-        'admin_deduction',
-        `admin-deduct-${Date.now()}`
+        'admin_withdrawal',
+        `admin-withdraw-${Date.now()}`
       );
 
       if (result.success) {
