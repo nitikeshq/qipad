@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute } from "wouter";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -135,24 +132,12 @@ export function ProjectDetailsPage() {
 
   if (!project) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="flex">
-            <Sidebar />
-            <SidebarInset>
-              <main className="flex-1 p-6">
-                <div className="text-center py-8">
-                  <p>Project not found</p>
-                  <Link href="/projects">
-                    <Button className="mt-4">Back to Projects</Button>
-                  </Link>
-                </div>
-              </main>
-            </SidebarInset>
-          </div>
-        </div>
-      </SidebarProvider>
+      <div className="text-center py-8">
+        <p>Project not found</p>
+        <Link href="/innovations">
+          <Button className="mt-4">Back to Innovations</Button>
+        </Link>
+      </div>
     );
   }
 
@@ -162,14 +147,8 @@ export function ProjectDetailsPage() {
 
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <SidebarInset>
-            <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto">
+    <>
+      <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-6">
               <Link href="/innovations">
@@ -689,33 +668,29 @@ export function ProjectDetailsPage() {
               </div>
             </div>
           </div>
-            </main>
-          </SidebarInset>
-        </div>
 
-        <ProjectModal 
-        open={isEditModalOpen} 
-        onOpenChange={setIsEditModalOpen}
-      />
-      
-      <InvestModal 
-        open={isInvestModalOpen} 
-        onOpenChange={setIsInvestModalOpen}
-        project={project}
-      />
-      
-      <SupportModal 
-        open={isSupportModalOpen} 
-        onOpenChange={setIsSupportModalOpen}
-        project={project}
-      />
-      
-      <EditProjectModal 
-        open={isEditProjectModalOpen} 
-        onOpenChange={setIsEditProjectModalOpen}
-        project={project}
-      />
-      </div>
-    </SidebarProvider>
+          <ProjectModal 
+            open={isEditModalOpen} 
+            onOpenChange={setIsEditModalOpen}
+          />
+          
+          <InvestModal 
+            open={isInvestModalOpen} 
+            onOpenChange={setIsInvestModalOpen}
+            project={project}
+          />
+          
+          <SupportModal 
+            open={isSupportModalOpen} 
+            onOpenChange={setIsSupportModalOpen}
+            project={project}
+          />
+          
+          <EditProjectModal 
+            open={isEditProjectModalOpen} 
+            onOpenChange={setIsEditProjectModalOpen}
+            project={project}
+          />
+    </>
   );
 }
